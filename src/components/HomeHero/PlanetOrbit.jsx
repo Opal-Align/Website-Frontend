@@ -5,9 +5,9 @@ export default function PlanetOrbit() {
   return (
     <motion.div
       className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-      initial={{ x: -800, y: -80, opacity: 0 }}
-      animate={{ x: [-800, -200], y: -80, opacity: 1 }}
-      transition={{ duration: 2.5, delay: 0.6, ease: "linear" }}
+      initial={{ x: -600, y: -80, opacity: 0 }}
+      animate={{ x: [-600, -200], y: -80, opacity: 1 }}
+      transition={{ duration: 1.5, delay: 0.6, ease: "linear" }}
       style={{ willChange: "transform" }}
     >
       {/* Planet */}

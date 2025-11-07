@@ -1,16 +1,38 @@
-// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
+import Carestack from "../../assets/Carestack.svg";
+import Cloud9 from "../../assets/Cloud 9.svg";
+import Curve from "../../assets/Curve.svg";
+import Denticon from "../../assets/Denticon.svg";
+import Dentimax from "../../assets/Dentimax.svg";
+import Dentrix from "../../assets/dentrix.svg";
+import DentrixAscend from "../../assets/DentrixAscend.svg";
+import Dolphin from "../../assets/dolphin.svg";
+import Eaglesoft from "../../assets/Eaglesoft.svg";
+import OpenDental from "../../assets/Open Dental.svg";
+
+const logos = [
+  Carestack,
+  Cloud9,
+  Curve,
+  Denticon,
+  Dentimax,
+  Dentrix,
+  DentrixAscend,
+  Dolphin,
+  Eaglesoft,
+  OpenDental,
+];
 
 export default function LogoStream() {
   return (
-    <div className="relative overflow-hidden w-full border-t border-gray-200 py-8 md:py-12 mb-4 bg-white">
+    <div className="relative overflow-hidden w-full border-t border-gray-200 py-12 md:py-16 mb-4 bg-white flex items-center justify-center">
       {/* Fade at edges */}
-      <div className="absolute top-0 left-0 w-12 md:w-32 h-full bg-gradient-to-r from-white to-transparent z-10"></div>
-      <div className="absolute top-0 right-0 w-12 md:w-32 h-full bg-gradient-to-l from-white to-transparent z-10"></div>
+      <div className="absolute top-0 left-0 w-12 md:w-32 h-full bg-linear-to-r from-white to-transparent z-10"></div>
+      <div className="absolute top-0 right-0 w-12 md:w-32 h-full bg-linear-to-l from-white to-transparent z-10"></div>
 
       {/* Looping Row */}
       <motion.div
-        className="flex items-center justify-between gap-8 md:gap-12 whitespace-nowrap px-4 md:px-0"
+        className="flex items-center justify-center gap-12 md:gap-16 whitespace-nowrap px-4 md:px-0"
         animate={{ x: ["0%", "-50%"] }}
         transition={{
           ease: "linear",
@@ -22,37 +44,20 @@ export default function LogoStream() {
         {[...Array(2)].map((_, index) => (
           <div
             key={index}
-            className="flex items-center justify-between gap-8 md:gap-12 px-6 md:px-12"
+            className="flex items-center justify-center gap-12 md:gap-16 px-6 md:px-12"
           >
-            <div className="w-16 md:w-20 h-10 md:h-12 bg-gray-100 rounded flex items-center justify-center">
-              <div className="w-10 md:w-12 h-5 md:h-6 bg-gray-300 rounded"></div>
-            </div>
-
-            <div className="text-gray-400 text-xs md:text-sm flex items-center gap-2">
-              <div className="w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-gray-400"></div>
-              <span>Logoipsum Foundation</span>
-            </div>
-
-            <div className="text-gray-400 text-lg md:text-xl font-bold italic tracking-wider">
-              LOGO
-            </div>
-
-            <div className="text-gray-400 text-xs md:text-sm flex items-center gap-2">
-              <span className="text-2xl">+</span>
-              <span>Logo Ipsum Plus</span>
-            </div>
-
-            <div className="text-gray-400 text-2xl md:text-3xl font-bold">
-              G
-            </div>
-
-            <div className="text-gray-400 text-lg md:text-xl font-light tracking-widest">
-              LOGO
-            </div>
-
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-gray-200 rounded"></div>
-
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-gray-200 rounded-full border-2 border-gray-300"></div>
+            {logos.map((logo, logoIndex) => (
+              <div
+                key={`${index}-${logoIndex}`}
+                className="flex items-center justify-center min-w-[120px] md:min-w-[180px]"
+              >
+                <img
+                  src={logo}
+                  alt={`Logo ${logoIndex + 1}`}
+                  className="h-12 md:h-16 w-auto max-w-[150px] md:max-w-[200px] object-contain opacity-70 hover:opacity-100 transition-opacity"
+                />
+              </div>
+            ))}
           </div>
         ))}
       </motion.div>

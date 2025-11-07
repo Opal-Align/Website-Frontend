@@ -1,15 +1,16 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useState } from "react";
-const TripleDots = () => {
+const TripleDots = ({ onClick }) => {
   const [isHovered, setIsHovered] = useState(false);
   return (
     <div>
       <motion.button
-        className="w-10 h-10 flex items-center justify-center rounded-full relative overflow-hidden"
+        className="w-10 h-10 flex items-center justify-center rounded-full relative overflow-hidden cursor-pointer"
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
         whileTap={{ scale: 0.95 }}
+        onClick={onClick}
       >
         {/* White background that scales from center */}
         <motion.div

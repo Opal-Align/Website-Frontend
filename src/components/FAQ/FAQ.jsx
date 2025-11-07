@@ -40,7 +40,7 @@ function FAQItem({ faq, isOpen, onToggle }) {
     <div className="border-b border-gray-200 last:border-b-0">
       <button
         onClick={onToggle}
-        className="w-full py-6 md:py-8 flex items-start justify-between gap-6 text-left transition-colors"
+        className="w-full py-6 md:py-8 flex items-start justify-between gap-6 text-left transition-colors cursor-pointer"
       >
         <h3 className="text-lg md:text-xl font-medium text-gray-900 flex-1 text-left">
           {faq.question}
@@ -82,16 +82,14 @@ function FAQItem({ faq, isOpen, onToggle }) {
 }
 
 export default function FAQ() {
-  const [openIds, setOpenIds] = useState([3]); // Default: third item open
+  const [openId, setOpenId] = useState(null);
 
   const toggleFAQ = (id) => {
-    setOpenIds((prev) =>
-      prev.includes(id) ? prev.filter((openId) => openId !== id) : [...prev, id]
-    );
+    setOpenId((prev) => (prev === id ? null : id));
   };
 
   return (
-    <div className="min-h-9/10 bg-white py-16 md:py-24 mb-8">
+    <div id="faq" className="min-h-9/10 bg-white py-16 md:py-24 mb-8">
       <div className="max-w-9/10 mx-auto px-4 sm:px-6 md:px-8">
         {/* Header */}
         <motion.div
@@ -123,7 +121,7 @@ export default function FAQ() {
             <FAQItem
               key={faq.id}
               faq={faq}
-              isOpen={openIds.includes(faq.id)}
+              isOpen={openId === faq.id}
               onToggle={() => toggleFAQ(faq.id)}
             />
           ))}

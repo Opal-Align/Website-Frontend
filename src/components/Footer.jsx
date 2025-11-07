@@ -200,10 +200,10 @@ export default function Footer() {
             <div id="footer-contact-form" className="space-y-6 md:space-y-8">
               <div className="space-y-2">
                 <h2 className="text-white text-base md:text-lg font-medium">
-                  Request your invitation today before slots fill up.
+                  Due to high demand, demo availability is limited.
                 </h2>
                 <p className="text-white/50 text-xs md:text-sm">
-                  Due to high demand, demo availability is limited.
+                  Request your invitation today before slots fill up.
                 </p>
               </div>
               <div className="h-10 md:h-12 w-12 border-t border-white/30" />
@@ -337,7 +337,7 @@ export default function Footer() {
                   className={`w-full md:w-auto px-6 md:px-8 py-3 border rounded-full flex items-center justify-center md:justify-start gap-3 transition-all ${
                     isFormValid()
                       ? "border-white/30 text-white hover:bg-white hover:text-black cursor-pointer"
-                      : "border-white/20 text-white/40 cursor-not-allowed opacity-50"
+                      : "border-white/30 text-white cursor-not-allowed opacity-50"
                   }`}
                   whileHover={isFormValid() ? { scale: 1.05 } : {}}
                   whileTap={isFormValid() ? { scale: 0.95 } : {}}
@@ -348,6 +348,30 @@ export default function Footer() {
                     <span className="w-2 h-2 bg-current rounded-full"></span>
                   </span>
                 </motion.button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Footer Line */}
+        <div className="relative z-10 border-t border-white/10 bg-black/40">
+          <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-16 py-4 md:py-6">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-8 text-white/60 text-xs md:text-sm">
+              {/* Left: Copyright */}
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4">
+                {/* <span>© 2025</span>
+                <span className="hidden md:inline">•</span> */}
+                <span>OPAL gOS</span>
+              </div>
+
+              {/* Center: Policy Links */}
+              <div className="flex flex-wrap items-center gap-4 md:gap-6">
+                <a
+                  href="#privacy"
+                  className="hover:text-white transition-colors"
+                >
+                  Privacy Policy
+                </a>
               </div>
             </div>
           </div>

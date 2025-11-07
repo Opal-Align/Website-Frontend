@@ -40,7 +40,7 @@ const HomePage = () => {
   }, []);
 
   return (
-    <div className="h-screen overflow-hidden relative">
+    <div className="h-screen overflow-hidden relative w-full">
       {/* Video Background - Fixed to viewport height */}
       <div className="absolute inset-0">
         <video

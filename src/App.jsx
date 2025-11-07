@@ -10,7 +10,7 @@ import FAQ from "./components/FAQ/FAQ";
 import LogoStream from "./components/LogoStream/LogoStream";
 function App() {
   return (
-    <>
+    <div className="overflow-x-hidden w-full">
       <div className="h-screen overflow-hidden">
         <HomePage />
         <Navbar />
@@ -36,7 +36,7 @@ function App() {
         </div>
         <Footer />
       </div>
-    </>
+    </div>
   );
 }
 

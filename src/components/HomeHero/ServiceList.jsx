@@ -28,11 +28,11 @@ export default function ServicesList({ items = [] }) {
               ],
             }}
             transition={{
-              duration: 0.8,
+              duration: 1,
               repeat: Infinity,
-              delay: idx * 0.4,
+              delay: idx * 0.8,
               ease: "easeInOut",
-              repeatDelay: 1.2,
+              repeatDelay: 2,
             }}
           />
         </div>

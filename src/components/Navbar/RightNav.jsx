@@ -2,8 +2,8 @@ import React from "react";
 import { useState, useEffect } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
-import TripleDots from "../TripleDots";
-const RightNav = () => {
+import TripleDots from "./TripleDots";
+const RightNav = ({ onMenuClick }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isLargeScreen, setIsLargeScreen] = useState(true);
   useEffect(() => {
@@ -27,7 +27,7 @@ const RightNav = () => {
               const footer = document.getElementById("footer-contact-form");
               footer?.scrollIntoView({ behavior: "smooth", block: "start" });
             }}
-            className="pl-8 pr-6 py-2.5 bg-white/10 flex items-center gap-8 hover:bg-white/20 backdrop-blur-sm text-white font-medium rounded-full border border-white/20 transition-all duration-2000"
+            className="pl-8 pr-6 py-2.5 bg-white/10 flex items-center gap-8 hover:bg-white/20 backdrop-blur-sm text-white font-medium rounded-full border border-white/20 transition-all duration-2000 cursor-pointer"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onHoverStart={() => setIsHovered(true)}
@@ -109,7 +109,7 @@ const RightNav = () => {
       )}
 
       {/* Three Dots Menu Icon - Always visible */}
-      <TripleDots />
+      <TripleDots onClick={onMenuClick} />
     </div>
   );
 };

@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
-import TripleDots from "../TripleDots";
+import TripleDots from "./TripleDots";
 import RightNav from "./RightNav";
-import logoImage from "../../assets/opal-gos.png";
+import NavigationOverlay from "./NavigationOverlay";
+import logoImage from "../../assets/opal-gos.svg";
 export default function Navbar() {
   // State to track if navbar should be hidden
   const [hidden, setHidden] = useState(false);
   // State to track if initial animation has completed
   const [hasAnimated, setHasAnimated] = useState(false);
+  // State to track navigation overlay
+  const [isNavOpen, setIsNavOpen] = useState(false);
   const { scrollY } = useScroll();
 
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -71,7 +74,7 @@ export default function Navbar() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent relative">
+    <div className="min-h-screen relative bg-transparent">
       {/* Animated Navbar */}
       <motion.nav
         variants={navbarVariants}
@@ -80,7 +83,7 @@ export default function Navbar() {
         className="fixed top-0 left-0 right-0 z-50"
       >
         {/* Navbar container with glassmorphism effect */}
-        <div className="px-8 py-4 shadow-2xl">
+        <div className="px-8 py-4 shadow-xl">
           <div className="flex items-center justify-between">
             {/* LEFT SIDE: Brand Logo */}
             <motion.div
@@ -91,7 +94,7 @@ export default function Navbar() {
               <motion.img
                 src={logoImage}
                 alt="gOS Logo"
-                className="h-10 md:h-12 w-auto"
+                className="h-10 md:h-12 w-auto mix-blend-screen"
                 variants={{
                   hover: {
                     rotate: 360,
@@ -124,12 +127,16 @@ export default function Navbar() {
             </motion.div>
 
             {/* RIGHT SIDE: Profile + Contact Now + Menu Dots */}
-            <RightNav />
+            <RightNav onMenuClick={() => setIsNavOpen(true)} />
           </div>
         </div>
       </motion.nav>
 
-      {/* Demo Content for Scrolling */}
+      {/* Navigation Overlay */}
+      <NavigationOverlay
+        isOpen={isNavOpen}
+        onClose={() => setIsNavOpen(false)}
+      />
     </div>
   );
 }
