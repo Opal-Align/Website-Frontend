@@ -178,44 +178,6 @@ const NavigationOverlay = ({ isOpen, onClose }) => {
                 </motion.button>
               ))}
             </div>
-
-            {/* Bottom Section */}
-            <div className="flex items-end justify-between px-8 py-6">
-              {/* Email - Bottom Center */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ duration: 0.5, delay: 0.7 }}
-                className="flex-1 flex justify-center"
-              >
-                <a
-                  href="mailto:hello@astragency.com"
-                  className="text-white/60 hover:text-white text-base md:text-lg transition-colors"
-                >
-                  hello@astragency.com
-                </a>
-              </motion.div>
-
-              {/* BUY 'ASTRA' Button - Bottom Right */}
-              <motion.button
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.5, delay: 0.7 }}
-                className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-md text-white flex items-center gap-2 transition-colors border border-white/20"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <span className="text-sm md:text-base font-medium">
-                  BUY "ASTRA"
-                </span>
-                <div className="flex gap-1">
-                  <span className="w-1.5 h-1.5 bg-white/60 rounded-full"></span>
-                  <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-                </div>
-              </motion.button>
-            </div>
           </motion.div>
         </>
       )}
