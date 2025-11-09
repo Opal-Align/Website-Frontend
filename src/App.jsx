@@ -1,13 +1,12 @@
 import "./App.css";
 import Navbar from "./components/Navbar/Navbar";
 import HomePage from "./components/HomePage";
-import StatsSection from "./components/Info/StatsSection";
-import ContactForm from "./components/Form/ContactForm";
 import Services from "./components/Info/Services";
-import UserData from "./components/Info/UserData";
 import Footer from "./components/Footer";
-import FAQ from "./components/FAQ/FAQ";
 import LogoStream from "./components/LogoStream/LogoStream";
+import gosInActionServices from "./Content/gosInAction.jsx";
+import whoWeServeServices from "./Content/whoWeServe.jsx";
+
 function App() {
   return (
     <div className="overflow-x-hidden w-full">
@@ -19,7 +18,11 @@ function App() {
         <StatsSection />
       </div> */}
       <div>
-        <Services />
+        <Services
+          services={gosInActionServices}
+          title="OPAL gOS in Action"
+          sectionId="gos-in-action"
+        />
       </div>
       <div>
         <LogoStream />
@@ -31,9 +34,13 @@ function App() {
         <ContactForm />
       </div> */}
       <div>
-        <div>
-          <FAQ />
-        </div>
+        <Services
+          services={whoWeServeServices}
+          title="Who We Support"
+          sectionId="faq"
+        />
+      </div>
+      <div>
         <Footer />
       </div>
     </div>
@@ -42,7 +49,6 @@ function App() {
 
 export default App;
 
-//  export default function App() {
 //   const [currentPage, setCurrentPage] = useState(0);
 //   const [direction, setDirection] = useState("down");
 //   const [isTransitioning, setIsTransitioning] = useState(false);

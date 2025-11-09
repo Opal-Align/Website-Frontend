@@ -3,134 +3,6 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ScrollingWords from "./ScrollingWords";
 
-const Services = () => {
-  return (
-    <div className="min-h-screen bg-black text-white py-16">
-      <div className="max-w-7xl mx-8 px-4 sm:px-6 md:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-[1fr,auto] gap-x-8 md:gap-x-16 gap-y-10 md:gap-y-24">
-          {/* Branding and Identity */}
-          <div className="col-span-1">
-            <motion.h2
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              className="text-3xl md:text-4xl font-bold"
-            >
-              Branding and Identity
-            </motion.h2>
-          </div>
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            className="flex items-center gap-4 md:justify-start"
-          >
-            <span className="text-3xl md:text-5xl font-bold">12</span>
-            <span className="text-gray-400">Projects</span>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              className="ml-6 md:ml-8 w-10 h-10 rounded-full border border-white/20 flex items-center justify-center"
-            >
-              +
-            </motion.button>
-          </motion.div>
-          <div className="md:col-start-2 text-gray-400 max-w-md">
-            We define your voice, visuals, and vision to help your brand connect
-            and thrive.
-          </div>
-
-          {/* UI/UX and Product Design */}
-          <div className="col-span-1">
-            <motion.h2
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              className="text-3xl md:text-4xl font-bold"
-            >
-              UI/UX and Product Design
-            </motion.h2>
-          </div>
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            className="flex items-center gap-4 md:justify-start"
-          >
-            <span className="text-3xl md:text-5xl font-bold">12</span>
-            <span className="text-gray-400">Projects</span>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              className="ml-6 md:ml-8 w-10 h-10 rounded-full border border-white/20 flex items-center justify-center"
-            >
-              +
-            </motion.button>
-          </motion.div>
-          <div className="md:col-start-2 text-gray-400 max-w-md">
-            Human-centered design that turns complex ideas into elegant user
-            experiences.
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const services = [
-  {
-    id: 1,
-    number: "/01",
-    title: "Stop Managing Solutions &",
-    secondaryTitle: "Start Gaining",
-    description: "One Platform » One Workflow » Zero Complexity",
-    scrollingComponent: (
-      <>
-        <ScrollingWords
-          words={["Margins", "Control", "Advantage", "Accountability"]}
-        />
-      </>
-    ),
-    expandedDescription:
-      "gOS is the first guided operating system that replaces your fragmented point solutions with a simple unified interface delivering measurable gains on day one.",
-
-    hasImage: false,
-    alignRight: true,
-  },
-  {
-    id: 2,
-    number: "/02",
-    title: "From Zero to Results",
-    description: "Day 1 Adoption » Day 1 Impact",
-    expandedDescription:
-      "With zero training and under 10 minutes using gOS, a practice recovered $1,500 in delinquent patient balances. gOS guided every action toward maximum margins. No complexity. Just results.",
-
-    hasImage: false,
-    alignRight: false,
-  },
-  {
-    id: 3,
-    number: "/03",
-    title: "Social Media Marketing",
-    description:
-      "We turn followers into fans with standout content and strategy.",
-    subservices: "Content Strategy, Social Campaigns, Community Management",
-    projects: ["Lummi", "Sonoma", "LINX", "+ 11"],
-    projectCount: 25,
-    hasImage: true,
-    alignRight: true,
-  },
-  {
-    id: 4,
-    number: "/04",
-    title: "SEO Optimization",
-    description:
-      "Tailored SEO solutions that improve rankings, and increase clicks.",
-    projectCount: 17,
-    alignRight: false,
-  },
-];
-
 function ServiceItem({ service, isOpen, onToggle }) {
   return (
     <motion.div
@@ -140,12 +12,12 @@ function ServiceItem({ service, isOpen, onToggle }) {
       transition={{ duration: 0.6, ease: "easeOut" }}
       className={`relative flex justify-${
         service.alignRight ? "end" : "start"
-      }`}
+      } w-full overflow-hidden`}
     >
       <motion.div
         className={`relative flex justify-${
           service.alignRight ? "end" : "start"
-        }`}
+        } w-full max-w-full overflow-hidden`}
         initial={false}
         animate={{
           backgroundColor: isOpen ? "#f9f9f9" : "#ffffff",
@@ -171,7 +43,7 @@ function ServiceItem({ service, isOpen, onToggle }) {
         </motion.div>
         <button
           onClick={onToggle}
-          className={`py-8 md:py-12 px-4 sm:px-6 md:px-8 text-left transition-all duration-500 border-grey border-t w-full max-w-[1100px] cursor-pointer
+          className={`py-6 sm:py-8 md:py-12 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 text-left transition-all duration-500 border-grey border-t w-full md:max-w-[1100px] cursor-pointer overflow-hidden
         }`}
         >
           <AnimatePresence mode="wait">
@@ -182,40 +54,45 @@ function ServiceItem({ service, isOpen, onToggle }) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className={`grid grid-cols-1 md:grid-cols-[2fr_1.5fr_auto_auto] items-start gap-y-6 md:gap-y-0 gap-x-6 md:gap-x-12 ${
+                className={`grid grid-cols-1 md:grid-cols-[2fr_1.5fr_auto_auto] items-start gap-y-6 md:gap-y-0 gap-x-4 sm:gap-x-6 md:gap-x-8 lg:gap-x-12 ${
                   service.alignRight ? "direction-rtl text-right" : ""
                 }`}
               >
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1 min-w-0 w-full">
                   <h4
-                    className={`text-2xl font-semibold tracking-tight leading-none ${
+                    className={`text-lg sm:text-xl md:text-2xl font-semibold tracking-tight leading-none m-0 break-words ${
                       service.alignRight
                         ? "text-right [direction:ltr]"
                         : "text-left"
                     }`}
                   >
-                    <span className="inline">{service.title}</span>
+                    {service.title}
                   </h4>
                   {service.secondaryTitle && (
-                    <div
-                      className={`text-2xl font-semibold tracking-tight leading-tight flex items-baseline gap-2 ${
+                    <h4
+                      className={`text-lg sm:text-xl md:text-2xl font-semibold tracking-tight leading-tight m-0 ${
                         service.alignRight
-                          ? "text-right [direction:ltr] justify-end"
+                          ? "text-right [direction:ltr]"
                           : "text-left"
                       }`}
                     >
-                      <span>{service.secondaryTitle}</span>
-                      {service.scrollingComponent && (
-                        <span className="inline">
-                          {service.scrollingComponent}
-                        </span>
-                      )}
-                    </div>
+                      <span className="inline-flex items-baseline gap-1 sm:gap-2 whitespace-nowrap">
+                        <span>{service.secondaryTitle}</span>
+                        {service.scrollingComponent && (
+                          <>
+                            <span className="inline">
+                              {service.scrollingComponent}
+                            </span>
+                            <span className="inline-block md:w-2"></span>
+                          </>
+                        )}
+                      </span>
+                    </h4>
                   )}
                 </div>
 
-                <div className="max-w-prose">
-                  <p className="text-lg text-gray-600 mb-0">
+                <div className="max-w-prose min-w-0 overflow-hidden w-full">
+                  <p className="text-[13px] sm:text-sm md:text-base lg:text-lg text-gray-600 mb-0 break-words">
                     {service.description}
                   </p>
                 </div>
@@ -265,27 +142,29 @@ function ServiceItem({ service, isOpen, onToggle }) {
                   {/* TITLE + DESC */}
                   <div className="flex-1 min-w-[240px] space-y-4">
                     <div className="flex flex-col gap-1">
-                      <h4 className="text-2xl md:text-3xl font-bold leading-tight">
+                      <h4 className="text-2xl md:text-3xl font-bold leading-tight m-0">
                         {service.title}
                       </h4>
                       {service.secondaryTitle && (
-                        <div
-                          className={`text-2xl md:text-3xl font-bold leading-tight flex items-baseline gap-2 ${
+                        <h4
+                          className={`text-2xl md:text-3xl font-bold leading-tight m-0 ${
                             service.alignRight
-                              ? "text-right [direction:ltr] justify-end"
+                              ? "text-right [direction:ltr]"
                               : "text-left"
                           }`}
                         >
-                          <span>{service.secondaryTitle}</span>
-                          {service.scrollingComponent && (
-                            <span className="inline">
-                              {service.scrollingComponent}
-                            </span>
-                          )}
-                        </div>
+                          <span className="inline-flex items-baseline gap-2 whitespace-nowrap">
+                            <span>{service.secondaryTitle}</span>
+                            {service.scrollingComponent && (
+                              <span className="inline">
+                                {service.scrollingComponent}
+                              </span>
+                            )}
+                          </span>
+                        </h4>
                       )}
                     </div>
-                    <p className="text-lg text-gray-700 leading-relaxed">
+                    <p className="text-[13px] sm:text-sm md:text-base lg:text-lg text-gray-700 leading-relaxed overflow-hidden min-w-0">
                       {service.description}
                     </p>
                     {service.expandedDescription && (
@@ -348,21 +227,26 @@ function ServiceItem({ service, isOpen, onToggle }) {
   );
 }
 
-export default function ServicesAccordion() {
-  const [openIds, setOpenIds] = useState([1]);
+export default function ServicesAccordion({
+  services = [],
+  title = "Services",
+  sectionId = "services",
+}) {
+  const [openId, setOpenId] = useState(null);
 
   const toggleService = (id) => {
-    setOpenIds((prev) =>
-      prev.includes(id) ? prev.filter((openId) => openId !== id) : [...prev, id]
-    );
+    setOpenId((prev) => (prev === id ? null : id));
   };
 
   return (
-    <div id="gos-in-action" className="min-h-screen bg-white py-8">
-      <div className="max-w-9/10 mx-auto px-4 sm:px-6 md:px-8">
+    <div
+      id={sectionId}
+      className="min-h-screen bg-white py-8 overflow-x-hidden"
+    >
+      <div className="max-w-9/10 mx-auto px-3 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="mb-8 md:mb-12 text-center">
           <h3 className="text-3xl md:text-4xl lg:text-8xl font-bold">
-            OPAL gOS in Action
+            {title}
           </h3>
         </div>
 
@@ -371,7 +255,7 @@ export default function ServicesAccordion() {
             <ServiceItem
               key={service.id}
               service={service}
-              isOpen={openIds.includes(service.id)}
+              isOpen={openId === service.id}
               onToggle={() => toggleService(service.id)}
             />
           ))}

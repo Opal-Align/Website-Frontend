@@ -31,36 +31,42 @@ export default function LogoStream() {
       <div className="absolute top-0 right-0 w-12 md:w-32 h-full bg-linear-to-l from-white to-transparent z-10"></div>
 
       {/* Looping Row */}
-      <motion.div
-        className="flex items-center justify-center gap-12 md:gap-16 whitespace-nowrap px-4 md:px-0"
-        animate={{ x: ["0%", "-50%"] }}
-        transition={{
-          ease: "linear",
-          duration: 20,
-          repeat: Infinity,
-        }}
-      >
-        {/* Duplicate content twice for seamless loop */}
-        {[...Array(2)].map((_, index) => (
-          <div
-            key={index}
-            className="flex items-center justify-center gap-12 md:gap-16 px-6 md:px-12"
-          >
-            {logos.map((logo, logoIndex) => (
-              <div
-                key={`${index}-${logoIndex}`}
-                className="flex items-center justify-center min-w-[120px] md:min-w-[180px]"
-              >
-                <img
-                  src={logo}
-                  alt={`Logo ${logoIndex + 1}`}
-                  className="h-12 md:h-16 w-auto max-w-[150px] md:max-w-[200px] object-contain opacity-70 hover:opacity-100 transition-opacity"
-                />
-              </div>
-            ))}
-          </div>
-        ))}
-      </motion.div>
+      <div className="flex overflow-hidden w-full">
+        <motion.div
+          className="flex items-center gap-12 md:gap-16 whitespace-nowrap"
+          animate={{ x: ["0%", "-20%"] }}
+          transition={{
+            ease: "linear",
+            duration: 20,
+            repeat: Infinity,
+            repeatType: "loop",
+          }}
+          style={{
+            willChange: "transform",
+          }}
+        >
+          {/* Duplicate content 4 times for seamless loop */}
+          {[...Array(5)].map((_, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-12 md:gap-16 px-6 md:px-12 shrink-0"
+            >
+              {logos.map((logo, logoIndex) => (
+                <div
+                  key={`${index}-${logoIndex}`}
+                  className="flex items-center justify-center min-w-[120px] md:min-w-[180px] shrink-0"
+                >
+                  <img
+                    src={logo}
+                    alt={`Logo ${logoIndex + 1}`}
+                    className="h-12 md:h-16 w-auto max-w-[150px] md:max-w-[200px] object-contain opacity-70 hover:opacity-100 transition-opacity"
+                  />
+                </div>
+              ))}
+            </div>
+          ))}
+        </motion.div>
+      </div>
     </div>
   );
 }

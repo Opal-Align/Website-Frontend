@@ -2,40 +2,34 @@ import { useState } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 
-const faqData = [
+const whoWeServeData = [
   {
     id: 1,
-    question: "How long does a typical project take?",
-    answer:
-      "Project timelines vary depending on scope and complexity. A branding project typically takes 4-6 weeks, while a full website design and development can take 8-12 weeks. We'll provide a detailed timeline during our initial consultation.",
+    title: "Clinician-led Practices",
+    description:
+      "gOS helps independent, provider-led practices bring order and clarity to their operations. By unifying financial, clinical, and administrative data into one intuitive system, practices can effortlessly understand performance, uncover opportunities, and act with confidence. What once required manual reports or outside analysis is now simplified, giving providers the control and insight to focus more on care and less on coordination.",
   },
   {
     id: 2,
-    question: "Do you offer branding packages?",
-    answer:
-      "Yes, we offer comprehensive branding packages that include logo design, brand guidelines, color palettes, typography selection, and visual identity systems. Each package is customized to meet your specific business needs.",
+    title: "Multi-location Groups",
+    description:
+      "For growing organizations managing multiple offices, gOS creates a single source of truth that connects every location in real time. Leaders gain visibility into financial, clinical, and operational performance across the network, eliminating silos and ensuring consistent standards of excellence. With everything aligned—teams, data, and workflows—multi-site practices can scale efficiently while maintaining cohesion and quality.",
   },
   {
     id: 3,
-    question: "Can you work with my existing brand style?",
-    answer:
-      "Definitely. We can adapt to your existing brand identity, help you evolve it, or completely refresh it — depending on what your business needs most.",
+    title: "Emerging DSOs & MSOs",
+    description:
+      "gOS equips emerging DSOs and MSOs with the infrastructure to grow intelligently. It transforms scattered systems into one harmonized ecosystem, providing clarity across financial and clinical dimensions while standardizing operations network-wide. As new locations come online, leaders can measure performance, ensure consistency, and scale with confidence—building a foundation for sustainable growth rooted in alignment.",
   },
   {
     id: 4,
-    question: "What industries do you specialize in?",
-    answer:
-      "We work with a wide range of industries, but we specialize in creative businesses, tech startups, lifestyle brands, and modern service companies who value design-driven growth.",
-  },
-  {
-    id: 5,
-    question: "Do you provide ongoing website support?",
-    answer:
-      "Yes, we offer ongoing support and maintenance packages after launch. Whether it's updates, performance checks, or small design tweaks — we're here to keep your website fresh and functional.",
+    title: "Established Practices",
+    description:
+      "For mature practices poised for expansion, gOS brings the clarity and structure needed to scale without losing precision. The platform centralizes insight across departments and teams, turning operational complexity into coordinated action. By connecting data, people, and processes through one unified lens, established practices gain the agility and confidence to grow strategically while preserving the quality and integrity that define their success.",
   },
 ];
 
-function FAQItem({ faq, isOpen, onToggle }) {
+function WhoWeServeItem({ item, isOpen, onToggle }) {
   return (
     <div className="border-b border-gray-200 last:border-b-0">
       <button
@@ -43,7 +37,7 @@ function FAQItem({ faq, isOpen, onToggle }) {
         className="w-full py-6 md:py-8 flex items-start justify-between gap-6 text-left transition-colors cursor-pointer"
       >
         <h3 className="text-lg md:text-xl font-medium text-gray-900 flex-1 text-left">
-          {faq.question}
+          {item.title}
         </h3>
         <motion.div
           animate={{ rotate: isOpen ? 45 : 0 }}
@@ -71,7 +65,7 @@ function FAQItem({ faq, isOpen, onToggle }) {
               className="pb-6 md:pb-8"
             >
               <p className="text-base md:text-lg text-gray-600 leading-relaxed text-left">
-                {faq.answer}
+                {item.description}
               </p>
             </motion.div>
           </motion.div>
@@ -84,7 +78,7 @@ function FAQItem({ faq, isOpen, onToggle }) {
 export default function FAQ() {
   const [openId, setOpenId] = useState(null);
 
-  const toggleFAQ = (id) => {
+  const toggleItem = (id) => {
     setOpenId((prev) => (prev === id ? null : id));
   };
 
@@ -99,17 +93,12 @@ export default function FAQ() {
           transition={{ duration: 0.6 }}
           className="mb-12 md:mb-16 text-center"
         >
-          <div className="flex items-center justify-center gap-4 mb-8"></div>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
-            Frequently Asked Questions
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900">
+            Who We Serve
           </h2>
-          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
-            Behind every project, the thinking that fuels Astra's creative
-            process.
-          </p>
         </motion.div>
 
-        {/* FAQ Accordion */}
+        {/* Who We Serve Accordion */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -117,12 +106,12 @@ export default function FAQ() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="bg-white"
         >
-          {faqData.map((faq) => (
-            <FAQItem
-              key={faq.id}
-              faq={faq}
-              isOpen={openId === faq.id}
-              onToggle={() => toggleFAQ(faq.id)}
+          {whoWeServeData.map((item) => (
+            <WhoWeServeItem
+              key={item.id}
+              item={item}
+              isOpen={openId === item.id}
+              onToggle={() => toggleItem(item.id)}
             />
           ))}
         </motion.div>

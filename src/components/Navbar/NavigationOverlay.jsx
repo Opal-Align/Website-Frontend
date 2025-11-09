@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const NavigationOverlay = ({ isOpen, onClose }) => {
-  const navItems = ["Home", "gOS in Action", "FAQ", "Contact Us"];
+  const navItems = ["Home", "gOS in Action", "Who We Serve", "Contact Us"];
   const scrollPositionRef = useRef(0);
 
   // Map navigation items to their target selectors
@@ -12,7 +12,7 @@ const NavigationOverlay = ({ isOpen, onClose }) => {
         return null; // Scroll to top
       case "gOS in Action":
         return "#gos-in-action";
-      case "FAQ":
+      case "Who We Serve":
         return "#faq";
       case "Contact Us":
         return "#footer-contact-form";
@@ -167,11 +167,9 @@ const NavigationOverlay = ({ isOpen, onClose }) => {
                     delay: 0.2 + index * 0.1,
                     ease: "easeOut",
                   }}
-                  className={`text-4xl md:text-6xl lg:text-7xl font-bold transition-colors cursor-pointer bg-transparent border-none ${
-                    item === "Agency"
-                      ? "text-white"
-                      : "text-white/60 hover:text-white"
-                  }`}
+                  className={`text-white/60 hover:text-white text-4xl md:text-6xl lg:text-7xl font-bold transition-colors cursor-pointer bg-transparent border-none ${
+                    item === "Contact Us" ? "block sm:hidden" : ""
+                  } `}
                   whileHover={{ scale: 1.05 }}
                 >
                   {item}

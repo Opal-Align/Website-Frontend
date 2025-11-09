@@ -5,10 +5,9 @@ export default function PlanetOrbit() {
   return (
     <motion.div
       className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-      initial={{ x: -600, y: -80, opacity: 0 }}
-      animate={{ x: [-600, -200], y: -80, opacity: 1 }}
-      transition={{ duration: 1.5, delay: 0.6, ease: "linear" }}
-      style={{ willChange: "transform" }}
+      initial={{ opacity: 0, x: -150, y: -80 }}
+      animate={{ opacity: 1, x: -150, y: -80 }}
+      transition={{ duration: 1.5, delay: 0.6, ease: "easeOut" }}
     >
       {/* Planet */}
       <div className="relative">
@@ -40,7 +39,7 @@ export default function PlanetOrbit() {
           duration: 8,
           repeat: Infinity,
           ease: "linear",
-          delay: 3.1,
+          delay: 2,
         }}
         style={{
           left: "50%",
