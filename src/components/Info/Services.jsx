@@ -43,7 +43,7 @@ function ServiceItem({ service, isOpen, onToggle }) {
         </motion.div>
         <button
           onClick={onToggle}
-          className={`py-6 sm:py-8 md:py-12 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 text-left transition-all duration-500 border-grey border-t w-full md:max-w-[1100px] cursor-pointer overflow-hidden
+          className={`py-6 sm:py-8 md:py-12 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12 text-left transition-all duration-500 border-grey border-t w-full md:max-w-[1100px] cursor-pointer overflow-visible
         }`}
         >
           <AnimatePresence mode="wait">
@@ -54,13 +54,13 @@ function ServiceItem({ service, isOpen, onToggle }) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className={`grid grid-cols-1 md:grid-cols-[2fr_1.5fr_auto_auto] items-start gap-y-6 md:gap-y-0 gap-x-4 sm:gap-x-6 md:gap-x-8 lg:gap-x-12 ${
+                className={`grid grid-cols-1 md:grid-cols-[2fr_2fr_auto_auto] items-start gap-y-6 md:gap-y-0 gap-x-4 sm:gap-x-6 md:gap-x-8 lg:gap-x-12 ${
                   service.alignRight ? "direction-rtl text-right" : ""
                 }`}
               >
                 <div className="flex flex-col gap-1 min-w-0 w-full">
                   <h4
-                    className={`text-lg sm:text-xl md:text-2xl font-semibold tracking-tight leading-none m-0 break-words ${
+                    className={`text-lg sm:text-xl md:text-2xl font-semibold tracking-tight leading-none m-0 wrap-break-word ${
                       service.alignRight
                         ? "text-right [direction:ltr]"
                         : "text-left"
@@ -91,8 +91,8 @@ function ServiceItem({ service, isOpen, onToggle }) {
                   )}
                 </div>
 
-                <div className="max-w-prose min-w-0 overflow-hidden w-full">
-                  <p className="text-[13px] sm:text-sm md:text-base lg:text-lg text-gray-600 mb-0 break-words">
+                <div className="min-w-0 w-full overflow-visible">
+                  <p className="text-[13px] sm:text-sm md:text-base lg:text-lg text-gray-600 mb-0">
                     {service.description}
                   </p>
                 </div>

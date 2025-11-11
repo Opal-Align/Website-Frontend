@@ -76,7 +76,7 @@ export default function Footer() {
     );
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Mark all fields as touched
@@ -94,6 +94,33 @@ export default function Footer() {
     // Only submit if no errors
     if (Object.values(newErrors).every((error) => error === "")) {
       console.log("Form submitted:", formData);
+      e.preventDefault();
+
+      const submittedFormData = new FormData();
+      submittedFormData.append("name", formData.name);
+      submittedFormData.append("email", formData.email);
+      submittedFormData.append("company", formData.company);
+      submittedFormData.append("website", formData.website);
+
+      try {
+        const response = await fetch(
+          "https://formsubmit.co/suyashs@opalalign.com",
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        if (response.ok) {
+          alert("Message sent successfully!");
+          e.target.reset();
+        } else {
+          alert("Something went wrong. Please try again.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Error sending message");
+      }
       // Handle form submission
     }
   };
@@ -203,7 +230,7 @@ export default function Footer() {
                   Due to high demand, demo availability is limited.
                 </h2>
                 <p className="text-white/50 text-xs md:text-sm">
-                  Request your invitation today before slots fill up.
+                  Request your invitation now before slots fill up.
                 </p>
               </div>
               <div className="h-10 md:h-12 w-12 border-t border-white/30" />
@@ -342,7 +369,7 @@ export default function Footer() {
                   whileHover={isFormValid() ? { scale: 1.05 } : {}}
                   whileTap={isFormValid() ? { scale: 0.95 } : {}}
                 >
-                  <span>Apply Now</span>
+                  <span>Join Today</span>
                   <span className="flex gap-1.5">
                     <span className="w-2 h-2 bg-current rounded-full"></span>
                     <span className="w-2 h-2 bg-current rounded-full"></span>

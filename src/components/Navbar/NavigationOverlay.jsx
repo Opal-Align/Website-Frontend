@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const NavigationOverlay = ({ isOpen, onClose }) => {
-  const navItems = ["Home", "gOS in Action", "Who We Serve", "Contact Us"];
+  const navItems = ["Home", "gOS in Action", "Who We Guide", "Contact Us"];
   const scrollPositionRef = useRef(0);
 
   // Map navigation items to their target selectors
@@ -12,7 +12,7 @@ const NavigationOverlay = ({ isOpen, onClose }) => {
         return null; // Scroll to top
       case "gOS in Action":
         return "#gos-in-action";
-      case "Who We Serve":
+      case "Who We Guide":
         return "#faq";
       case "Contact Us":
         return "#footer-contact-form";

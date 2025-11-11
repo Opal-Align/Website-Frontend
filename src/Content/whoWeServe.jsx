@@ -3,7 +3,7 @@ const whoWeServeServices = [
     id: 1,
     title: "Independent Providers",
     description:
-      "Enterprise-level intelligence. Independent-practice simplicity.",
+      "Enterprise level intelligence. Independent practice simplicity.",
     expandedDescription:
       "gOS identifies where margins are leaking and guides your team to high-value actions to fix them. Maximize margins with the systems and staff you already have.",
     hasImage: false,

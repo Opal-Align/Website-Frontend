@@ -36,7 +36,7 @@ function App() {
       <div>
         <Services
           services={whoWeServeServices}
-          title="Who We Support"
+          title="Who We Guide"
           sectionId="faq"
         />
       </div>
