@@ -367,7 +367,7 @@ export default function Footer() {
               {/* Center: Policy Links */}
               <div className="flex flex-wrap items-center gap-4 md:gap-6">
                 <a
-                  href="#privacy"
+                  href="https://opalalign.com/privacy-policy"
                   className="hover:text-white transition-colors"
                 >
                   Privacy Policy

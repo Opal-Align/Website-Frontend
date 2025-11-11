@@ -29,20 +29,20 @@ const services = [
   },
   {
     id: 2,
-    title: "From Zero to Results",
-    description: "Day 1 Adoption » Day 1 Impact",
+    title: "No PhDs or MBAs Needed",
+    description: "Turn on gOS >> Follow the guidance >> Get results",
     expandedDescription:
-      "With zero training and under 10 minutes using gOS, a practice recovered $1,500 in delinquent patient balances. gOS guided every action toward maximum margins. No complexity. Just results.",
+      "Solutions should not require extensive training and advanced degrees. gOS guides actions that yield the highest margins, regardless of experience.",
 
     hasImage: false,
     alignRight: false,
   },
   {
     id: 3,
-    title: "Powering Every Provider-Led Practice",
-    description: "Unified Care. Universal Impact.",
+    title: "From Zero to Results",
+    description: "Day 1 Adoption » Day 1 Impact",
     expandedDescription:
-      "gOS brings scheduling, production, and collections into one guided system — tailored for any provider-driven business. Whether it’s dental, veterinary, or ophthalmology, teams gain clarity, reduce friction, and act on what matters most. One workflow, limitless scalability.​",
+      "With zero training and under 10 minutes using gOS, a practice recovered $1,500 in delinquent patient balances. gOS guided every action toward maximum margins. No complexity. Just results.",
 
     hasImage: false,
     alignRight: true,
@@ -50,8 +50,11 @@ const services = [
   {
     id: 4,
 
-    title: "SEO Optimization",
-    description: "Tailored SEO solutions that ",
+    title: "Don't Switch. Don't Migrate. Just Connect.",
+    description: "gOS is Interoperable Out of the Box ",
+    expandedDescription:
+      "gOS integrates with industry leading clinical and practice management systems. Keep your systems. Plug in gOS. Start gaining immediately.",
+
     alignRight: false,
   },
 ];
