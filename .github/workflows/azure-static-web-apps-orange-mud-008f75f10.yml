@@ -32,6 +32,14 @@ jobs:
           # Add your HubSpot environment variables here or set them in Azure Portal
           VITE_HUBSPOT_PORTAL_ID: ${{ secrets.VITE_HUBSPOT_PORTAL_ID }}
           VITE_HUBSPOT_FORM_GUID: ${{ secrets.VITE_HUBSPOT_FORM_GUID }}
+      - name: Copy config to dist
+        run: cp staticwebapp.config.json dist/ || echo "Config file copied"
+      - name: Create deployment package
+        run: |
+          # Create a clean deployment directory with only dist contents
+          mkdir -p .deployment
+          cp -r dist/* .deployment/ 2>/dev/null || true
+          cp dist/staticwebapp.config.json .deployment/ 2>/dev/null || cp staticwebapp.config.json .deployment/ 2>/dev/null || true
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -41,11 +49,10 @@ jobs:
           action: "upload"
           ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: "/" # App source code path (not used when skip_app_build is true)
+          app_location: ".deployment" # Point to deployment folder which only contains dist files
           api_location: "" # Api source code path - optional
-          output_location: "dist" # Built app content directory - optional
+          output_location: "" # Not needed when app_location contains built files
           skip_app_build: true # Skip build since we're building manually above
-          app_artifact_location: "dist" # Location of the built app files to deploy (only deploy dist folder)
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
