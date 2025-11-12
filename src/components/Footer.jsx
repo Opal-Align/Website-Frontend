@@ -1,8 +1,11 @@
 import { useState } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
+import { useMutation } from "@tanstack/react-query";
 import { MdCall } from "react-icons/md";
 import { MdEmail } from "react-icons/md";
+import { submitToHubSpot } from "../services/hubspotService.js";
+
 export default function Footer() {
   const [formData, setFormData] = useState({
     name: "",
@@ -23,6 +26,32 @@ export default function Footer() {
     company: false,
     website: false,
     email: false,
+  });
+
+  // ============================================
+  // REACT QUERY MUTATION FOR HUBSPOT SUBMISSION
+  // ============================================
+  const hubspotMutation = useMutation({
+    mutationFn: submitToHubSpot,
+    onSuccess: (data) => {
+      console.log("Form submitted successfully to HubSpot:", data);
+      // Reset form on success
+      setFormData({ name: "", company: "", website: "", email: "" });
+      setTouched({ name: false, company: false, website: false, email: false });
+      setErrors({ name: "", company: "", website: "", email: "" });
+
+      // Auto-reset success state after 5 seconds
+      setTimeout(() => {
+        hubspotMutation.reset();
+      }, 5000);
+    },
+    onError: (error) => {
+      console.error("Error submitting to HubSpot:", error);
+      // Auto-reset error state after 8 seconds
+      setTimeout(() => {
+        hubspotMutation.reset();
+      }, 8000);
+    },
   });
 
   // Validate individual field
@@ -76,7 +105,7 @@ export default function Footer() {
     );
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
     // Mark all fields as touched
@@ -93,35 +122,8 @@ export default function Footer() {
 
     // Only submit if no errors
     if (Object.values(newErrors).every((error) => error === "")) {
-      console.log("Form submitted:", formData);
-      e.preventDefault();
-
-      const submittedFormData = new FormData();
-      submittedFormData.append("name", formData.name);
-      submittedFormData.append("email", formData.email);
-      submittedFormData.append("company", formData.company);
-      submittedFormData.append("website", formData.website);
-
-      try {
-        const response = await fetch(
-          "https://formsubmit.co/suyashs@opalalign.com",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        if (response.ok) {
-          alert("Message sent successfully!");
-          e.target.reset();
-        } else {
-          alert("Something went wrong. Please try again.");
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Error sending message");
-      }
-      // Handle form submission
+      // Submit to HubSpot using React Query mutation
+      hubspotMutation.mutate(formData);
     }
   };
 
@@ -227,7 +229,7 @@ export default function Footer() {
             <div id="footer-contact-form" className="space-y-6 md:space-y-8">
               <div className="space-y-2">
                 <h2 className="text-white text-base md:text-lg font-medium">
-                  Due to high demand, demo availability is limited.
+                  Due to high demand, DEMO availability is limited.
                 </h2>
                 <p className="text-white/50 text-xs md:text-sm">
                   Request your invitation now before slots fill up.
@@ -358,22 +360,125 @@ export default function Footer() {
                     </motion.p>
                   )}
                 </div>
+
+                {/* Success Message */}
+                {hubspotMutation.isSuccess && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-green-400 text-xs md:text-sm flex items-center gap-2"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    We will be in touch!
+                  </motion.p>
+                )}
+
+                {/* Error Message */}
+                {hubspotMutation.isError && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-red-400 text-xs md:text-sm flex items-center gap-2"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                    {hubspotMutation.error?.message ||
+                      "Failed to submit. Please try again."}
+                  </motion.p>
+                )}
+
                 <motion.button
                   onClick={handleSubmit}
-                  disabled={!isFormValid()}
+                  disabled={!isFormValid() || hubspotMutation.isPending}
                   className={`w-full md:w-auto px-6 md:px-8 py-3 border rounded-full flex items-center justify-center md:justify-start gap-3 transition-all ${
-                    isFormValid()
+                    isFormValid() && !hubspotMutation.isPending
                       ? "border-white/30 text-white hover:bg-white hover:text-black cursor-pointer"
                       : "border-white/30 text-white cursor-not-allowed opacity-50"
                   }`}
-                  whileHover={isFormValid() ? { scale: 1.05 } : {}}
-                  whileTap={isFormValid() ? { scale: 0.95 } : {}}
+                  whileHover={
+                    isFormValid() && !hubspotMutation.isPending
+                      ? { scale: 1.05 }
+                      : {}
+                  }
+                  whileTap={
+                    isFormValid() && !hubspotMutation.isPending
+                      ? { scale: 0.95 }
+                      : {}
+                  }
                 >
-                  <span>Join Today</span>
-                  <span className="flex gap-1.5">
-                    <span className="w-2 h-2 bg-current rounded-full"></span>
-                    <span className="w-2 h-2 bg-current rounded-full"></span>
-                  </span>
+                  {hubspotMutation.isPending ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      <span>Submitting...</span>
+                    </>
+                  ) : hubspotMutation.isSuccess ? (
+                    <>
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <span>Submitted!</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Join Today</span>
+                      <span className="flex gap-1.5">
+                        <span className="w-2 h-2 bg-current rounded-full"></span>
+                        <span className="w-2 h-2 bg-current rounded-full"></span>
+                      </span>
+                    </>
+                  )}
                 </motion.button>
               </div>
             </div>

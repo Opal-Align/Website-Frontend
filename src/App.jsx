@@ -1,4 +1,5 @@
 import "./App.css";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Navbar from "./components/Navbar/Navbar";
 import HomePage from "./components/HomePage";
 import Services from "./components/Info/Services";
@@ -7,43 +8,58 @@ import LogoStream from "./components/LogoStream/LogoStream";
 import gosInActionServices from "./Content/gosInAction.jsx";
 import whoWeServeServices from "./Content/whoWeServe.jsx";
 
+// Create a React Query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
+
 function App() {
   return (
-    <div className="overflow-x-hidden w-full">
-      <div className="h-screen overflow-hidden">
-        <HomePage />
-        <Navbar />
-      </div>
-      {/* <div>
+    <QueryClientProvider client={queryClient}>
+      <div className="overflow-x-hidden w-full">
+        <div className="h-screen overflow-hidden">
+          <HomePage />
+          <Navbar />
+        </div>
+        {/* <div>
         <StatsSection />
       </div> */}
-      <div>
-        <Services
-          services={gosInActionServices}
-          title="OPAL gOS in Action"
-          sectionId="gos-in-action"
-        />
-      </div>
-      <div>
-        <LogoStream />
-      </div>
-      {/* <div>
+        <div>
+          <Services
+            services={gosInActionServices}
+            title="OPAL gOS in Action"
+            sectionId="gos-in-action"
+          />
+        </div>
+        <div>
+          <LogoStream />
+        </div>
+        {/* <div>
         <UserData />
       </div> */}
-      {/* <div>
+        {/* <div>
         <ContactForm />
       </div> */}
-      <div>
-        <Services
-          services={whoWeServeServices}
-          title="Who We Guide"
-          sectionId="faq"
-        />
+        <div>
+          <Services
+            services={whoWeServeServices}
+            title="Who We Guide"
+            sectionId="faq"
+          />
+        </div>
+        <div>
+          <Footer />
+        </div>
       </div>
-      <div>
-        <Footer />
-      </div>
-    </div>
+    </QueryClientProvider>
   );
 }
 
