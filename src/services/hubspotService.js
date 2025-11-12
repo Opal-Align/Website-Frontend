@@ -10,16 +10,17 @@ import axios from "axios";
 // ============================================
 
 // HubSpot Portal ID (replace with your actual portal ID)
-const HUBSPOT_PORTAL_ID =
-  import.meta.env.VITE_HUBSPOT_PORTAL_ID || "YOUR_PORTAL_ID";
+const HUBSPOT_PORTAL_ID = import.meta.env.VITE_HUBSPOT_PORTAL_ID || "";
 
 // HubSpot Form GUID (replace with your actual form GUID)
-const HUBSPOT_FORM_GUID =
-  import.meta.env.VITE_HUBSPOT_FORM_GUID || "YOUR_FORM_GUID";
+const HUBSPOT_FORM_GUID = import.meta.env.VITE_HUBSPOT_FORM_GUID || "";
 
 // HubSpot Form Submission URL
 // Format: https://api.hsforms.com/submissions/v3/integration/submit/{portalId}/{formId}
-const HUBSPOT_SUBMIT_URL = `https://api.hsforms.com/submissions/v3/integration/submit/${HUBSPOT_PORTAL_ID}/${HUBSPOT_FORM_GUID}`;
+const HUBSPOT_SUBMIT_URL =
+  HUBSPOT_PORTAL_ID && HUBSPOT_FORM_GUID
+    ? `https://api.hsforms.com/submissions/v3/integration/submit/${HUBSPOT_PORTAL_ID}/${HUBSPOT_FORM_GUID}`
+    : null;
 
 // ============================================
 // HUBSPOT FORM FIELD MAPPING
@@ -36,6 +37,13 @@ const HUBSPOT_SUBMIT_URL = `https://api.hsforms.com/submissions/v3/integration/s
  * @returns {Promise} Axios response
  */
 export const submitToHubSpot = async (formData) => {
+  // Check if HubSpot is configured
+  if (!HUBSPOT_SUBMIT_URL) {
+    throw new Error(
+      "HubSpot is not configured. Please set VITE_HUBSPOT_PORTAL_ID and VITE_HUBSPOT_FORM_GUID environment variables."
+    );
+  }
+
   try {
     // Map form fields to HubSpot format
     // Adjust field names based on your HubSpot form configuration
