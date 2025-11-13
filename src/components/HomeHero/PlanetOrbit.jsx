@@ -1,6 +1,6 @@
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
-
+import PlatformInterface from "../../assets/planet.avif";
 export default function PlanetOrbit() {
   return (
     <motion.div
@@ -13,8 +13,8 @@ export default function PlanetOrbit() {
       <div className="relative">
         <div className="w-24 h-24 rounded-full overflow-hidden">
           <img
-            src="https://framerusercontent.com/images/R4jSZWFR126PbJhYKSjiZxWz9k.png"
-            alt=""
+            src={PlatformInterface}
+            alt="OPAL gOS Platform Interface"
             className="w-full h-full object-cover"
             style={{ objectPosition: "center center" }}
           />

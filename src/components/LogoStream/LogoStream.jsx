@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import Carestack from "../../assets/Carestack.svg";
 import Cloud9 from "../../assets/Cloud 9.svg";
@@ -11,16 +12,16 @@ import Eaglesoft from "../../assets/Eaglesoft.svg";
 import OpenDental from "../../assets/Open Dental.svg";
 
 const logos = [
-  Carestack,
-  Cloud9,
-  Curve,
-  Denticon,
-  Dentimax,
-  Dentrix,
-  DentrixAscend,
-  Dolphin,
-  Eaglesoft,
-  OpenDental,
+  { src: Carestack, name: "Carestack" },
+  { src: Cloud9, name: "Cloud 9" },
+  { src: Curve, name: "Curve Dental" },
+  { src: Denticon, name: "Denticon" },
+  { src: Dentimax, name: "Dentimax" },
+  { src: Dentrix, name: "Dentrix" },
+  { src: DentrixAscend, name: "Dentrix Ascend" },
+  { src: Dolphin, name: "Dolphin" },
+  { src: Eaglesoft, name: "Eaglesoft" },
+  { src: OpenDental, name: "Open Dental" },
 ];
 
 export default function LogoStream() {
@@ -57,8 +58,8 @@ export default function LogoStream() {
                   className="flex items-center justify-center min-w-[120px] md:min-w-[180px] shrink-0"
                 >
                   <img
-                    src={logo}
-                    alt={`Logo ${logoIndex + 1}`}
+                    src={logo.src}
+                    alt={`${logo.name} - Practice management integration partner`}
                     className="h-12 md:h-16 w-auto max-w-[150px] md:max-w-[200px] object-contain opacity-70 hover:opacity-100 transition-opacity"
                   />
                 </div>
