@@ -21,9 +21,9 @@ const whoWeServeServices = [
   {
     id: 3,
     title: "DSOs & MSOs",
-    description: "Enterprise scale doesn't require enterprise complexity.",
+    description: "Scale Profitability not Overhead",
     expandedDescription:
-      "gOS provides a unified platform that scales across the entire enterprise while remaining configurable for individual practice requirements. Standardize what matters. Customize what doesn't.",
+      "gOS provides a unified platform that scales across the entire enterprise while remaining configurable for individual practice requirements.",
     hasImage: false,
     alignRight: true,
   },
