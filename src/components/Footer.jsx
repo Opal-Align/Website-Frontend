@@ -495,7 +495,9 @@ export default function Footer() {
                 <span className="hidden md:inline">•</span> */}
                 <span>OPAL gOS</span>
               </div>
-
+              <div className="flex flex-wrap items-center gap-4 md:gap-6">
+                © 2025 OPAL gOS. All rights reserved
+              </div>
               {/* Center: Policy Links */}
               <div className="flex flex-wrap items-center gap-4 md:gap-6">
                 <a
