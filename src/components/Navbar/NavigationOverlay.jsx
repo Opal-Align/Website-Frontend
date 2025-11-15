@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const NavigationOverlay = ({ isOpen, onClose }) => {
-  const navItems = ["Home", "gOS in Action", "Who We Guide", "Contact Us"];
+  const navItems = ["Home", "gOS in Action", "Who We Guide", "Join Today"];
   const scrollPositionRef = useRef(0);
 
   // Map navigation items to their target selectors
@@ -14,7 +14,7 @@ const NavigationOverlay = ({ isOpen, onClose }) => {
         return "#gos-in-action";
       case "Who We Guide":
         return "#faq";
-      case "Contact Us":
+      case "Join Today":
         return "#footer-contact-form";
       default:
         return null;
@@ -168,7 +168,7 @@ const NavigationOverlay = ({ isOpen, onClose }) => {
                     ease: "easeOut",
                   }}
                   className={`text-white/60 hover:text-white text-4xl md:text-6xl lg:text-7xl font-bold transition-colors cursor-pointer bg-transparent border-none ${
-                    item === "Contact Us" ? "block sm:hidden" : ""
+                    item === "Join Today" ? "block sm:hidden" : ""
                   } `}
                   whileHover={{ scale: 1.05 }}
                 >

@@ -50,7 +50,7 @@ const RightNav = ({ onMenuClick }) => {
                   transition={{ duration: 0.3, ease: "easeInOut" }}
                   className="absolute whitespace-nowrap" // Added block display
                 >
-                  Contact Now
+                  Join Today
                 </motion.span>
                 <motion.span
                   variants={{
@@ -60,7 +60,7 @@ const RightNav = ({ onMenuClick }) => {
                   transition={{ duration: 0.3, ease: "easeInOut" }}
                   className="absolute top-0 whitespace-nowrap" // Position second text at top
                 >
-                  Contact Now
+                  Join Today
                 </motion.span>
               </motion.div>
             </motion.div>
