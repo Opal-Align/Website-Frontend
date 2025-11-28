@@ -501,6 +501,15 @@ export default function Footer() {
               {/* Center: Policy Links */}
               <div className="flex flex-wrap items-center gap-4 md:gap-6">
                 <a
+                  href="/sms-opt-in"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  SMS Opt In
+                </a>
+                <span className="text-white/60">|</span>
+                <a
                   href="/privacy-policy"
                   target="_blank"
                   rel="noopener noreferrer"
