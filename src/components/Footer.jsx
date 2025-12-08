@@ -405,8 +405,7 @@ export default function Footer() {
                         d="M6 18L18 6M6 6l12 12"
                       />
                     </svg>
-                    {hubspotMutation.error?.message ||
-                      "Failed to submit. Please try again."}
+                    Failed to submit. Please try again.
                   </motion.p>
                 )}
 

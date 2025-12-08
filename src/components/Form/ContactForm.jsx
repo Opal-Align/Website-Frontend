@@ -1,5 +1,8 @@
 import { useState } from "react";
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
+import { useMutation } from "@tanstack/react-query";
+import { submitToHubSpot } from "../../services/hubspotService.js";
 import FormHeader from "./FormHeader";
 export default function ContactForm() {
   const [formData, setFormData] = useState({
@@ -21,6 +24,25 @@ export default function ContactForm() {
   });
 
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
+  // HubSpot mutation with Azure fallback
+  const hubspotMutation = useMutation({
+    mutationFn: (formData) => submitToHubSpot(formData, "contact"),
+    onSuccess: () => {
+      setIsSubmitted(true);
+      setSubmitError("");
+      setTimeout(() => {
+        setFormData({ name: "", email: "", message: "" });
+        setIsSubmitted(false);
+        setTouched({ name: false, email: false, message: false });
+      }, 2000);
+    },
+    onError: () => {
+      setSubmitError("Failed to submit. Please try again.");
+      setIsSubmitted(false);
+    },
+  });
 
   const validateName = (name) => {
     if (!name.trim()) {
@@ -95,14 +117,8 @@ export default function ContactForm() {
     });
 
     if (!nameError && !emailError && !messageError) {
-      setIsSubmitted(true);
-      console.log("Form submitted:", formData);
-
-      setTimeout(() => {
-        setFormData({ name: "", email: "", message: "" });
-        setIsSubmitted(false);
-        setTouched({ name: false, email: false, message: false });
-      }, 2000);
+      setSubmitError("");
+      hubspotMutation.mutate(formData);
     }
   };
 
@@ -134,6 +150,17 @@ export default function ContactForm() {
           <div className="flex-1 md:max-w-3/4">
             {/* Header Row */}
             <FormHeader />
+
+            {/* Error Message */}
+            {submitError && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg"
+              >
+                <p className="text-red-600 text-sm">{submitError}</p>
+              </motion.div>
+            )}
 
             {/* Form Fields */}
             <div className="space-y-8 md:col-span-2">
@@ -232,14 +259,14 @@ export default function ContactForm() {
                   <motion.button
                     type="button"
                     onClick={handleSubmit}
-                    disabled={isSubmitted}
+                    disabled={isSubmitted || hubspotMutation.isPending}
                     className={`px-8 py-4 rounded-full font-medium transition-colors flex items-center justify-center gap-2 ${
                       isSubmitted
                         ? "bg-green-600 text-white"
                         : "bg-black text-white hover:bg-gray-800"
-                    }`}
-                    whileHover={{ scale: isSubmitted ? 1 : 1.02 }}
-                    whileTap={{ scale: isSubmitted ? 1 : 0.98 }}
+                    } ${hubspotMutation.isPending ? "opacity-50 cursor-not-allowed" : ""}`}
+                    whileHover={isSubmitted || hubspotMutation.isPending ? {} : { scale: 1.02 }}
+                    whileTap={isSubmitted || hubspotMutation.isPending ? {} : { scale: 0.98 }}
                   >
                     {isSubmitted ? (
                       <>
