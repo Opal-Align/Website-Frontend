@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState, useEffect, useCallback } from "react";
+import React, { useLayoutEffect, useRef, useState, useEffect } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, px } from "framer-motion";
 import Divider from "./HomeHero/Divider";
@@ -12,60 +12,30 @@ const HomePage = () => {
   const containerRef = useRef(null);
   const [titleLeftPx, setTitleLeftPx] = useState(undefined);
   const [lineWidthPx, setLineWidthPx] = useState(undefined);
-  const [archSize, setArchSize] = useState(() => {
-    if (typeof window === 'undefined') return 1400;
-    const width = window.innerWidth;
-    if (width > 2560) return 3400;
-    if (width > 1920) return 2200;
-    if (width > 1400) return 1600;
-    return 1000;
-  });
+  const [archSize, setArchSize] = useState(1400);
 
   const O_OVERLAP_EM = 0.09;
   const ARCH_CENTER = "88% 50%";
 
-  const getArchSize = useCallback((width) => {
-    if (width > 2560) return 3400;
-    if (width > 1920) return 2200;
-    if (width > 1400) return 1600;
-    return 1000;
-  }, []);
-
-  // Update arch size on window resize
+  // Update arch size reactively
   useEffect(() => {
     const updateArchSize = () => {
-      const newSize = getArchSize(window.innerWidth);
-      setArchSize(prevSize => {
-        if (prevSize !== newSize) {
-          // Trigger position recalculation after arch resizes
-          setTimeout(() => {
-            const arch = archRef.current;
-            const container = containerRef.current;
-            if (!arch || !container) return;
-    
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                const rect = arch.getBoundingClientRect();
-                const containerLeft = container.getBoundingClientRect().left;
-                const titleEl = titleRef.current;
-                const fs = titleEl ? parseFloat(getComputedStyle(titleEl).fontSize || "0") : 0;
-                const overlapPx = isNaN(fs) ? 0 : fs * O_OVERLAP_EM;
-    
-                setTitleLeftPx(rect.right - containerLeft - overlapPx);
-                setLineWidthPx(rect.right - containerLeft + 100 - overlapPx);
-              });
-            });
-          }, 250);
-          return newSize;
-        }
-        return prevSize;
-      });
+      const width = window.innerWidth;
+      if (width > 2560) {
+        setArchSize(3400);
+      } else if (width > 1920) {
+        setArchSize(2200);
+      } else if (width > 1400) {
+        setArchSize(1800);
+      } else {
+        setArchSize(1400);
+      }
     };
 
     updateArchSize();
     window.addEventListener("resize", updateArchSize, { passive: true });
     return () => window.removeEventListener("resize", updateArchSize);
-  }, [ getArchSize ]);
+  }, []);
 
   // Calculate position - wait for arch to finish resizing
   useLayoutEffect(() => {
@@ -73,24 +43,46 @@ const HomePage = () => {
       const arch = archRef.current;
       const container = containerRef.current;
       if (!arch || !container) return;
-  
+
+      // Wait for arch to finish resizing
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          const rect = arch.getBoundingClientRect();
-          const containerLeft = container.getBoundingClientRect().left;
-          const titleEl = titleRef.current;
-          const fs = titleEl ? parseFloat(getComputedStyle(titleEl).fontSize || "0") : 0;
-          const overlapPx = isNaN(fs) ? 0 : fs * O_OVERLAP_EM;
-  
-          setTitleLeftPx(rect.right - containerLeft - overlapPx);
-          setLineWidthPx(rect.right - containerLeft + 130);
+          // Force reflow
+          void arch.offsetHeight;
+          
+          // Additional delay to ensure arch is completely done
+          setTimeout(() => {
+            const rect = arch.getBoundingClientRect();
+            const containerLeft = container.getBoundingClientRect().left;
+
+            const titleEl = titleRef.current;
+            const fs = titleEl
+              ? parseFloat(getComputedStyle(titleEl).fontSize || "0")
+              : 0;
+            const overlapPx = isNaN(fs) ? 0 : fs * O_OVERLAP_EM;
+
+            setTitleLeftPx(rect.right - containerLeft - overlapPx);
+            setLineWidthPx(rect.right - containerLeft + 130);
+          }, 300); // Wait 300ms for arch to fully resize
         });
       });
     };
-  
-    // Initial calculation
+
     update();
-  }, [archSize, O_OVERLAP_EM]);// Recalculate when archSize changes
+    
+    // Debounce resize events
+    let resizeTimeout;
+    const handleResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(update, 350);
+    };
+    
+    window.addEventListener("resize", handleResize, { passive: true });
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      clearTimeout(resizeTimeout);
+    };
+  }, [archSize, O_OVERLAP_EM]); // Recalculate when archSize changes
 
   return (
     <div className="h-screen overflow-hidden relative w-full">
