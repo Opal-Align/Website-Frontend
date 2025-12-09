@@ -58,14 +58,10 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: ".deployment"
-          api_location: "api" # Point to API folder
+          api_location: "../api" # Point to API folder
           output_location: ""
           skip_app_build: true
-        env:
-          # Azure Function environment variables
-          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
-          AZURE_TABLE_NAME: ${{ secrets.AZURE_TABLE_NAME }}
-
+        
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
