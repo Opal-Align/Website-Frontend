@@ -32,7 +32,7 @@ jobs:
       - name: Install API dependencies
         run: |
           cd api
-          npm ci
+          npm ci --omit=dev --no-audit --no-fund
           cd ..
       
       - name: Build frontend

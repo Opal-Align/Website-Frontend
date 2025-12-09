@@ -1,15 +1,8 @@
 {
-    "name": "api",
-    "version": "1.0.0",
-    "description": "Azure Functions API for form submissions",
-    "scripts": {
-      "start": "func start",
-      "test": "echo \"No tests yet...\""
-    },
-    "dependencies": {
-      "@azure/data-tables": "^13.2.2"
-    },
-    "devDependencies": {
-      "azure-functions-core-tools": "^4.0.5530"
-    }
+  "name": "api",
+  "version": "1.0.0",
+  "description": "Azure Functions API for form submissions",
+  "dependencies": {
+    "@azure/data-tables": "^13.2.2"
   }
+}
