@@ -44,39 +44,46 @@ module.exports = async function (context, req) {
       return;
     }
 
-    const tableClient = TableClient.fromConnectionString(
-      connectionString,
-      tableName
-    );
+    // const tableClient = TableClient.fromConnectionString(
+    //   connectionString,
+    //   tableName
+    // );
 
-    await tableClient.createTable().catch(() => {});
+    // await tableClient.createTable().catch(() => {});
 
-    const entity = {
-      partitionKey: typeof formData.formType === "string"
-        ? formData.formType
-        : "contact",
+    // const entity = {
+    //   partitionKey: typeof formData.formType === "string"
+    //     ? formData.formType
+    //     : "contact",
 
-      rowKey: `${Date.now()}_${Math.random().toString(36).slice(2)}`,
-      timestamp: new Date().toISOString(),
+    //   rowKey: `${Date.now()}_${Math.random().toString(36).slice(2)}`,
+    //   timestamp: new Date().toISOString(),
 
-      name: String(formData.name || ""),
-      email: String(formData.email || ""),
-      company: String(formData.company || ""),
-      website: String(formData.website || ""),
-      phone: String(formData.phone || ""),
-      message: String(formData.message || ""),
-      source: String(formData.source || "web"),
-      errorContext: String(formData.errorContext || ""),
-    };
+    //   name: String(formData.name || ""),
+    //   email: String(formData.email || ""),
+    //   company: String(formData.company || ""),
+    //   website: String(formData.website || ""),
+    //   phone: String(formData.phone || ""),
+    //   message: String(formData.message || ""),
+    //   source: String(formData.source || "web"),
+    //   errorContext: String(formData.errorContext || ""),
+    // };
 
-    await tableClient.createEntity(entity);
-
-    context.res.status = 200;
-    context.res.body = {
-      success: true,
-      message: "Form submitted successfully",
-      id: entity.rowKey,
-    };
+    // await tableClient.createEntity(entity);
+    return context.res = {
+        status: 200,
+        body: {
+          success: true,
+          storageConfigured: !!connectionString,
+          tableName
+        }
+      };
+    // context.res.status = 200;
+    // context.res.body = {
+    //   success: true,
+    //   message: "Form submitted successfully",
+    //   id: entity.rowKey,
+    // };
 
   } catch (error) {
     context.log.error("Azure error:", error);
