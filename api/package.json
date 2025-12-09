@@ -1,8 +1,12 @@
 {
-  "name": "api",
-  "version": "1.0.0",
-  "description": "Azure Functions API for form submissions",
-  "dependencies": {
-    "@azure/data-tables": "^13.2.2"
+    "name": "api",
+    "version": "1.0.0",
+    "description": "Azure Functions API for form submissions",
+    "type": "module",
+    "engines": {
+      "node": ">=18"
+    },
+    "dependencies": {
+      "@azure/data-tables": "^13.2.2"
+    }
   }
-}
