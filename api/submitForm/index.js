@@ -1,95 +1,87 @@
-const { TableClient } = require("@azure/data-tables");
+import { TableClient } from "@azure/data-tables";
 
-module.exports = async function (context, req) {
-  context.log('Form submission received');
+export default async function (context, req) {
+  context.log("Form submission received");
 
-  // CORS headers
   context.res = {
     headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
-    }
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
   };
 
-  // Handle preflight
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     context.res.status = 200;
     return;
   }
 
-  if (req.method !== 'POST') {
+  if (req.method !== "POST") {
     context.res.status = 405;
-    context.res.body = { error: 'Method not allowed' };
+    context.res.body = { error: "Method not allowed" };
     return;
   }
 
   try {
-    const formData = req.body;
-    
+    let formData = req.body;
+
+    if (!formData && req.rawBody) {
+      formData = JSON.parse(req.rawBody);
+    }
+
     if (!formData) {
       context.res.status = 400;
-      context.res.body = { error: 'No form data provided' };
+      context.res.body = { error: "No form data provided" };
       return;
     }
 
-    // Get Azure connection string from environment
     const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
-    const tableName = process.env.AZURE_TABLE_NAME || 'FormSubmissions';
+    const tableName = process.env.AZURE_TABLE_NAME || "FormSubmissions";
 
     if (!connectionString) {
-      context.log.error('Azure Storage not configured');
       context.res.status = 500;
-      context.res.body = { error: 'Storage not configured' };
+      context.res.body = { error: "Storage not configured" };
       return;
     }
 
-    // Connect to Azure Table Storage
     const tableClient = TableClient.fromConnectionString(
       connectionString,
       tableName
     );
 
-    // Ensure table exists
-    await tableClient.createTable().catch(() => {
-      // Table already exists, ignore error
-    });
+    await tableClient.createTable().catch(() => {});
 
-    // Create entity
     const entity = {
-      partitionKey: formData.formType || 'contact',
-      rowKey: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      partitionKey: formData.formType || "contact",
+      rowKey: `${Date.now()}_${Math.random().toString(36).slice(2)}`,
       timestamp: new Date().toISOString(),
-      name: formData.name || '',
-      email: formData.email || '',
-      company: formData.company || '',
-      website: formData.website || '',
-      phone: formData.phone || '',
-      message: formData.message || '',
-      source: formData.source || 'web',
-      errorContext: formData.errorContext || '',
+      name: formData.name || "",
+      email: formData.email || "",
+      company: formData.company || "",
+      website: formData.website || "",
+      phone: formData.phone || "",
+      message: formData.message || "",
+      source: formData.source || "web",
+      errorContext: formData.errorContext || "",
     };
 
-    // Save to Azure
     await tableClient.createEntity(entity);
 
-    context.log('Successfully saved to Azure Table Storage');
-    
     context.res.status = 200;
     context.res.body = {
       success: true,
-      message: 'Form submitted successfully',
-      id: entity.rowKey
+      message: "Form submitted successfully",
+      id: entity.rowKey,
     };
-
   } catch (error) {
-    context.log.error('Error saving to Azure:', error);
+    context.log.error("Azure error:", error);
+
     context.res.status = 500;
     context.res.body = {
       success: false,
-      error: 'Failed to save form data',
-      details: error.message
+      error: "Failed to save form data",
+      details: error.message,
     };
   }
-};
+}
