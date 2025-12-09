@@ -1,6 +1,6 @@
-import { TableClient } from "@azure/data-tables";
+const { TableClient } = require("@azure/data-tables");
 
-export default async function (context, req) {
+module.exports = async function (context, req) {
   context.log("Form submission received");
 
   context.res = {
@@ -24,22 +24,18 @@ export default async function (context, req) {
   }
 
   try {
-    let formData = req.body;
+    const formData =
+      typeof req.body === "object"
+        ? req.body
+        : JSON.parse(req.rawBody || "{}");
 
-    if (!formData && req.rawBody) {
-      formData = JSON.parse(req.rawBody);
-    }
-
-    if (!formData) {
-      context.res.status = 400;
-      context.res.body = { error: "No form data provided" };
-      return;
-    }
-
-    const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
-    const tableName = process.env.AZURE_TABLE_NAME || "FormSubmissions";
+    const connectionString =
+      process.env.AZURE_STORAGE_CONNECTION_STRING;
+    const tableName =
+      process.env.AZURE_TABLE_NAME || "FormSubmissions";
 
     if (!connectionString) {
+      context.log.error("Missing AZURE_STORAGE_CONNECTION_STRING");
       context.res.status = 500;
       context.res.body = { error: "Storage not configured" };
       return;
@@ -53,12 +49,17 @@ export default async function (context, req) {
     await tableClient.createTable().catch(() => {});
 
     const entity = {
-        partitionKey:
+      partitionKey:
         typeof formData.formType === "string"
           ? formData.formType
           : "contact",
-      rowKey: `${Date.now()}_${Math.random().toString(36).slice(2)}`,
-      timestamp: new Date().toISOString(),
+
+      rowKey: `${Date.now()}_${Math.random()
+        .toString(36)
+        .slice(2)}`,
+
+      submittedAt: new Date().toISOString(),
+
       name: formData.name || "",
       email: formData.email || "",
       company: formData.company || "",
@@ -78,7 +79,7 @@ export default async function (context, req) {
       id: entity.rowKey,
     };
   } catch (error) {
-    context.log.error("Azure error:", error);
+    context.log.error("Azure Table Error:", error);
 
     context.res.status = 500;
     context.res.body = {
@@ -87,4 +88,4 @@ export default async function (context, req) {
       details: error.message,
     };
   }
-}
+};
