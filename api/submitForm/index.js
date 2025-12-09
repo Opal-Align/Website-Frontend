@@ -53,7 +53,10 @@ export default async function (context, req) {
     await tableClient.createTable().catch(() => {});
 
     const entity = {
-      partitionKey: formData.formType || "contact",
+        partitionKey:
+        typeof formData.formType === "string"
+          ? formData.formType
+          : "contact",
       rowKey: `${Date.now()}_${Math.random().toString(36).slice(2)}`,
       timestamp: new Date().toISOString(),
       name: formData.name || "",
