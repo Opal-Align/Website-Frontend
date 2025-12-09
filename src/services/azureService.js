@@ -10,7 +10,7 @@
 
 /**
  * Check if Azure fallback API is available
- * Azure Functions API is always available in Azure Static Web Apps
+ * Azure Functions API is always available in Azure Static Web Apps .
  */
 export const isAzureConfigured = () => {
   return true; // API is part of the deployment
