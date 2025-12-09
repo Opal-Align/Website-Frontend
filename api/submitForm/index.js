@@ -24,18 +24,21 @@ module.exports = async function (context, req) {
   }
 
   try {
-    const formData =
-      typeof req.body === "object"
-        ? req.body
-        : JSON.parse(req.rawBody || "{}");
+    let formData = req.body;
+    if (!formData && req.rawBody) {
+      formData = JSON.parse(req.rawBody);
+    }
 
-    const connectionString =
-      process.env.AZURE_STORAGE_CONNECTION_STRING;
-    const tableName =
-      process.env.AZURE_TABLE_NAME || "FormSubmissions";
+    if (!formData) {
+      context.res.status = 400;
+      context.res.body = { error: "No form data provided" };
+      return;
+    }
+
+    const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
+    const tableName = process.env.AZURE_TABLE_NAME || "FormSubmissions";
 
     if (!connectionString) {
-      context.log.error("Missing AZURE_STORAGE_CONNECTION_STRING");
       context.res.status = 500;
       context.res.body = { error: "Storage not configured" };
       return;
@@ -49,25 +52,21 @@ module.exports = async function (context, req) {
     await tableClient.createTable().catch(() => {});
 
     const entity = {
-      partitionKey:
-        typeof formData.formType === "string"
-          ? formData.formType
-          : "contact",
+      partitionKey: typeof formData.formType === "string"
+        ? formData.formType
+        : "contact",
 
-      rowKey: `${Date.now()}_${Math.random()
-        .toString(36)
-        .slice(2)}`,
+      rowKey: `${Date.now()}_${Math.random().toString(36).slice(2)}`,
+      timestamp: new Date().toISOString(),
 
-      submittedAt: new Date().toISOString(),
-
-      name: formData.name || "",
-      email: formData.email || "",
-      company: formData.company || "",
-      website: formData.website || "",
-      phone: formData.phone || "",
-      message: formData.message || "",
-      source: formData.source || "web",
-      errorContext: formData.errorContext || "",
+      name: String(formData.name || ""),
+      email: String(formData.email || ""),
+      company: String(formData.company || ""),
+      website: String(formData.website || ""),
+      phone: String(formData.phone || ""),
+      message: String(formData.message || ""),
+      source: String(formData.source || "web"),
+      errorContext: String(formData.errorContext || ""),
     };
 
     await tableClient.createEntity(entity);
@@ -78,8 +77,9 @@ module.exports = async function (context, req) {
       message: "Form submitted successfully",
       id: entity.rowKey,
     };
+
   } catch (error) {
-    context.log.error("Azure Table Error:", error);
+    context.log.error("Azure error:", error);
 
     context.res.status = 500;
     context.res.body = {
