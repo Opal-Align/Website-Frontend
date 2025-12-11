@@ -6,6 +6,6 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@azure/data-tables": "^13.3.2"
+    "@azure/data-tables": "^12.1.2"
   }
 }
