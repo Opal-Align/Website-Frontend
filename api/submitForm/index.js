@@ -58,10 +58,6 @@ module.exports = async function (context, req) {
     const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
     const tableName = process.env.AZURE_TABLE_NAME || "FormSubmissions";
 
-    context.log("Connection string exists:", !!connectionString);
-    context.log("Connection string length:", connectionString?.length || 0);
-    context.log("Table name:", tableName);
-
     if (!connectionString) {
       context.log.error("CRITICAL: AZURE_STORAGE_CONNECTION_STRING is not set");
       context.res.status = 500;
