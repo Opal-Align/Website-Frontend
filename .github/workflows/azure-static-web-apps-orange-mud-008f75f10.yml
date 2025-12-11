@@ -58,7 +58,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: ".deployment"
-          api_location: "api" # Point to API folder
+          api_location: "./api" # Point to API folder
           output_location: ""
           skip_app_build: true
         
