@@ -14,7 +14,7 @@ const HomePage = () => {
   const [lineWidthPx, setLineWidthPx] = useState(undefined);
   const [archSize, setArchSize] = useState(1400);
 
-  const O_OVERLAP_EM = 0.09;
+  const IMAGE_OVERLAP_PX = 20; // Small overlap to ensure image doesn't touch arch
   const ARCH_CENTER = "88% 50%";
 
   // Update arch size reactively
@@ -56,10 +56,13 @@ const HomePage = () => {
             const containerLeft = container.getBoundingClientRect().left;
 
             const titleEl = titleRef.current;
-            const fs = titleEl
-              ? parseFloat(getComputedStyle(titleEl).fontSize || "0")
+            const titleWidth = titleEl
+              ? titleEl.getBoundingClientRect().width
               : 0;
-            const overlapPx = isNaN(fs) ? 0 : fs * O_OVERLAP_EM;
+            
+            // Calculate position to ensure image doesn't overlap with arch
+            // Add some padding to keep them separated
+            const overlapPx = titleWidth > 0 ? IMAGE_OVERLAP_PX : 0;
 
             setTitleLeftPx(rect.right - containerLeft - overlapPx);
             setLineWidthPx(rect.right - containerLeft + 130);
@@ -82,7 +85,7 @@ const HomePage = () => {
       window.removeEventListener("resize", handleResize);
       clearTimeout(resizeTimeout);
     };
-  }, [archSize, O_OVERLAP_EM]); // Recalculate when archSize changes
+  }, [archSize, IMAGE_OVERLAP_PX]); // Recalculate when archSize changes
 
   return (
     <div className="h-screen overflow-hidden relative w-full">
@@ -157,7 +160,7 @@ const HomePage = () => {
             "gUIDED Workflows",
             "gAMIFIED Experience",
             "gALVANIZED Practice",
-            "gURANTEED Results",
+            "gUARANTEED Results",
           ]}
         />
         <TitleBlock titleRef={titleRef} left={titleLeftPx} />

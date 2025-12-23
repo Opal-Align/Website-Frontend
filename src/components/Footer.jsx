@@ -5,6 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { MdCall } from "react-icons/md";
 import { MdEmail } from "react-icons/md";
 import { submitToHubSpot } from "../services/hubspotService.js";
+import opalLogo from "../assets/OPALgos GreyWhite Website.png";
 
 export default function Footer() {
   const [formData, setFormData] = useState({
@@ -492,7 +493,11 @@ export default function Footer() {
               <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4">
                 {/* <span>© 2025</span>
                 <span className="hidden md:inline">•</span> */}
-                <span>OPAL gOS</span>
+                <img 
+                  src={opalLogo} 
+                  alt="OPAL gOS" 
+                  className="h-6 md:h-8 w-auto object-contain"
+                />
               </div>
               <div className="flex flex-wrap items-center gap-4 md:gap-6">
                 © 2025 OPAL gOS. All rights reserved
