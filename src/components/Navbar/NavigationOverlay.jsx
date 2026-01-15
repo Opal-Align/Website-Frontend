@@ -1,7 +1,9 @@
 import React, { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 const NavigationOverlay = ({ isOpen, onClose }) => {
+  const navigate = useNavigate();
   const navItems = ["Home", "gOS in Action", "Who We Guide", "Join Today"];
   const scrollPositionRef = useRef(0);
 
@@ -15,7 +17,7 @@ const NavigationOverlay = ({ isOpen, onClose }) => {
       case "Who We Guide":
         return "#faq";
       case "Join Today":
-        return "#footer-contact-form";
+        return "/contact-us"; // Navigate to contact page
       default:
         return null;
     }
@@ -148,6 +150,9 @@ const NavigationOverlay = ({ isOpen, onClose }) => {
                       if (target === null) {
                         // Scroll to top for Home
                         window.scrollTo({ top: 0, behavior: "smooth" });
+                      } else if (target === "/contact-us") {
+                        // Navigate to contact page
+                        navigate("/contact-us");
                       } else {
                         const element = document.querySelector(target);
                         if (element) {

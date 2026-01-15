@@ -2,8 +2,10 @@ import React from "react";
 import { useState, useEffect } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import TripleDots from "./TripleDots";
 const RightNav = ({ onMenuClick }) => {
+  const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const [isLargeScreen, setIsLargeScreen] = useState(true);
   useEffect(() => {
@@ -24,8 +26,7 @@ const RightNav = ({ onMenuClick }) => {
         <div className="flex gap-2 items-center">
           <motion.button
             onClick={() => {
-              const footer = document.getElementById("footer-contact-form");
-              footer?.scrollIntoView({ behavior: "smooth", block: "start" });
+              navigate("/contact-us");
             }}
             className="pl-8 pr-6 py-2.5 bg-white/10 flex items-center gap-8 hover:bg-white/20 backdrop-blur-sm text-white font-medium rounded-full border border-white/20 transition-all duration-2000 cursor-pointer"
             whileHover={{ scale: 1.05 }}

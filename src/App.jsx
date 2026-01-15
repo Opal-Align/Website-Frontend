@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import HomePageLayout from "./components/HomePageLayout";
 import PrivacyPolicy from "./components/PrivacyPolicy";
 import SMSOptIn from "./components/SMSOptIn";
+import ContactUs from "./components/ContactUs";
 import BackToTop from "./components/BackToTop";
 // Create a React Query client
 const queryClient = new QueryClient({
@@ -26,6 +27,7 @@ function App() {
           <Route path="/" element={<HomePageLayout />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/sms-opt-in" element={<SMSOptIn />} />
+          <Route path="/contact-us" element={<ContactUs />} />
         </Routes>
         <BackToTop />
       </BrowserRouter>
