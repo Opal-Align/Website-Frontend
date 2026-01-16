@@ -30,7 +30,7 @@ const services = [
   {
     id: 2,
     title: "No PhDs or MBAs Needed",
-    description: "Turn on gOS » Follow the guidance » Get results",
+    description: "Turn on gOS » Follow The Guidance » Get Results",
     expandedDescription:
       "Solutions should not require extensive training and advanced degrees. gOS guides actions that yield the highest margins, regardless of experience.",
 
@@ -51,7 +51,7 @@ const services = [
     id: 4,
 
     title: "gOS is Interoperable Out of the Box",
-    description: "Don't Switch » Don't Migrate » Just Connect.",
+    description: "Don't Switch » Don't Migrate » Just Connect",
     expandedDescription:
       "gOS integrates with industry leading clinical and practice management systems. Keep your systems. Plug in gOS. Start gaining immediately.",
 

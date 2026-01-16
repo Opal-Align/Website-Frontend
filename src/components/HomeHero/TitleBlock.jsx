@@ -36,6 +36,39 @@ export default function TitleBlock({ titleRef, right = 0 }) {
             className="relative w-[80vw] sm:w-[70vw] md:w-[50vw] lg:w-[45vw] xl:w-[40vw] max-w-[800px] mb-3 md:mb-4 mx-auto sm:mx-0"
             style={{ perspective: '1000px' }}
           >
+            <motion.button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsFlipped(!isFlipped);
+              }}
+              className="absolute -left-8 md:-left-10 top-1/2 -translate-y-1/2 z-30 
+              w-5 h-5 md:w-6 md:h-6 
+              border-2 border-white/40 rounded-full 
+              flex items-center justify-center cursor-pointer"
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{
+                delay: 1.2,
+                duration: 0.5,
+                ease: [0.25, 0.1, 0.25, 1]
+              }}
+            >
+              <motion.svg
+                className="w-2.5 h-2.5 sm:w-3 sm:h-3"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                animate={{ rotate: isFlipped ? 45 : 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </motion.svg>
+
+            </motion.button>
             <motion.div
               className="relative w-full"
               style={{ transformStyle: 'preserve-3d' }}
@@ -81,37 +114,6 @@ export default function TitleBlock({ titleRef, right = 0 }) {
               </div>
             </motion.div>
           </div>
-          {/* Flip Indicator Button */}
-          <motion.button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsFlipped(!isFlipped);
-            }}
-            className="absolute left-2 md:left-4 z-30 w-6 h-6 md:w-8 md:h-8 border-2 border-white/40 rounded-full flex items-center justify-center cursor-pointer"
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{
-              delay: 1.2,
-              duration: 0.5,
-              ease: [0.25, 0.1, 0.25, 1]
-            }}
-          >
-            <motion.svg
-              className="w-3 h-3 sm:w-4 sm:h-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="white"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              animate={{ rotate: isFlipped ? 45 : 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </motion.svg>
-
-          </motion.button>
           {/* Scrolling Words */}
           <div className="relative flex items-center justify-center sm:justify-end px-4 sm:px-0">
             
