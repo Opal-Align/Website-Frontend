@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import Carestack from "../../assets/Carestack.svg";
 import Cloud9 from "../../assets/Cloud 9.svg";
@@ -25,10 +26,10 @@ const logos = [
 
 export default function LogoStream() {
   return (
-    <div className="relative overflow-hidden w-full border-t border-gray-200 py-12 md:py-16 mb-4 bg-white flex items-center justify-center">
+    <div className="relative overflow-hidden w-full border-t border-b border-gray-800 py-8 md:py-12 bg-black flex items-center justify-center">
       {/* Fade at edges */}
-      <div className="absolute top-0 left-0 w-12 md:w-32 h-full bg-linear-to-r from-white to-transparent z-10"></div>
-      <div className="absolute top-0 right-0 w-12 md:w-32 h-full bg-linear-to-l from-white to-transparent z-10"></div>
+      <div className="absolute top-0 left-0 w-12 md:w-32 h-full bg-linear-to-r from-black to-transparent z-10"></div>
+      <div className="absolute top-0 right-0 w-12 md:w-32 h-full bg-linear-to-l from-black to-transparent z-10"></div>
 
       {/* Looping Row */}
       <div className="flex overflow-hidden w-full">
@@ -59,7 +60,10 @@ export default function LogoStream() {
                   <img
                     src={logo}
                     alt={`Logo ${logoIndex + 1}`}
-                    className="h-12 md:h-16 w-auto max-w-[150px] md:max-w-[200px] object-contain opacity-70 hover:opacity-100 transition-opacity"
+                    className="h-12 md:h-16 w-auto max-w-[150px] md:max-w-[200px] object-contain opacity-60 hover:opacity-100 transition-opacity brightness-0 invert"
+                    style={{
+                      filter: 'brightness(0) invert(1)',
+                    }}
                   />
                 </div>
               ))}

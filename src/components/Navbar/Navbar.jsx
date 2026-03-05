@@ -1,49 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 import TripleDots from "./TripleDots";
 import RightNav from "./RightNav";
 import NavigationOverlay from "./NavigationOverlay";
-import logoImage from "../../assets/opal-gos.svg";
+import opalLogo from "../../assets/OPALgos GreyWhite Website.png";
 export default function Navbar() {
-  // State to track if navbar should be hidden
-  const [hidden, setHidden] = useState(false);
-  // State to track if initial animation has completed
-  const [hasAnimated, setHasAnimated] = useState(false);
   // State to track navigation overlay
   const [isNavOpen, setIsNavOpen] = useState(false);
+  // State to track if user has scrolled
+  const [hasScrolled, setHasScrolled] = useState(false);
   const { scrollY } = useScroll();
 
-  const [lastScrollY, setLastScrollY] = useState(0);
-
-  // Check screen size and mark initial animation as complete
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setHasAnimated(true);
-    }, 1000);
-    return () => {
-      clearTimeout(timer);
-    };
-  }, []);
-
-  // Listen to scroll changes and determine navbar visibility
+  // Listen to scroll changes to show logo
   useMotionValueEvent(scrollY, "change", (latest) => {
-    const previous = lastScrollY;
-
-    // Only start hiding navbar after initial animation completes
-    if (hasAnimated) {
-      // Hide navbar when scrolling down past 100px
-      if (latest > previous && latest > 100) {
-        setHidden(true);
-      }
-      // Show navbar when scrolling up
-      else if (latest < previous && latest < 100) {
-        setHidden(false);
-      }
+    // Show logo after scrolling past hero section (80vh)
+    if (latest > window.innerHeight * 0.8) {
+      setHasScrolled(true);
+    } else {
+      setHasScrolled(false);
     }
-
-    // Update last scroll position
-    setLastScrollY(latest);
   });
 
   // Animation variants for navbar
@@ -62,67 +38,42 @@ export default function Navbar() {
         ease: "easeOut",
       },
     },
-    // Hidden state (slides up and fades out)
-    hidden: {
-      y: -100,
-      opacity: 0,
-      transition: {
-        duration: 0.5,
-        ease: "easeInOut",
-      },
-    },
   };
 
   return (
     <div className="min-h-screen relative bg-transparent">
-      {/* Animated Navbar */}
+      {/* Sticky Navbar - Always visible */}
       <motion.nav
         variants={navbarVariants}
         initial="initial"
-        animate={hidden ? "hidden" : "visible"}
+        animate="visible"
         className="fixed top-0 left-0 right-0 z-50"
       >
-        {/* Navbar container with glassmorphism effect */}
-        <div className="px-8 py-4 shadow-xl">
+        {/* Navbar container - fully transparent */}
+        <div className="px-8 py-4">
           <div className="flex items-center justify-between">
-            {/* LEFT SIDE: Brand Logo */}
+            {/* LEFT SIDE: Brand Logo - Always takes up space */}
             <motion.div
-              className="relative"
-              whileHover="hover"
+              className="relative cursor-pointer"
               whileTap={{ scale: 0.95 }}
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              animate={{ 
+                opacity: hasScrolled ? 1 : 0,
+                x: hasScrolled ? 0 : -20
+              }}
+              transition={{ duration: 0.5 }}
+              style={{ 
+                visibility: hasScrolled ? 'visible' : 'hidden',
+                pointerEvents: hasScrolled ? 'auto' : 'none'
+              }}
             >
-              <motion.img
-                src={logoImage}
-                alt="gOS Logo"
-                className="h-10 md:h-12 w-auto mix-blend-screen"
-                variants={{
-                  hover: {
-                    rotate: 360,
-                    transition: {
-                      duration: 2,
-                      ease: "linear",
-                      repeat: Infinity,
-                    },
-                  },
+              <img
+                src={opalLogo}
+                alt="OPAL gOS"
+                className="h-8 md:h-10 w-auto"
+                style={{
+                  filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
                 }}
-              />
-              {/* Small orbiting dot on hover */}
-              <motion.div
-                className="absolute top-0 right-0 w-2 h-2 bg-white rounded-full shadow-lg"
-                variants={{
-                  hover: {
-                    x: [0, 8, 0, -8, 0],
-                    y: [0, -8, 0, 8, 0],
-                    scale: [1, 1.2, 1, 1.2, 1],
-                    opacity: [0, 1, 1, 1, 0],
-                    transition: {
-                      duration: 1.5,
-                      ease: "linear",
-                      repeat: Infinity,
-                    },
-                  },
-                }}
-                initial={{ opacity: 0 }}
               />
             </motion.div>
 

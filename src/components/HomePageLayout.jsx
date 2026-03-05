@@ -1,11 +1,10 @@
 import Navbar from "./Navbar/Navbar";
 import HomePage from "./HomePage";
-import Services from "./Info/Services";
 import Footer from "./Footer";
 import LogoStream from "./LogoStream/LogoStream";
-import gosInActionServices from "../Content/gosInAction.jsx";
-import whoWeServeServices from "../Content/whoWeServe.jsx";
-
+import HeroFlow from "./Info/HeroFlow";
+import Processes from "./Info/Stats.jsx";
+import TestimonialSection from "./Info/Testimonial";
 export default function HomePageLayout() {
   return (
     <div className="overflow-x-hidden w-full">
@@ -13,22 +12,17 @@ export default function HomePageLayout() {
         <HomePage />
         <Navbar />
       </div>
+      
       <div>
-        <Services
-          services={gosInActionServices}
-          title="OPAL gOS in Action"
-          sectionId="gos-in-action"
-        />
+        <HeroFlow />
       </div>
+      
+      <Processes />
       <div>
         <LogoStream />
       </div>
       <div>
-        <Services
-          services={whoWeServeServices}
-          title="Who We Guide"
-          sectionId="faq"
-        />
+        <TestimonialSection />
       </div>
       <div>
         <Footer />

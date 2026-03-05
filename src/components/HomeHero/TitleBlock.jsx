@@ -4,28 +4,59 @@ import { useState } from "react";
 import opalLogo from "../../assets/OPALgos GreyWhite Website.png";
 import ScrollingWords from "../Info/ScrollingWords";
 
-export default function TitleBlock({ titleRef, right = 0 }) {
+export default function TitleBlock() {
   const [isFlipped, setIsFlipped] = useState(false);
 
   const segments = [
-    "Maximum Margins",
-    "Minimal Overhead",
-    "Guided Intelligence"
+    
+    "Identify Leakage",
+    "Generate Strategy",
+    "Throttle Outreach",
+    "Track Impact",
   ];
 
-  const flipCardText = "The guided OS that reduces revenue leakage automatically.";
+  const leftQuestions = [
+    "No singular location to manage patient outreach?",
+    "Is your A/R descending into oblivion?"
+  ];
+
+  const rightQuestions = [
+    "Have no-shows impacted your production?",
+    "Are scheduling bottlenecks limiting your growth?"
+  ];
 
   return (
     <>
       <div
-        className="absolute left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-4 md:right-10 top-[60%] sm:top-[50%] translate-y-[-50%] z-20 lg:transition-[right] lg:duration-300 lg:ease-out w-full sm:w-auto flex justify-center sm:block"
-        style={{ 
-          right: right !== undefined && right > 0 ? `${right}px` : undefined,
-        }}
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-full flex flex-col justify-center items-center px-4 md:px-8 gap-5"
       >
+        {/* Left Questions — above logo on mobile, left on desktop */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            delay: 1.5,
+            duration: 1,
+            ease: [0.25, 0.1, 0.25, 1],
+          }}
+          className="flex flex-col items-center gap-2"
+        >
+          {leftQuestions.map((question, idx) => (
+            <p
+              key={idx}
+              className="text-white/80 font-['Montserrat'] text-[10px] sm:text-xs lg:text-sm leading-snug font-light text-center whitespace-nowrap"
+              style={{
+                textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+                letterSpacing: '0.03em',
+              }}
+            >
+              {question}
+            </p>
+          ))}
+        </motion.div>
+
         <div
-          ref={titleRef}
-          className="relative inline-block text-center sm:text-right"
+          className="relative inline-block text-center shrink-0"
           style={{ overflow: 'visible' }}
           onMouseEnter={() => setIsFlipped(true)}
           onMouseLeave={() => setIsFlipped(false)}
@@ -33,7 +64,7 @@ export default function TitleBlock({ titleRef, right = 0 }) {
         >
           {/* Flip Card Container */}
           <div
-            className="relative w-[80vw] sm:w-[70vw] md:w-[50vw] lg:w-[45vw] xl:w-[40vw] max-w-[800px] mb-3 md:mb-4 mx-auto sm:mx-0"
+            className="relative w-[40vw] sm:w-[35vw] md:w-[25vw] lg:w-[22vw] xl:w-[20vw] max-w-[400px] mb-3 md:mb-4 mx-auto"
             style={{ perspective: '1000px' }}
           >
             <motion.button
@@ -94,7 +125,7 @@ export default function TitleBlock({ titleRef, right = 0 }) {
                 }}
               />
               
-              {/* Back: Flip Card Text */}
+              {/* Back: Scrolling Words */}
               <div
                 className="absolute top-0 left-0 w-full h-full flex items-center justify-center p-4 md:p-6"
                 style={{
@@ -103,39 +134,44 @@ export default function TitleBlock({ titleRef, right = 0 }) {
                   transform: 'rotateY(180deg)',
                 }}
               >
-                <p className="text-white font-['Montserrat'] text-base md:text-lg lg:text-xl xl:text-2xl leading-tight tracking-wide font-light text-center px-4"
+                <div className="text-white font-['Montserrat'] text-sm sm:text-base md:text-lg lg:text-xl leading-tight tracking-wide font-light text-center"
                   style={{
                     textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
                     letterSpacing: '0.05em',
                   }}
                 >
-                  {flipCardText}
-                </p>
+                  <ScrollingWords words={segments} />
+                </div>
               </div>
             </motion.div>
           </div>
-          {/* Scrolling Words */}
-          <div className="relative flex items-center justify-center sm:justify-end px-4 sm:px-0">
-            
-            
-            <motion.div
-              initial={{ x: "50%", opacity: 0 }}
-              animate={{ x: "0%", opacity: 1 }}
-              transition={{
-                delay: 0.8,
-                duration: 1.5,
-                ease: [0.25, 0.1, 0.25, 1],
-              }}
-              className="text-white font-['Montserrat'] text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl leading-tight tracking-wide font-light"
+          
+        </div>
+
+        {/* Right Questions — below logo on mobile, right on desktop */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            delay: 1.5,
+            duration: 1,
+            ease: [0.25, 0.1, 0.25, 1],
+          }}
+          className="flex flex-col items-center gap-2"
+        >
+          {rightQuestions.map((question, idx) => (
+            <p
+              key={idx}
+              className="text-white/80 font-['Montserrat'] text-[10px] sm:text-xs lg:text-sm leading-snug font-light text-center lg:text-left whitespace-nowrap"
               style={{
                 textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
-                letterSpacing: '0.05em',
+                letterSpacing: '0.03em',
               }}
             >
-              <ScrollingWords words={segments} />
-            </motion.div>
-          </div>
-        </div>
+              {question}
+            </p>
+          ))}
+        </motion.div>
       </div>
     </>
   );

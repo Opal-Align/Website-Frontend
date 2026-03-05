@@ -1,10 +1,11 @@
 import React, { useEffect, useRef } from "react";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 const NavigationOverlay = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
-  const navItems = ["Home", "gOS in Action", "Who We Guide", "Join Today"];
+  const navItems = ["Home", "Services", "Impact", "Testimonials", "Join Today"];
   const scrollPositionRef = useRef(0);
 
   // Map navigation items to their target selectors
@@ -12,10 +13,12 @@ const NavigationOverlay = ({ isOpen, onClose }) => {
     switch (item) {
       case "Home":
         return null; // Scroll to top
-      case "gOS in Action":
-        return "#gos-in-action";
-      case "Who We Guide":
-        return "#faq";
+      case "Services":
+        return "#services";
+      case "Impact":
+        return "#impact";
+      case "Testimonials":
+        return "#testimonials";
       case "Join Today":
         return "/contact-us"; // Navigate to contact page
       default:

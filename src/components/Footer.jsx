@@ -1,7 +1,9 @@
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { MdCall } from "react-icons/md";
-import { MdEmail } from "react-icons/md";
+import { MdCall, MdEmail } from "react-icons/md";
+import instagramIcon from "../assets/instagram.svg";
+import linkedinIcon from "../assets/linkedin.svg";
 import opalLogo from "../assets/OPALgos GreyWhite Website.png";
 
 export default function Footer() {
@@ -29,8 +31,8 @@ export default function Footer() {
       {/* Content - Single Row Layout */}
       <div className="relative z-10 flex flex-col justify-between h-full">
         <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-16 py-12 md:py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start">
-            {/* Left side: Contact Info */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12 lg:gap-20 items-start">
+            {/* Left: Phone & Email */}
             <div className="space-y-6 md:space-y-8">
               <div className="space-y-3 md:space-y-4 text-white">
                 <a
@@ -50,7 +52,32 @@ export default function Footer() {
               </div>
             </div>
 
-            {/* Right side: Contact CTA */}
+            {/* Center: Social Media */}
+            <div className="space-y-4">
+              <p className="text-white/40 text-xs tracking-[0.2em] uppercase">Follow Us</p>
+              <div className="space-y-3">
+                <a
+                  href="https://www.instagram.com/opal_gos/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 text-base md:text-lg text-white hover:text-white/80 transition-colors"
+                >
+                  <img src={instagramIcon} alt="Instagram" className="w-5 h-5 md:w-6 md:h-6 shrink-0" style={{ filter: 'brightness(0) invert(1)' }} />
+                  <span>Instagram</span>
+                </a>
+                <a
+                  href="https://www.linkedin.com/company/opal-gos/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 text-base md:text-lg text-white hover:text-white/80 transition-colors"
+                >
+                  <img src={linkedinIcon} alt="LinkedIn" className="w-5 h-5 md:w-6 md:h-6 shrink-0" style={{ filter: 'brightness(0) invert(1)' }} />
+                  <span>LinkedIn</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Right: Contact CTA */}
             <div className="space-y-6 md:space-y-8">
               <div className="space-y-2">
                 <h2 className="text-white text-base md:text-lg font-medium">
