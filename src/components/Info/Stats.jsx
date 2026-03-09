@@ -392,7 +392,7 @@ export default function Processes() {
         >
           <div className="flex-1 h-px bg-linear-to-r from-transparent via-white/10 to-transparent" />
           <span className="text-[10px] tracking-[0.3em] uppercase text-white/20">
-            ∞ · observed · catalogued · verified
+             observed · catalogued · verified
           </span>
           <div className="flex-1 h-px bg-linear-to-r from-transparent via-white/10 to-transparent" />
         </motion.div>

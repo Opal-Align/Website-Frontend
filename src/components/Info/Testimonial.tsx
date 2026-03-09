@@ -12,7 +12,7 @@ const testimonials: Testimonial[] = [
   {
     quote:
       "Honestly, the biggest difference is we're not digging through ledgers anymore. Opal just shows us who needs attention, and the automation takes care of most of the follow-ups.",
-    name: "Dentist (Practice Owner)",
+    name: "Practice Owner",
   },
   {
     quote:
@@ -142,7 +142,7 @@ const TestimonialSection = () => {
         >
           <div className="flex-1 h-px bg-linear-to-r from-transparent via-white/10 to-transparent" />
           <span className="text-[10px] tracking-[0.3em] uppercase text-white/20">
-            ∞ · trusted · validated · proven
+             trusted · validated · proven
           </span>
           <div className="flex-1 h-px bg-linear-to-r from-transparent via-white/10 to-transparent" />
         </motion.div>

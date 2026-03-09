@@ -26,7 +26,7 @@ const logos = [
 
 export default function LogoStream() {
   return (
-    <div className="relative overflow-hidden w-full border-t border-b border-gray-800 py-8 md:py-12 bg-black flex items-center justify-center">
+    <div className="relative overflow-hidden w-full py-8 md:py-12 bg-black flex items-center justify-center">
       {/* Fade at edges */}
       <div className="absolute top-0 left-0 w-12 md:w-32 h-full bg-linear-to-r from-black to-transparent z-10"></div>
       <div className="absolute top-0 right-0 w-12 md:w-32 h-full bg-linear-to-l from-black to-transparent z-10"></div>
