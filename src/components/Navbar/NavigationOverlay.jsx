@@ -21,8 +21,7 @@ const NavigationOverlay = ({ isOpen, onClose }) => {
         return "#testimonials";
       case "Join Today":
         return "/contact-us"; // Navigate to contact page
-      default:
-        return null;
+      
     }
   };
 
