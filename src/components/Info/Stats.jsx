@@ -301,13 +301,17 @@ function Card({ stat, index, inView }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
+      initial={{ opacity: 0, y: 40, scale: 1 }}
+      animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
+      whileHover={{ scale: 1.06, backgroundColor: "#111", boxShadow: "0 8px 30px rgba(255,255,255,0.08)" }}
       transition={{ duration: 0.6, delay: index * 0.12, ease: "easeOut" }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="relative overflow-hidden border-t border-white/5 transition-colors duration-500 cursor-default"
-      style={{ backgroundColor: hovered ? "#111" : "#000" }}
+      className="relative overflow-hidden border-t border-white/5 cursor-default"
+      style={{
+        backgroundColor: "#000",
+        zIndex: hovered ? 10 : 1,
+      }}
     >
       <div className="relative z-10 p-6 md:p-8 flex flex-col gap-4">
 
@@ -375,6 +379,21 @@ export default function Processes() {
             We deliver <InvisibleInk>Realtime Operational Impact</InvisibleInk>.
           </h2>
         </motion.div>
+
+        {/* Hero header */}
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.7, delay: 0.3 }}
+          className="text-center text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white tracking-tight font-['Montserrat'] mb-5 mt-30"
+          style={{
+            letterSpacing: "-0.02em",
+            lineHeight: 1.05,
+            textShadow: "0 0 60px rgba(255,255,255,0.06)",
+          }}
+        >
+          OPAL gOS in Action
+        </motion.h2>
 
         {/* Stats grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">

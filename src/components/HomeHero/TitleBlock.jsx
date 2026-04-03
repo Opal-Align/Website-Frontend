@@ -16,35 +16,37 @@ export default function TitleBlock() {
   ];
 
   const leftQuestions = [
-    "No singular location to manage patient outreach?",
-    "Is your A/R descending into oblivion?"
+    "Your practice is leaking revenue. You just can't see where.",
+    "Your practice billed it. Your A/R aged it into oblivion."
   ];
+  
+    
 
   const rightQuestions = [
-    "Have no-shows impacted your production?",
-    "Are scheduling bottlenecks limiting your growth?"
+    "Your practice isn't losing patients. It's losing touch with them",
+    "Your Practice has capacity. Your demand says otherwise."
   ];
 
   return (
     <>
       <div
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-full flex flex-col justify-center items-center px-4 md:px-8 gap-5"
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-full flex flex-col lg:flex-row justify-center items-center px-4 md:px-8 gap-10 lg:gap-16"
       >
         {/* Left Questions — above logo on mobile, left on desktop */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
           transition={{
             delay: 1.5,
             duration: 1,
             ease: [0.25, 0.1, 0.25, 1],
           }}
-          className="flex flex-col items-center gap-2"
+          className="flex flex-col items-center lg:items-end gap-2 lg:flex-1"
         >
           {leftQuestions.map((question, idx) => (
             <p
               key={idx}
-              className="text-white/80 font-['Montserrat'] text-[10px] sm:text-xs lg:text-sm leading-snug font-light text-center whitespace-nowrap"
+              className="text-white/80 font-['Montserrat'] text-[10px] sm:text-xs lg:text-sm leading-snug font-light text-center lg:text-left whitespace-nowrap lg:pr-10"
               style={{
                 textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
                 letterSpacing: '0.03em',
@@ -150,14 +152,14 @@ export default function TitleBlock() {
 
         {/* Right Questions — below logo on mobile, right on desktop */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
           transition={{
             delay: 1.5,
             duration: 1,
             ease: [0.25, 0.1, 0.25, 1],
           }}
-          className="flex flex-col items-center gap-2"
+          className="flex flex-col items-center lg:items-start gap-2 lg:flex-1"
         >
           {rightQuestions.map((question, idx) => (
             <p

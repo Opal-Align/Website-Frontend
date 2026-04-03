@@ -13,11 +13,12 @@ export default function HomePageLayout() {
         <Navbar />
       </div>
       
+      
+      
+      <Processes />
       <div>
         <HeroFlow />
       </div>
-      
-      <Processes />
       <div>
         <LogoStream />
       </div>
