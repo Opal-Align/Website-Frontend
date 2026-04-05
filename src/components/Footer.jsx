@@ -180,7 +180,7 @@ export default function Footer() {
           <div className="space-y-2">
             <h2 className="text-white text-base md:text-lg font-medium">
               <Typewriter
-                text="Pilot assessment availability is limited."
+                text="Due to high demand, DEMO availability is limited."
                 started={typewriterStarted}
                 delay={s.cta1.d}
                 speed={s.cta1.sp}
@@ -188,7 +188,7 @@ export default function Footer() {
             </h2>
             <p className="text-white/50 text-xs md:text-sm">
               <Typewriter
-                text="We work with a select number of DSOs at a time. Request yours before the next cohort fills."
+                text="Request your invitation now before slots fill up."
                 started={typewriterStarted}
                 delay={s.cta2.d}
                 speed={s.cta2.sp}
@@ -205,7 +205,7 @@ export default function Footer() {
               animate={{ opacity: typewriterStarted ? 1 : 0 }}
               transition={{ delay: typewriterStarted ? s.btn : 0, duration: 0.5 }}
             >
-              <span>Request a Pilot Assessment</span>
+              <span>Join Today</span>
               <span className="flex gap-1.5">
                 <span className="w-2 h-2 bg-current rounded-full"></span>
                 <span className="w-2 h-2 bg-current rounded-full"></span>
