@@ -375,7 +375,7 @@ export default function Processes() {
         >
           <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white/40 leading-tight">
             They sell{" "}
-            <AnimatedStrike inView={inView}>Return On Investment</AnimatedStrike>.<br />{" "}
+            <AnimatedStrike inView={inView}>ROI</AnimatedStrike>.<br />{" "}
             We deliver <InvisibleInk>Realtime Operational Impact</InvisibleInk>.
           </h2>
         </motion.div>
