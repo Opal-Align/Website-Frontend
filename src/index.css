@@ -2,12 +2,14 @@
 
 html,
 body {
-  overflow-x: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
   width: 100%;
   position: relative;
 }
 
 #root {
-  overflow-x: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
   width: 100%;
 }

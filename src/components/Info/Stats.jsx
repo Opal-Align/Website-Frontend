@@ -2,42 +2,42 @@ import { useEffect, useRef, useState, useCallback } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, useInView, animate } from "framer-motion";
 
+const NAVY = "#08060C";
+const OPAL_LIGHT_GRADIENT =
+  "linear-gradient(120deg, #B8EEFF 0%, #D4AAFF 30%, #FFB8F5 60%, #AAFFD4 100%)";
+const OPAL_SOFT_GLOW = "rgba(212,170,255,0.28)";
+const gradientText = {
+  backgroundImage: OPAL_LIGHT_GRADIENT,
+  WebkitBackgroundClip: "text",
+  backgroundClip: "text",
+  WebkitTextFillColor: "transparent",
+  color: "transparent",
+};
+
 const stats = [
   {
     target: 18, prefix: "$", suffix: "K+",
     label: "Recovered Revenue",
     desc: "Automation drove A/R recovery in a single pilot, across two practices.",
     glyph: "α · 001",
-    gradient: "from-white via-blue-100 to-blue-300",
-    glow: "rgba(190,215,255,0.3)",
-    dot: "bg-blue-200 shadow-[0_0_8px_3px_rgba(190,210,255,0.5)]",
   },
   {
     target: 1, prefix: "", suffix: "K+",
     label: "Communications Triggered",
     desc: "Outreach attempts per session vastly outnumber what is humanely achievable.",
     glyph: "β · 002",
-    gradient: "from-white via-purple-100 to-purple-300",
-    glow: "rgba(210,195,255,0.3)",
-    dot: "bg-purple-200 shadow-[0_0_8px_3px_rgba(210,195,255,0.5)]",
   },
   {
     target: 625, prefix: "", suffix: "",
     label: "Hours Saved",
     desc: "Manual labor dependence is eliminated instantly.",
     glyph: "γ · 003",
-    gradient: "from-white via-amber-100 to-amber-300",
-    glow: "rgba(255,225,140,0.3)",
-    dot: "bg-amber-200 shadow-[0_0_8px_3px_rgba(255,230,150,0.5)]",
   },
   {
     target: 16, prefix: "", suffix: "×",
     label: "Productivity Multiplier",
     desc: "Existing teams became exponentially more effective.",
     glyph: "δ · 004",
-    gradient: "from-white via-emerald-100 to-emerald-300",
-    glow: "rgba(170,245,210,0.3)",
-    dot: "bg-emerald-200 shadow-[0_0_8px_3px_rgba(170,245,210,0.5)]",
   },
 ];
 
@@ -70,10 +70,11 @@ function Process() {
         if (s.tw) a = s.base * (0.35 + 0.65 * Math.sin(t * 0.001 * s.sp + s.ph));
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,255,255,${a})`;
+        const hue = s.r > 1.2 ? 280 : 210;
+        ctx.fillStyle = `hsla(${hue}, 85%, 86%, ${a})`;
         ctx.fill();
         if (s.r > 1.2) {
-          ctx.strokeStyle = `rgba(255,255,255,${a * 0.3})`;
+          ctx.strokeStyle = `hsla(285, 90%, 86%, ${a * 0.28})`;
           ctx.lineWidth = 0.5;
           ctx.beginPath();
           ctx.moveTo(s.x - s.r * 3, s.y); ctx.lineTo(s.x + s.r * 3, s.y);
@@ -99,7 +100,11 @@ function AnimatedStrike({ children, inView }) {
     <span className="relative inline-block">
       <span className="text-white/60">{children}</span>
       <motion.span
-        className="absolute left-0 top-1/2 h-[7px] bg-white/70 rounded-full"
+        className="absolute left-0 top-1/2 h-[7px] rounded-full"
+        style={{
+          backgroundImage: OPAL_LIGHT_GRADIENT,
+          boxShadow: `0 0 22px ${OPAL_SOFT_GLOW}`,
+        }}
         initial={{ width: "0%" }}
         animate={inView ? { width: "100%" } : { width: "0%" }}
         transition={{ duration: 0.8, delay: 0.6, ease: "easeInOut" }}
@@ -167,7 +172,7 @@ function InvisibleInk({ children, hideDelay = 2000 }) {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,255,255,${flicker})`;
+        ctx.fillStyle = `rgba(212,170,255,${flicker})`;
         ctx.fill();
       }
 
@@ -242,9 +247,9 @@ function InvisibleInk({ children, hideDelay = 2000 }) {
         style={{
           filter: revealed ? "blur(0px)" : "blur(10px)",
           opacity: revealed ? 1 : 0,
-          color: revealed ? "#fff" : undefined,
+          ...(revealed ? gradientText : {}),
           textShadow: revealed
-            ? "0 0 20px rgba(190,215,255,0.7), 0 0 40px rgba(190,215,255,0.4), 0 0 60px rgba(190,215,255,0.2)"
+            ? "0 0 20px rgba(212,170,255,0.55), 0 0 44px rgba(184,238,255,0.24)"
             : "none",
           transition: revealed
             ? "filter 0.7s ease-out, opacity 0.7s ease-out, text-shadow 0.7s ease-out 0.3s"
@@ -269,7 +274,7 @@ function InvisibleInk({ children, hideDelay = 2000 }) {
   );
 }
 
-function Counter({ target, prefix, suffix, gradient, glow, inView }) {
+function Counter({ target, prefix, suffix, inView }) {
   const [val, setVal] = useState(0);
 
   useEffect(() => {
@@ -284,11 +289,12 @@ function Counter({ target, prefix, suffix, gradient, glow, inView }) {
 
   return (
     <span
-      className={`bg-linear-to-br ${gradient} bg-clip-text text-transparent font-semibold tracking-tight`}
+      className="font-semibold tracking-tight"
       style={{
+        ...gradientText,
         fontSize: "clamp(2.8rem, 5vw, 4.2rem)",
         lineHeight: 1,
-        filter: `drop-shadow(0 0 24px ${glow})`,
+        filter: `drop-shadow(0 0 24px ${OPAL_SOFT_GLOW})`,
       }}
     >
       {prefix}{val}{suffix}
@@ -303,27 +309,55 @@ function Card({ stat, index, inView }) {
     <motion.div
       initial={{ opacity: 0, y: 40, scale: 1 }}
       animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
-      whileHover={{ scale: 1.06, backgroundColor: "#111", boxShadow: "0 8px 30px rgba(255,255,255,0.08)" }}
+      whileHover={{
+        scale: 1.035,
+        borderColor: "rgba(212,170,255,0.42)",
+        boxShadow: "0 18px 70px rgba(212,170,255,0.12)",
+      }}
       transition={{ duration: 0.6, delay: index * 0.12, ease: "easeOut" }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="relative overflow-hidden border-t border-white/5 cursor-default"
+      className="relative overflow-hidden rounded-[28px] border cursor-default"
       style={{
-        backgroundColor: "#000",
+        borderColor: "rgba(255,255,255,0.1)",
+        background:
+          "linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018))",
+        backdropFilter: "blur(10px)",
         zIndex: hovered ? 10 : 1,
       }}
     >
-      <div className="relative z-10 p-6 md:p-8 flex flex-col gap-4">
+      <div
+        aria-hidden
+        className="absolute inset-0 opacity-70"
+        style={{
+          background:
+            "radial-gradient(circle at 20% 10%, rgba(184,238,255,0.12), transparent 36%), radial-gradient(circle at 85% 90%, rgba(255,184,245,0.10), transparent 42%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="absolute inset-x-0 top-0 h-px"
+        style={{ backgroundImage: OPAL_LIGHT_GRADIENT }}
+      />
+
+      <div className="relative z-10 p-6 md:p-8 flex flex-col gap-4 min-h-[245px]">
 
         {/* Star dot */}
         <div className="absolute top-4 right-4">
-          <div className={`w-[5px] h-[5px] rounded-full ${stat.dot}`} />
+          <div
+            className="w-[6px] h-[6px] rounded-full"
+            style={{
+              backgroundImage: OPAL_LIGHT_GRADIENT,
+              boxShadow: `0 0 12px 4px ${OPAL_SOFT_GLOW}`,
+            }}
+          />
           {hovered && (
             <motion.div
               initial={{ scale: 0, opacity: 0.6 }}
               animate={{ scale: 5, opacity: 0 }}
               transition={{ duration: 1.8, repeat: Infinity }}
-              className="absolute inset-0 rounded-full border border-white/20"
+              className="absolute inset-0 rounded-full border"
+              style={{ borderColor: "rgba(212,170,255,0.35)" }}
             />
           )}
         </div>
@@ -332,17 +366,17 @@ function Card({ stat, index, inView }) {
         <Counter {...stat} inView={inView} />
 
         {/* Label */}
-        <h4 className="text-white font-semibold tracking-tight text-lg leading-tight">
+        <h4 className="text-white/90 font-semibold tracking-tight text-lg leading-tight">
           {stat.label}
         </h4>
 
-        <div className="h-px bg-white/5" />
+        <div className="h-px bg-white/10" />
 
         {/* Description */}
-        <p className="text-sm text-gray-400 leading-relaxed">{stat.desc}</p>
+        <p className="text-sm text-white/55 leading-relaxed">{stat.desc}</p>
 
         {/* Greek index */}
-        <span className="absolute bottom-3 right-4 text-[10px] tracking-widest text-white/10 hidden md:block">
+        <span className="absolute bottom-3 right-4 text-[10px] tracking-widest text-white/18 hidden md:block">
           {stat.glyph}
         </span>
       </div>
@@ -352,16 +386,34 @@ function Card({ stat, index, inView }) {
 
 export default function Processes() {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const inView = useInView(ref, { once: false, margin: "-80px" });
 
   return (
-    <div id="impact" className="relative bg-black overflow-hidden py-16">
+    <div
+      id="impact"
+      className="relative overflow-hidden py-16 md:py-24"
+      style={{ backgroundColor: NAVY }}
+    >
+      <div
+        aria-hidden
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `
+            radial-gradient(ellipse at 18% 12%, rgba(184,238,255,0.10) 0%, transparent 34%),
+            radial-gradient(ellipse at 82% 42%, rgba(255,184,245,0.11) 0%, transparent 36%),
+            radial-gradient(ellipse at 48% 92%, rgba(170,255,212,0.08) 0%, transparent 36%),
+            ${NAVY}
+          `,
+        }}
+      />
       <Process />
 
       {/* Vignette */}
       <div
         className="absolute inset-0 pointer-events-none"
-        style={{ background: "radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.8) 100%)" }}
+        style={{
+          background: `radial-gradient(ellipse at center, transparent 44%, ${NAVY}cc 82%, ${NAVY}f7 100%)`,
+        }}
       />
 
       <div ref={ref} className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -371,9 +423,9 @@ export default function Processes() {
           initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="text-left mb-16"
+          className="text-left mb-14 md:mb-16"
         >
-          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white/40 leading-tight">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-semibold text-white/45 leading-tight">
             They sell{" "}
             <AnimatedStrike inView={inView}>ROI</AnimatedStrike>.<br />{" "}
             We deliver <InvisibleInk>Realtime Operational Impact</InvisibleInk>.
@@ -385,18 +437,19 @@ export default function Processes() {
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.7, delay: 0.3 }}
-          className="text-center text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white tracking-tight font-['Montserrat'] mb-5 mt-30"
+          className="text-center text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold tracking-tight font-['Montserrat'] mb-8 md:mb-10 mt-10 md:mt-24"
           style={{
+            color: "#ffffff",
             letterSpacing: "-0.02em",
             lineHeight: 1.05,
-            textShadow: "0 0 60px rgba(255,255,255,0.06)",
+            textShadow: "0 0 60px rgba(212,170,255,0.10)",
           }}
         >
-          OPAL gOS in Action
+          gOS in Action
         </motion.h2>
 
         {/* Stats grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat, i) => (
             <Card key={i} stat={stat} index={i} inView={inView} />
           ))}
@@ -407,13 +460,13 @@ export default function Processes() {
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
           transition={{ delay: 0.9, duration: 0.8 }}
-          className="flex items-center gap-4 mt-8 border-t border-white/5 pt-6"
+          className="flex items-center gap-4 mt-10 border-t border-white/10 pt-6"
         >
-          <div className="flex-1 h-px bg-linear-to-r from-transparent via-white/10 to-transparent" />
-          <span className="text-[10px] tracking-[0.3em] uppercase text-white/20">
+          <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(212,170,255,0.28), transparent)` }} />
+          <span className="text-[10px] tracking-[0.3em] uppercase text-white/28">
              observed · catalogued · verified
           </span>
-          <div className="flex-1 h-px bg-linear-to-r from-transparent via-white/10 to-transparent" />
+          <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(184,238,255,0.25), transparent)` }} />
         </motion.div>
 
       </div>

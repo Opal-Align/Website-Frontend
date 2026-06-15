@@ -24,12 +24,25 @@ const logos = [
   OpenDental,
 ];
 
+const OPAL_LIGHT_GRADIENT =
+  "linear-gradient(120deg, #B8EEFF 0%, #D4AAFF 30%, #FFB8F5 60%, #AAFFD4 100%)";
+
 export default function LogoStream() {
   return (
-    <div className="relative overflow-hidden w-full py-8 md:py-12 bg-black flex items-center justify-center">
-      {/* Fade at edges */}
-      <div className="absolute top-0 left-0 w-12 md:w-32 h-full bg-linear-to-r from-black to-transparent z-10"></div>
-      <div className="absolute top-0 right-0 w-12 md:w-32 h-full bg-linear-to-l from-black to-transparent z-10"></div>
+    <div
+      className="relative overflow-hidden w-full py-8 md:py-12 flex items-center justify-center"
+      style={{
+        background: `
+          radial-gradient(ellipse at 20% 50%, rgba(184,238,255,0.08) 0%, transparent 40%),
+          radial-gradient(ellipse at 80% 50%, rgba(255,184,245,0.08) 0%, transparent 40%),
+          radial-gradient(ellipse at 50% 0%,  rgba(212,170,255,0.07) 0%, transparent 35%),
+          #08060C
+        `,
+      }}
+    >
+      {/* Fade at edges — matched to navy */}
+      <div className="absolute top-0 left-0 w-12 md:w-32 h-full z-10" style={{ background: "linear-gradient(to right, #08060C, transparent)" }} />
+      <div className="absolute top-0 right-0 w-12 md:w-32 h-full z-10" style={{ background: "linear-gradient(to left, #08060C, transparent)" }} />
 
       {/* Looping Row */}
       <div className="flex overflow-hidden w-full">
@@ -57,12 +70,21 @@ export default function LogoStream() {
                   key={`${index}-${logoIndex}`}
                   className="flex items-center justify-center min-w-[120px] md:min-w-[180px] shrink-0"
                 >
-                  <img
-                    src={logo}
-                    alt={`Logo ${logoIndex + 1}`}
-                    className="h-12 md:h-16 w-auto max-w-[150px] md:max-w-[200px] object-contain opacity-60 hover:opacity-100 transition-opacity brightness-0 invert"
+                  <span
+                    role="img"
+                    aria-label={`Logo ${logoIndex + 1}`}
+                    className="block h-12 md:h-16 w-[150px] md:w-[200px] opacity-70 hover:opacity-100 transition-opacity"
                     style={{
-                      filter: 'brightness(0) invert(1)',
+                      backgroundImage: OPAL_LIGHT_GRADIENT,
+                      backgroundSize: "180% 180%",
+                      WebkitMaskImage: `url("${logo}")`,
+                      WebkitMaskRepeat: "no-repeat",
+                      WebkitMaskPosition: "center",
+                      WebkitMaskSize: "contain",
+                      maskImage: `url("${logo}")`,
+                      maskRepeat: "no-repeat",
+                      maskPosition: "center",
+                      maskSize: "contain",
                     }}
                   />
                 </div>

@@ -7,6 +7,35 @@ import instagramIcon from "../assets/instagram.svg";
 import linkedinIcon from "../assets/linkedin.svg";
 import opalLogo from "../assets/OPALgos GreyWhite Website.png";
 
+const OPAL_GRADIENT =
+  "linear-gradient(120deg, #B8EEFF 0%, #D4AAFF 30%, #FFB8F5 60%, #AAFFD4 100%)";
+
+const gradientText = {
+  backgroundImage: OPAL_GRADIENT,
+  WebkitBackgroundClip: "text",
+  backgroundClip: "text",
+  WebkitTextFillColor: "transparent",
+  color: "transparent",
+};
+
+/* Gradient fill for CSS-mask SVG images (instagram, linkedin) */
+const gradientMaskIcon = (src, size = "1.25rem") => ({
+  display: "inline-block",
+  width: size,
+  height: size,
+  flexShrink: 0,
+  backgroundImage: OPAL_GRADIENT,
+  backgroundSize: "100% 100%",
+  WebkitMaskImage: `url("${src}")`,
+  WebkitMaskRepeat: "no-repeat",
+  WebkitMaskPosition: "center",
+  WebkitMaskSize: "contain",
+  maskImage: `url("${src}")`,
+  maskRepeat: "no-repeat",
+  maskPosition: "center",
+  maskSize: "contain",
+});
+
 /* ─── Typewriter component ─── */
 function Typewriter({ text, started, delay = 0, speed = 30, className = "", style = {} }) {
   const [displayed, setDisplayed] = useState("");
@@ -92,33 +121,53 @@ export default function Footer() {
   /* ─── Expandable content only (no bottom bar here) ─── */
   const footerContent = (
     <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-16 py-12 md:py-20">
+      {/* Hidden SVG gradient defs — makes fill="url(#opalIconGrad)" work for react-icons */}
+      <svg width="0" height="0" style={{ position: "absolute", overflow: "hidden" }} aria-hidden>
+        <defs>
+          <linearGradient id="opalIconGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%"   stopColor="#B8EEFF" />
+            <stop offset="30%"  stopColor="#D4AAFF" />
+            <stop offset="60%"  stopColor="#FFB8F5" />
+            <stop offset="100%" stopColor="#AAFFD4" />
+          </linearGradient>
+        </defs>
+      </svg>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12 lg:gap-20 items-start">
 
         {/* Left: Phone & Email */}
         <div className="space-y-6 md:space-y-8">
-          <div className="space-y-3 md:space-y-4 text-white">
+          <div className="space-y-3 md:space-y-4">
             <a
               href="tel:8779966725"
-              className="flex items-center gap-3 text-base md:text-lg hover:text-white/80 transition-colors"
+              className="flex items-center gap-3 text-base md:text-lg transition-opacity hover:opacity-75"
             >
-              <MdCall className="w-5 h-5 md:w-6 md:h-6 shrink-0" />
+              <MdCall
+                className="w-5 h-5 md:w-6 md:h-6 shrink-0"
+                style={{ fill: "url(#opalIconGrad)" }}
+              />
               <Typewriter
                 text="877-996-6725 (OPAL)"
                 started={typewriterStarted}
                 delay={s.phone.d}
                 speed={s.phone.sp}
+                style={gradientText}
               />
             </a>
             <a
               href="mailto:info@opalgos.com"
-              className="flex items-center gap-3 text-base md:text-lg hover:text-white/80 transition-colors"
+              className="flex items-center gap-3 text-base md:text-lg transition-opacity hover:opacity-75"
             >
-              <MdEmail className="w-5 h-5 md:w-6 md:h-6 shrink-0" />
+              <MdEmail
+                className="w-5 h-5 md:w-6 md:h-6 shrink-0"
+                style={{ fill: "url(#opalIconGrad)" }}
+              />
               <Typewriter
                 text="info@opalgos.com"
                 started={typewriterStarted}
                 delay={s.email.d}
                 speed={s.email.sp}
+                style={gradientText}
               />
             </a>
           </div>
@@ -131,45 +180,38 @@ export default function Footer() {
             started={typewriterStarted}
             delay={s.follow.d}
             speed={s.follow.sp}
-            className="text-white/40 text-xs tracking-[0.2em] uppercase block"
+            className="text-xs tracking-[0.2em] uppercase block"
+            style={{ ...gradientText, opacity: 0.55 }}
           />
           <div className="space-y-3">
             <a
               href="https://www.instagram.com/opal_gos/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 text-base md:text-lg text-white hover:text-white/80 transition-colors"
+              className="flex items-center gap-3 text-base md:text-lg transition-opacity hover:opacity-75"
             >
-              <img
-                src={instagramIcon}
-                alt="Instagram"
-                className="w-5 h-5 md:w-6 md:h-6 shrink-0"
-                style={{ filter: 'brightness(0) invert(1)' }}
-              />
+              <span style={gradientMaskIcon(instagramIcon, "1.25rem")} className="md:w-6 md:h-6" />
               <Typewriter
                 text="Instagram"
                 started={typewriterStarted}
                 delay={s.insta.d}
                 speed={s.insta.sp}
+                style={gradientText}
               />
             </a>
             <a
               href="https://www.linkedin.com/company/opal-gos/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 text-base md:text-lg text-white hover:text-white/80 transition-colors"
+              className="flex items-center gap-3 text-base md:text-lg transition-opacity hover:opacity-75"
             >
-              <img
-                src={linkedinIcon}
-                alt="LinkedIn"
-                className="w-5 h-5 md:w-6 md:h-6 shrink-0"
-                style={{ filter: 'brightness(0) invert(1)' }}
-              />
+              <span style={gradientMaskIcon(linkedinIcon, "1.25rem")} className="md:w-6 md:h-6" />
               <Typewriter
                 text="LinkedIn"
                 started={typewriterStarted}
                 delay={s.linked.d}
                 speed={s.linked.sp}
+                style={gradientText}
               />
             </a>
           </div>
@@ -178,37 +220,43 @@ export default function Footer() {
         {/* Right: Contact CTA */}
         <div className="space-y-6 md:space-y-8">
           <div className="space-y-2">
-            <h2 className="text-white text-base md:text-lg font-medium">
+            <h2 className="text-base md:text-lg font-medium">
               <Typewriter
                 text="Due to high demand, DEMO availability is limited."
                 started={typewriterStarted}
                 delay={s.cta1.d}
                 speed={s.cta1.sp}
+                style={gradientText}
               />
             </h2>
-            <p className="text-white/50 text-xs md:text-sm">
+            <p className="text-xs md:text-sm">
               <Typewriter
                 text="Request your invitation now before slots fill up."
                 started={typewriterStarted}
                 delay={s.cta2.d}
                 speed={s.cta2.sp}
+                style={{ ...gradientText, opacity: 0.6 }}
               />
             </p>
           </div>
 
           <Link to="/contact-us">
             <motion.button
-              className="w-full md:w-auto px-6 md:px-8 py-3 border border-white/30 rounded-full flex items-center justify-center md:justify-start gap-3 transition-all text-white hover:bg-white hover:text-black cursor-pointer"
-              whileHover={{ scale: 1.05 }}
+              className="w-full md:w-auto px-6 md:px-8 py-3 rounded-full flex items-center justify-center md:justify-start gap-3 transition-all cursor-pointer"
+              style={{
+                border: "1px solid transparent",
+                background: `linear-gradient(#000, #000) padding-box, ${OPAL_GRADIENT} border-box`,
+              }}
+              whileHover={{ opacity: 0.8 }}
               whileTap={{ scale: 0.95 }}
               initial={{ opacity: 0 }}
               animate={{ opacity: typewriterStarted ? 1 : 0 }}
               transition={{ delay: typewriterStarted ? s.btn : 0, duration: 0.5 }}
             >
-              <span>Join Today</span>
+              <span style={gradientText}>Join Today</span>
               <span className="flex gap-1.5">
-                <span className="w-2 h-2 bg-current rounded-full"></span>
-                <span className="w-2 h-2 bg-current rounded-full"></span>
+                <span className="w-2 h-2 rounded-full" style={{ background: OPAL_GRADIENT }} />
+                <span className="w-2 h-2 rounded-full" style={{ background: OPAL_GRADIENT }} />
               </span>
             </motion.button>
           </Link>
@@ -222,7 +270,7 @@ export default function Footer() {
   const bottomBar = (
     <div className="w-full bg-black border-t border-white/10">
       <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-16 py-4 md:py-6">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-8 text-white/60 text-xs md:text-sm">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-8 text-xs md:text-sm">
 
           {/* Logo */}
           <div className="flex items-center">
@@ -235,7 +283,9 @@ export default function Footer() {
 
           {/* Copyright */}
           <div className="flex flex-wrap items-center gap-4 md:gap-6">
-            © 2026 OPAL gOS. All rights reserved
+            <span style={{ ...gradientText, opacity: 0.55 }}>
+              © 2026 OPAL gOS. All rights reserved
+            </span>
           </div>
 
           {/* Links */}
@@ -244,16 +294,18 @@ export default function Footer() {
               href="/sms-opt-in"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-white transition-colors"
+              style={gradientText}
+              className="hover:opacity-80 transition-opacity"
             >
               SMS Opt In
             </a>
-            <span className="text-white/60">|</span>
+            <span style={{ ...gradientText, opacity: 0.35 }}>|</span>
             <a
               href="/privacy-policy"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-white transition-colors"
+              style={gradientText}
+              className="hover:opacity-80 transition-opacity"
             >
               Privacy Policy
             </a>
@@ -311,7 +363,7 @@ export default function Footer() {
             />
           </div>
 
-          {/* Collapsed stripe — logo image instead of text */}
+          {/* Collapsed stripe — logo */}
           <motion.div
             className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none"
             animate={{ opacity: isRevealed ? 0 : 1 }}
@@ -321,7 +373,7 @@ export default function Footer() {
               src={opalLogo}
               alt="OPAL gOS"
               className="h-6 w-auto object-contain"
-              style={{ filter: 'brightness(0) invert(1)', opacity: 0.5 }}
+              style={{ filter: "brightness(0) invert(1)", opacity: 0.5 }}
             />
           </motion.div>
 
@@ -337,7 +389,7 @@ export default function Footer() {
         </motion.footer>
       </div>
 
-      {/* Always-visible bottom bar — outside the expanding area */}
+      {/* Always-visible bottom bar */}
       {bottomBar}
 
     </div>

@@ -2,45 +2,24 @@ import React, { useEffect, useRef } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { OVERLAY_NAV_ITEMS, goToTarget } from "./navigationConfig";
 
 const NavigationOverlay = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
-  const navItems = ["Home", "Services", "Impact", "Testimonials", "Join Today"];
   const scrollPositionRef = useRef(0);
 
-  // Map navigation items to their target selectors
-  const getNavigationTarget = (item) => {
-    switch (item) {
-      case "Home":
-        return null; // Scroll to top
-      case "Services":
-        return "#services";
-      case "Impact":
-        return "#impact";
-      case "Testimonials":
-        return "#testimonials";
-      case "Join Today":
-        return "/contact-us"; // Navigate to contact page
-      
-    }
-  };
-
-  // Lock body scroll and save/restore scroll position
   useEffect(() => {
     if (isOpen) {
-      // Save current scroll position
       scrollPositionRef.current =
         window.scrollY ||
         window.pageYOffset ||
         document.documentElement.scrollTop;
 
-      // Lock scroll
       document.body.style.overflow = "hidden";
       document.body.style.position = "fixed";
       document.body.style.top = `-${scrollPositionRef.current}px`;
       document.body.style.width = "100%";
 
-      // Prevent scroll events
       const preventScroll = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -51,30 +30,38 @@ const NavigationOverlay = ({ isOpen, onClose }) => {
       window.addEventListener("wheel", preventScroll, { passive: false });
       window.addEventListener("touchmove", preventScroll, { passive: false });
 
+      const onKey = (e) => {
+        if (e.key === "Escape") onClose();
+      };
+      window.addEventListener("keydown", onKey);
+
       return () => {
         window.removeEventListener("scroll", preventScroll);
         window.removeEventListener("wheel", preventScroll);
         window.removeEventListener("touchmove", preventScroll);
+        window.removeEventListener("keydown", onKey);
       };
     } else {
-      // Restore scroll position
       document.body.style.overflow = "";
       document.body.style.position = "";
       document.body.style.top = "";
       document.body.style.width = "";
 
-      // Restore scroll position after a brief delay to ensure styles are reset
       setTimeout(() => {
         window.scrollTo(0, scrollPositionRef.current);
       }, 0);
     }
-  }, [isOpen]);
+  }, [isOpen, onClose]);
+
+  const handleItemClick = (target) => {
+    onClose();
+    goToTarget(target, navigate, { afterCloseMs: 320 });
+  };
 
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -84,7 +71,6 @@ const NavigationOverlay = ({ isOpen, onClose }) => {
             onClick={onClose}
           />
 
-          {/* Overlay Content */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -92,9 +78,7 @@ const NavigationOverlay = ({ isOpen, onClose }) => {
             transition={{ duration: 0.4 }}
             className="fixed inset-0 z-101 flex flex-col"
           >
-            {/* Top Bar */}
             <div className="flex items-center justify-between px-8 py-6">
-              {/* Star Icon - Top Left */}
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
@@ -115,56 +99,38 @@ const NavigationOverlay = ({ isOpen, onClose }) => {
                 </svg>
               </motion.div>
 
-              {/* Close Button - Top Right (Triple Dots) */}
               <motion.button
                 onClick={onClose}
-                initial={{ scale: 0, rotate: 180 }}
+                initial={{ scale: 0, rotate: 90 }}
                 animate={{ scale: 1, rotate: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+                aria-label="Close navigation"
                 className="w-10 h-10 flex items-center justify-center cursor-pointer"
               >
                 <svg
-                  width="24"
-                  height="24"
+                  width="22"
+                  height="22"
                   viewBox="0 0 24 24"
                   fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   className="text-white"
                 >
-                  {/* L-shaped triple dots pattern */}
-                  <circle cx="4" cy="4" r="2" fill="currentColor" />
-                  <circle cx="12" cy="4" r="2" fill="currentColor" />
-                  <circle cx="4" cy="12" r="2" fill="currentColor" />
+                  <line x1="5" y1="5" x2="19" y2="19" />
+                  <line x1="19" y1="5" x2="5" y2="19" />
                 </svg>
               </motion.button>
             </div>
 
-            {/* Center Navigation Links */}
             <div className="flex-1 flex flex-col items-center justify-center gap-8 md:gap-12">
-              {navItems.map((item, index) => (
+              {OVERLAY_NAV_ITEMS.map((item, index) => (
                 <motion.button
-                  key={item}
+                  key={item.key}
                   onClick={(e) => {
                     e.preventDefault();
-                    onClose();
-                    // Navigate after overlay closes
-                    setTimeout(() => {
-                      const target = getNavigationTarget(item);
-                      if (target === null) {
-                        // Scroll to top for Home
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      } else if (target === "/contact-us") {
-                        // Navigate to contact page
-                        navigate("/contact-us");
-                      } else {
-                        const element = document.querySelector(target);
-                        if (element) {
-                          element.scrollIntoView({
-                            behavior: "smooth",
-                            block: "start",
-                          });
-                        }
-                      }
-                    }, 300);
+                    handleItemClick(item.target);
                   }}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -175,11 +141,11 @@ const NavigationOverlay = ({ isOpen, onClose }) => {
                     ease: "easeOut",
                   }}
                   className={`text-white/60 hover:text-white text-4xl md:text-6xl lg:text-7xl font-bold transition-colors cursor-pointer bg-transparent border-none ${
-                    item === "Join Today" ? "block sm:hidden" : ""
-                  } `}
+                    item.key === "contact" ? "block md:hidden" : ""
+                  }`}
                   whileHover={{ scale: 1.05 }}
                 >
-                  {item}
+                  {item.label}
                 </motion.button>
               ))}
             </div>
