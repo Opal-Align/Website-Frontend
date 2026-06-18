@@ -10,6 +10,7 @@ import ParticleField from "./Info/Problem";
 import MechanismSection from "./Info/Mechanism";
 import ModulesSection from "./Info/ModuleSection.jsx";
 import SpaceRacer from "./Info/Gamefied.jsx";
+import GosStack from "./GosStack.tsx";
 export default function HomePageLayout() {
   return (
     <div
@@ -18,7 +19,7 @@ export default function HomePageLayout() {
     >
     <Navbar />
       <ScrollHero />
-      
+      <GosStack />
       
       <MechanismSection/>
       <ModulesSection/>

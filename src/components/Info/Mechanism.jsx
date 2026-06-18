@@ -1,58 +1,104 @@
-import { useEffect, useRef, useState } from "react";
-// eslint-disable-next-line no-unused-vars
+"use client";
+
+import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 
+/* ─── Constants ──────────────────────────────────────────────────────── */
 const NAVY = "#08060C";
-const OPAL_LIGHT_GRADIENT =
-  "linear-gradient(120deg, #B8EEFF 0%, #D4AAFF 30%, #FFB8F5 60%, #AAFFD4 100%)";
-const OPAL_STOPS = [
-  { offset: "0%", color: "#B8EEFF" },
-  { offset: "30%", color: "#D4AAFF" },
-  { offset: "60%", color: "#FFB8F5" },
-  { offset: "100%", color: "#AAFFD4" },
-];
-const gradientText = {
-  backgroundImage: OPAL_LIGHT_GRADIENT,
-  WebkitBackgroundClip: "text",
-  backgroundClip: "text",
-  WebkitTextFillColor: "transparent",
-  color: "transparent",
-};
+const AUTO_MS = 4200;
 
-// ── Particle canvas ──────────────────────────────────────────────────────────
+const STEPS = [
+  {
+    num: "01",
+    label: "Identify",
+    tagline: "Real-time visibility your reports never had.",
+    body: [
+      "Every revenue lever — aged A/R, unscheduled treatment, dormant patients, missed collections — is scanned continuously. ",
+      { bold: "The moment a gap opens, gOS surfaces it." },
+      " Your team stops hunting for problems and starts solving them — because gOS already knows where they are.",
+    ],
+  },
+  {
+    num: "02",
+    label: "Strategize",
+    tagline: "Your playbook. At machine scale.",
+    body: [
+      "Channels, cadences, message tone, escalation thresholds — ",
+      { bold: "all configured to your practice, your providers, your patients." },
+      " gOS doesn't impose a generic workflow. It learns how your practice operates and executes that logic at a volume no team ever could.",
+    ],
+  },
+  {
+    num: "03",
+    label: "Engage",
+    tagline: "Volume your team can't match. Automatically.",
+    body: [
+      "Multi-channel, multi-touch outreach — sequenced and dispatched automatically. ",
+      { bold: "The right message, to the right person, at the right time." },
+      " While your team is focused on patients in the chair, gOS is working every account that isn't.",
+    ],
+  },
+  {
+    num: "04",
+    label: "Calibrate",
+    tagline: "The system tunes itself. Your team doesn't have to.",
+    body: [
+      "gOS learns from every response. Timing adjusts. Cadence sharpens. Tone aligns to each patient's behavior. ",
+      { bold: "Month six performs better than month one" },
+      " — and your team doesn't do a thing differently to make that happen.",
+    ],
+  },
+  {
+    num: "05",
+    label: "Guide",
+    tagline: "Your team handles judgment. gOS handles everything else.",
+    body: [
+      "What automation can't resolve gets handed to your team — ",
+      { bold: "queued, prioritized, and ready to act on." },
+      " No digging. No guessing. Just the decisions that genuinely require a person, surfaced in the order they matter. ",
+      { bold: "That's the G in gOS." },
+    ],
+  },
+];
+
+const HEADLINE = [
+  { text: "FIVE",    color: "#FFFFFF" },
+  { text: "STEPS.",  color: "#9B6DFF" },
+  { text: "ONE",     color: "outline" },
+  { text: "CON-",    color: "#FFFFFF" },
+  { text: "TINUOUS", color: "#22D3EE" },
+  { text: "LOOP.",   color: "outline" },
+];
+
+/* ─── Particle canvas ────────────────────────────────────────────────── */
 function ParticleField() {
   const canvasRef = useRef(null);
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    let animId;
-    let dots = [];
-
+    let animId, dots = [];
     const resize = () => {
-      canvas.width = canvas.offsetWidth;
+      canvas.width  = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
-      dots = Array.from({ length: Math.floor((canvas.width * canvas.height) / 13000) }, () => ({
+      dots = Array.from({ length: Math.floor((canvas.width * canvas.height) / 14000) }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        r: Math.random() * 1.25 + 0.25,
-        vx: (Math.random() - 0.5) * 0.18,
-        vy: (Math.random() - 0.5) * 0.18,
-        a: Math.random() * 0.38 + 0.08,
+        r: Math.random() * 1.2 + 0.2,
+        vx: (Math.random() - 0.5) * 0.15,
+        vy: (Math.random() - 0.5) * 0.15,
+        a: Math.random() * 0.3 + 0.06,
         hue: [190, 230, 275, 315, 155][Math.floor(Math.random() * 5)],
       }));
     };
-
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       for (const d of dots) {
         ctx.beginPath();
         ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(${d.hue}, 85%, 86%, ${d.a})`;
+        ctx.fillStyle = `hsla(${d.hue},80%,82%,${d.a})`;
         ctx.fill();
-        d.x += d.vx;
-        d.y += d.vy;
+        d.x += d.vx; d.y += d.vy;
         if (d.x < -2) d.x = canvas.width + 2;
         if (d.x > canvas.width + 2) d.x = -2;
         if (d.y < -2) d.y = canvas.height + 2;
@@ -60,566 +106,341 @@ function ParticleField() {
       }
       animId = requestAnimationFrame(draw);
     };
-
-    resize();
-    draw();
+    resize(); draw();
     window.addEventListener("resize", resize);
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener("resize", resize);
-    };
+    return () => { cancelAnimationFrame(animId); window.removeEventListener("resize", resize); };
   }, []);
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-0" />;
+}
 
+/* ─── Render mixed text + bold segments ─────────────────────────────── */
+function BodyText({ segments }) {
   return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: "absolute",
-        inset: 0,
-        width: "100%",
-        height: "100%",
-        pointerEvents: "none",
-        zIndex: 0,
-      }}
-    />
+    <p className="text-[15px] leading-[1.82] text-white/60">
+      {segments.map((seg, i) =>
+        typeof seg === "string"
+          ? <span key={i}>{seg}</span>
+          : <strong key={i} className="text-white font-semibold">{seg.bold}</strong>
+      )}
+    </p>
   );
 }
 
-// ── Spark icon ───────────────────────────────────────────────────────────────
-function Spark({ size = 18 }) {
+/* ─── Single accordion card ──────────────────────────────────────────── */
+function StepCard({ step, isActive, onClick, timerKey }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 18 18" fill="none">
-      <defs>
-        <linearGradient id="mechanismSparkGradient" x1="0" y1="18" x2="18" y2="0">
-          {OPAL_STOPS.map((s) => (
-            <stop key={s.offset} offset={s.offset} stopColor={s.color} />
-          ))}
-        </linearGradient>
-      </defs>
-      <path
-        d="M9 0 L10.2 7.8 L18 9 L10.2 10.2 L9 18 L7.8 10.2 L0 9 L7.8 7.8 Z"
-        fill="url(#mechanismSparkGradient)"
-      />
-    </svg>
-  );
-}
-
-// ── Flow node data ────────────────────────────────────────────────────────────
-const STEPS = [
-  { num: "01", label: "Identify",   sub: "Surface every revenue gap — in real time" },
-  { num: "02", label: "Strategize", sub: "Design & configure the tone, methods & rhythm of practice to patient outreach" },
-  { num: "03", label: "Throttle",   sub: "Activate & engage the multi-channel automation" },
-  { num: "04", label: "Calibrate",  sub: "Intelligently tunes strategy with each patient & practice signal" },
-  { num: "05", label: "Guide",      sub: "Clear exceptions & supplement automation with guided task management" },
-];
-
-// ── Animation variants ────────────────────────────────────────────────────────
-const fadeUp = {
-  hidden: { opacity: 0, y: 32 },
-  visible: (delay = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1], delay },
-  }),
-};
-
-const slideRight = {
-  hidden: { opacity: 0, x: 36 },
-  visible: (delay = 0) => ({
-    opacity: 1,
-    x: 0,
-    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1], delay },
-  }),
-};
-
-const connectorVariant = {
-  hidden: { scaleY: 0, originY: 0 },
-  visible: (delay = 0) => ({
-    scaleY: 1,
-    transition: { duration: 0.4, ease: "easeOut", delay },
-  }),
-};
-
-// ── Main component ────────────────────────────────────────────────────────────
-export default function MechanismSection() {
-  const sectionRef = useRef(null);
-  const inView = useInView(sectionRef, {
-    once: false,
-    margin: "-18% 0px -18% 0px",
-  });
-  const [hoveredNode, setHoveredNode] = useState(null);
-
-  return (
-    <section
-      id="system"
-      ref={sectionRef}
-      className="mechanism-section"
+    <motion.div
+      layout
+      onClick={onClick}
+      transition={{ layout: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } }}
+      className="relative overflow-hidden rounded-2xl border cursor-pointer"
       style={{
-        position: "relative",
-        height: "100svh",
-        background: NAVY,
-        overflow: "hidden",
-        display: "flex",
-        alignItems: "center",
-        fontFamily: "'DM Sans', sans-serif",
+        borderColor: isActive ? "rgba(255,255,255,0.13)" : "rgba(255,255,255,0.06)",
+        backgroundColor: isActive ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.015)",
+        transition: "background-color 0.3s, border-color 0.3s",
       }}
     >
-      {/* Google font import via style tag — swap for your build tool's font loader */}
+      {/* Header row — always visible */}
+      <div className="flex items-center gap-4 px-6 py-4">
+
+        {/* Step number */}
+        <span
+          className="leading-none tabular-nums shrink-0 transition-colors duration-300"
+          style={{
+            fontFamily: "'Bebas Neue', sans-serif",
+            fontSize: "clamp(28px, 3vw, 42px)",
+            minWidth: 44,
+            color: isActive ? "#22D3EE" : "rgba(255,255,255,0.14)",
+          }}
+        >
+          {step.num}
+        </span>
+
+        {/* Label */}
+        <span
+          className="flex-1 font-semibold leading-tight transition-colors duration-300"
+          style={{
+            fontSize: "clamp(17px, 1.8vw, 23px)",
+            color: isActive ? "#ffffff" : "rgba(255,255,255,0.7)",
+          }}
+        >
+          {step.label}
+        </span>
+
+        {/* Trailing dot */}
+        <motion.div
+          className="w-2 h-2 rounded-full shrink-0"
+          animate={{ backgroundColor: isActive ? "#22D3EE" : "rgba(255,255,255,0.14)" }}
+          transition={{ duration: 0.3 }}
+        />
+      </div>
+
+      {/* Collapsed tagline */}
+      <AnimatePresence initial={false}>
+        {!isActive && (
+          <motion.div
+            key="tagline"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <p className="px-6 pb-4 text-[12.5px] italic text-white/32 leading-snug">
+              {step.tagline}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Expanded full body */}
+      <AnimatePresence initial={false}>
+        {isActive && (
+          <motion.div
+            key="body"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="px-6 pb-6">
+              <BodyText segments={step.body} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Auto-advance progress bar */}
+      <AnimatePresence>
+        {isActive && (
+          <motion.div
+            key={timerKey}
+            className="absolute bottom-0 left-0 h-[2px] origin-left"
+            style={{ backgroundColor: "#22D3EE", opacity: 0.5 }}
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.15 } }}
+            transition={{ duration: AUTO_MS / 1000, ease: "linear" }}
+          />
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+/* ─── Main section ───────────────────────────────────────────────────── */
+export default function MechanismSection() {
+  const sectionRef = useRef(null);
+  const inView = useInView(sectionRef, { once: false, margin: "-12% 0px -12% 0px" });
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [timerKey, setTimerKey]       = useState(0);
+  const intervalRef = useRef(null);
+
+  const startTimer = useCallback(() => {
+    clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setActiveIndex(prev => (prev + 1) % STEPS.length);
+      setTimerKey(k => k + 1);
+    }, AUTO_MS);
+  }, []);
+
+  useEffect(() => {
+    if (inView) startTimer();
+    else clearInterval(intervalRef.current);
+    return () => clearInterval(intervalRef.current);
+  }, [inView, startTimer]);
+
+  const handleClick = (i) => {
+    setActiveIndex(i);
+    setTimerKey(k => k + 1);
+    startTimer();
+  };
+
+  const fadeUp = (delay = 0) => ({
+    initial: { opacity: 0, y: 24 },
+    animate: inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 },
+    transition: { duration: 0.72, ease: [0.16, 1, 0.3, 1], delay },
+  });
+
+  return (
+    <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,200;0,9..40,300;0,9..40,400;1,9..40,200&display=swap');
-
-        @media (max-width: 960px) {
-          .mechanism-section {
-            height: auto !important;
-            min-height: 100svh !important;
-            align-items: flex-start !important;
-            overflow: hidden !important;
-          }
-
-          .mechanism-grid {
-            grid-template-columns: 1fr !important;
-            max-width: 720px !important;
-            padding: 72px 24px 56px !important;
-            gap: 36px !important;
-          }
-
-          .mechanism-left,
-          .mechanism-right {
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-          }
-
-          .mechanism-right {
-            align-items: stretch !important;
-          }
-
-          .mechanism-flow {
-            max-width: 100% !important;
-          }
-        }
-
-        @media (max-width: 640px) {
-          .mechanism-grid {
-            padding: 64px 18px 48px !important;
-            gap: 28px !important;
-          }
-
-          .mechanism-eyebrow-line {
-            max-width: 44px !important;
-          }
-
-          .mechanism-eyebrow-text {
-            font-size: 10px !important;
-            letter-spacing: 0.14em !important;
-            white-space: nowrap !important;
-          }
-
-          .mechanism-headline-word {
-            font-size: clamp(34px, 13vw, 54px) !important;
-            line-height: 0.96 !important;
-          }
-
-          .mechanism-body {
-            font-size: 14.5px !important;
-            line-height: 1.72 !important;
-            max-width: 100% !important;
-            margin-bottom: 22px !important;
-          }
-
-          .mechanism-cta {
-            padding: 10px 22px !important;
-            font-size: 11px !important;
-          }
-
-          .mechanism-node {
-            gap: 14px !important;
-            padding: 11px 16px !important;
-            border-radius: 28px !important;
-          }
-
-          .mechanism-step-num {
-            font-size: 30px !important;
-            min-width: 34px !important;
-          }
-
-          .mechanism-step-label {
-            font-size: 20px !important;
-          }
-
-          .mechanism-step-sub {
-            font-size: 11px !important;
-            line-height: 1.35 !important;
-          }
-
-          .mechanism-connector {
-            margin-left: 44px !important;
-            height: 8px !important;
-          }
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap');
       `}</style>
 
-      {/* Shared dark astral background — keeps this section in the same world as hero/modules */}
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: `
-            radial-gradient(ellipse at 22% 28%, rgba(184,238,255,0.10) 0%, transparent 34%),
-            radial-gradient(ellipse at 76% 62%, rgba(255,184,245,0.12) 0%, transparent 36%),
-            radial-gradient(ellipse at 52% 12%, rgba(212,170,255,0.10) 0%, transparent 30%),
-            ${NAVY}
-          `,
-          zIndex: 0,
-        }}
-      />
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: `radial-gradient(ellipse at 50% 48%, transparent 35%, ${NAVY}cc 78%, ${NAVY}f5 100%)`,
-          zIndex: 0,
-          pointerEvents: "none",
-        }}
-      />
-
-      <ParticleField />
-
-      {/* ── Grid ── */}
-      <div
-        className="mechanism-grid"
-        style={{
-          position: "relative",
-          zIndex: 1,
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          width: "100%",
-          maxWidth: 1280,
-          margin: "0 auto",
-          padding: "clamp(36px, 5vh, 56px) clamp(24px, 4vw, 52px) clamp(28px, 4vh, 42px)",
-          gap: "clamp(20px, 4vw, 54px)",
-          boxSizing: "border-box",
-        }}
+      <section
+        id="system"
+        ref={sectionRef}
+        className="relative overflow-hidden"
+        style={{ background: NAVY, minHeight: "100svh", fontFamily: "'Inter', sans-serif" }}
       >
-        {/* ══ LEFT ══ */}
+        {/* Ambient glows */}
         <div
-          className="mechanism-left"
+          aria-hidden
+          className="absolute inset-0 pointer-events-none z-0"
           style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            paddingRight: 48,
+            background: `
+              radial-gradient(ellipse at 18% 28%, rgba(155,109,255,0.09) 0%, transparent 40%),
+              radial-gradient(ellipse at 78% 68%, rgba(34,211,238,0.08) 0%, transparent 38%),
+              radial-gradient(ellipse at 50% 8%,  rgba(155,109,255,0.07) 0%, transparent 32%)
+            `,
           }}
+        />
+        {/* Vignette */}
+        <div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none z-0"
+          style={{ background: `radial-gradient(ellipse at 50% 50%, transparent 28%, ${NAVY}bb 72%, ${NAVY}ee 100%)` }}
+        />
+
+        <ParticleField />
+
+        {/* ── Two-column layout ── */}
+        <div
+          className="relative z-10 w-full max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-14"
+          style={{ paddingTop: "clamp(56px, 8vh, 96px)", paddingBottom: "clamp(56px, 8vh, 96px)" }}
         >
-          {/* Eyebrow */}
-          <motion.div
-            custom={0}
-            variants={fadeUp}
-            initial="hidden"
-            animate={inView ? "visible" : "hidden"}
+          <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 14,
-              marginBottom: "clamp(20px, 3.4vh, 32px)",
+              display: "grid",
+              gridTemplateColumns: "minmax(0,1fr) minmax(0,1.08fr)",
+              gap: "clamp(32px, 5vw, 80px)",
+              alignItems: "start",
             }}
+            className="max-md:grid-cols-1!"
           >
-            <motion.div
-              animate={inView ? { rotate: [0, 360] } : {}}
-              transition={{ duration: 1.2, ease: "easeInOut", delay: 0.3 }}
-            >
-              <Spark size={17} />
-            </motion.div>
-            <div className="mechanism-eyebrow-line" style={{ flex: 1, maxWidth: 72, height: 1, background: "rgba(255,255,255,0.18)" }} />
-            <span
-              className="mechanism-eyebrow-text"
-              style={{
-                fontSize: 11,
-                letterSpacing: "0.18em",
-                textTransform: "uppercase",
-                color: "rgba(255,255,255,0.38)",
-                fontWeight: 300,
-              }}
-            >
-              The Operating System
-            </span>
-            <div className="mechanism-eyebrow-line" style={{ flex: 1, maxWidth: 72, height: 1, background: "rgba(255,255,255,0.18)" }} />
-          </motion.div>
 
-          {/* Display headline — staggered words */}
-          <div style={{ marginBottom: "clamp(18px, 3vh, 28px)", overflow: "hidden" }}>
-            {[
-              { text: "A system", solid: true },
-              { text: "that ", solid: true, accent: "runs" },
-              { text: "your", outline: true },
-              { text: "practice", solid: true },
-              { text: "like it", solid: true, green: true },
-              { text: "should.", outline: true },
-            ].map((line, i) => (
-              <div key={i} style={{ overflow: "hidden" }}>
-                <motion.div
-                  custom={0.1 + i * 0.07}
-                  variants={fadeUp}
-                  initial="hidden"
-                  animate={inView ? "visible" : "hidden"}
-                >
-                  <span
-                    className="mechanism-headline-word"
-                    style={{
-                      fontFamily: "'Bebas Neue', sans-serif",
-                      fontSize: "clamp(42px, 6.3vw, 76px)",
-                      lineHeight: 0.93,
-                      display: "block",
-                      letterSpacing: "-0.01em",
-                      color: line.outline
-                        ? "transparent"
-                        : line.green
-                        ? "transparent"
-                        : "#fff",
-                      ...(line.green ? gradientText : {}),
-                      WebkitTextStroke: line.outline ? "1.5px rgba(255,255,255,0.2)" : undefined,
-                    }}
-                  >
-                    {line.text}
-                    {line.accent && (
-                      <span style={gradientText}>{line.accent}</span>
-                    )}
-                  </span>
-                </motion.div>
-              </div>
-            ))}
-          </div>
+            {/* ══ LEFT COLUMN ══ */}
+            <div className="flex flex-col lg:sticky" style={{ top: "10vh" }}>
 
-          {/* Body */}
-          <motion.p
-            className="mechanism-body"
-            custom={0.65}
-            variants={fadeUp}
-            initial="hidden"
-            animate={inView ? "visible" : "hidden"}
-            style={{
-              fontSize: "clamp(15.5px, 1.15vw, 17px)",
-              lineHeight: 1.85,
-              color: "rgba(244,248,255,0.72)",
-              fontWeight: 350,
-              maxWidth: 430,
-              margin: "0 0 clamp(22px, 4vh, 36px)",
-              textShadow: "0 0 18px rgba(184,238,255,0.08)",
-            }}
-          >
-            OPAL gOS continuously scans your operations, surfaces every gap,
-            and directs your team to the next highest-impact action —
-            automatically.
-          </motion.p>
-
-          {/* CTA */}
-          <motion.div
-            custom={0.8}
-            variants={fadeUp}
-            initial="hidden"
-            animate={inView ? "visible" : "hidden"}
-          >
-            <motion.button
-              className="mechanism-cta"
-              whileHover={{ backgroundColor: "rgba(212,170,255,0.08)" }}
-              whileTap={{ scale: 0.97 }}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 10,
-                border: "1px solid transparent",
-                borderRadius: 100,
-                padding: "12px 28px",
-                fontSize: 12,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: "#fff",
-                cursor: "pointer",
-                background: `
-                  linear-gradient(${NAVY}, ${NAVY}) padding-box,
-                  ${OPAL_LIGHT_GRADIENT} border-box
-                `,
-                fontFamily: "'DM Sans', sans-serif",
-                fontWeight: 300,
-              }}
-            >
-              <span style={gradientText}>See it in action</span>
-              <motion.svg
-                width={13}
-                height={13}
-                viewBox="0 0 13 13"
-                fill="none"
-                whileHover={{ x: 2, y: -2 }}
-                transition={{ type: "spring", stiffness: 300 }}
+              {/* Eyebrow */}
+              <motion.div
+                {...fadeUp(0.05)}
+                className="flex items-center gap-3 mb-4"
               >
-                <defs>
-                  <linearGradient id="mechanismArrowGradient" x1="0" y1="13" x2="13" y2="0">
-                    {OPAL_STOPS.map((s) => (
-                      <stop key={s.offset} offset={s.offset} stopColor={s.color} />
-                    ))}
-                  </linearGradient>
-                </defs>
-                <path
-                  d="M1 12 L11 2 M11 2 H4.5 M11 2 V8.5"
-                  stroke="url(#mechanismArrowGradient)"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-              </motion.svg>
-            </motion.button>
-          </motion.div>
-        </div>
+                <span style={{ color: "rgba(255,255,255,0.32)", fontSize: 13 }}>+</span>
+                <div style={{ height: 1, width: 48, backgroundColor: "rgba(255,255,255,0.12)" }} />
+                <span style={{ fontSize: 10.5, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.30)", fontWeight: 300 }}>
+                  The Operating System
+                </span>
+                <div style={{ height: 1, flex: 1, backgroundColor: "rgba(255,255,255,0.12)" }} />
+              </motion.div>
 
-        {/* ══ RIGHT ══ */}
-        <div
-          className="mechanism-right"
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-start",
-            justifyContent: "center",
-            paddingLeft: 20,
-            position: "relative",
-          }}
-        >
-
-          {/* Flow nodes */}
-          <div className="mechanism-flow" style={{ display: "flex", flexDirection: "column", width: "100%", maxWidth: 430 }}>
-            {STEPS.map((step, i) => (
-              <div key={i}>
-                {/* Node */}
-                <motion.div
-                  custom={0.3 + i * 0.16}
-                  variants={slideRight}
-                  initial="hidden"
-                  animate={inView ? "visible" : "hidden"}
-                  onHoverStart={() => setHoveredNode(i)}
-                  onHoverEnd={() => setHoveredNode(null)}
-                  style={{ position: "relative" }}
-                >
-                  <motion.div
-                    className="mechanism-node"
-                    animate={{
-                      borderColor:
-                        hoveredNode === i
-                          ? "rgba(212,170,255,0.52)"
-                          : "rgba(255,255,255,0.1)",
-                      backgroundColor:
-                        hoveredNode === i
-                          ? "rgba(212,170,255,0.055)"
-                          : "rgba(255,255,255,0.025)",
-                      opacity:
-                        hoveredNode !== null && hoveredNode !== i ? 0.32 : 1,
-                    }}
-                    transition={{ duration: 0.3 }}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 24,
-                      padding: "clamp(11px, 1.6vh, 16px) 28px",
-                      borderRadius: 100,
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      cursor: "default",
-                    }}
-                  >
-                    {/* Number */}
-                    <motion.span
-                      className="mechanism-step-num"
-                      animate={{
-                        color:
-                          hoveredNode === i
-                            ? "#D4AAFF"
-                            : "rgba(255,255,255,0.14)",
-                      }}
-                      transition={{ duration: 0.3 }}
-                      style={{
-                        fontFamily: "'Bebas Neue', sans-serif",
-                        fontSize: "clamp(32px, 3vw, 42px)",
-                        lineHeight: 1,
-                        minWidth: 42,
-                      }}
-                    >
-                      {step.num}
-                    </motion.span>
-
-                    {/* Label + sub */}
-                    <div style={{ flex: 1 }}>
-                      <motion.span
-                        className="mechanism-step-label"
-                        animate={{
-                          color:
-                            hoveredNode === i
-                              ? "#fff"
-                              : "rgba(255,255,255,0.72)",
-                        }}
-                        transition={{ duration: 0.3 }}
-                        style={{
-                          display: "block",
-                          fontSize: "clamp(19px, 1.9vw, 26px)",
-                          fontWeight: 400,
-                          letterSpacing: "0.015em",
-                          lineHeight: 1.05,
-                        }}
-                      >
-                        {step.label}
-                      </motion.span>
-                      <span
-                        className="mechanism-step-sub"
-                        style={{
-                          fontSize: "clamp(12px, 1vw, 13px)",
-                          color: "rgba(235,242,255,0.46)",
-                          letterSpacing: "0.04em",
-                          fontWeight: 300,
-                          display: "block",
-                        }}
-                      >
-                        {step.sub}
-                      </span>
-                    </div>
-
-                    {/* Trailing dot */}
+              {/* Headline — each word reveals upward.
+                  Sized against viewport height (min of vw/vh) so the full
+                  6-line stack always fits the page and never pushes the CTA
+                  out of view. */}
+              <div style={{ lineHeight: 0, marginBottom: "clamp(20px, 3vh, 32px)" }}>
+                {HEADLINE.map((line, i) => (
+                  <div key={i} className="overflow-hidden">
                     <motion.div
-                      animate={{
-                        backgroundColor:
-                          hoveredNode === i
-                            ? "#D4AAFF"
-                            : "rgba(255,255,255,0.12)",
-                        scale: hoveredNode === i ? 1.3 : 1,
-                      }}
-                      transition={{ duration: 0.3 }}
-                      style={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: "50%",
-                        flexShrink: 0,
-                      }}
-                    />
-                  </motion.div>
-                </motion.div>
+                      initial={{ y: "110%" }}
+                      animate={inView ? { y: "0%" } : { y: "110%" }}
+                      transition={{ duration: 0.72, ease: [0.16, 1, 0.3, 1], delay: 0.1 + i * 0.07 }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: "'Bebas Neue', sans-serif",
+                          fontSize: "clamp(40px, min(6.4vw, 7.4vh), 80px)",
+                          lineHeight: 0.92,
+                          display: "block",
+                          letterSpacing: "-0.01em",
+                          color: line.color === "outline" ? "transparent" : line.color,
+                          WebkitTextStroke: line.color === "outline" ? "1.5px rgba(255,255,255,0.22)" : undefined,
+                        }}
+                      >
+                        {line.text}
+                      </span>
+                    </motion.div>
+                  </div>
+                ))}
+              </div>
 
-                {/* Connector line between nodes */}
-                {i < STEPS.length - 1 && (
-                  <motion.div
-                    className="mechanism-connector"
-                    custom={0.48 + i * 0.14}
-                    variants={connectorVariant}
-                    initial="hidden"
-                    animate={inView ? "visible" : "hidden"}
+              {/* Body */}
+              <motion.p
+                {...fadeUp(0.72)}
+                style={{
+                  fontSize: "clamp(14px, 1.1vw, 16px)",
+                  lineHeight: 1.7,
+                  color: "rgba(255,255,255,0.50)",
+                  maxWidth: 390,
+                  margin: "0 0 clamp(18px, 2.6vh, 30px)",
+                  fontWeight: 300,
+                }}
+              >
+                gOS doesn&apos;t replace your team or your software. It sits on top of both —
+                running the work that falls through the cracks, and handing your team only
+                what needs a human decision.
+              </motion.p>
+
+              {/* CTA */}
+              <motion.div {...fadeUp(0.88)}>
+                <button
+                  className="inline-flex items-center gap-2.5 transition-all duration-200 active:scale-[0.97]"
+                  style={{
+                    padding: "13px 28px",
+                    borderRadius: 999,
+                    border: "1px solid rgba(255,255,255,0.22)",
+                    color: "#fff",
+                    fontSize: 11,
+                    fontWeight: 500,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    background: "transparent",
+                    cursor: "pointer",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.42)"; e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.22)"; e.currentTarget.style.background = "transparent"; }}
+                >
+                  Book a Demo
+                  <span style={{ fontSize: 14 }}>↗</span>
+                </button>
+              </motion.div>
+
+              {/* Step progress pills */}
+              <motion.div {...fadeUp(1.02)} className="flex gap-2" style={{ marginTop: "clamp(18px, 2.6vh, 28px)" }}>
+                {STEPS.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleClick(i)}
+                    aria-label={`Step ${i + 1}`}
+                    className="rounded-full transition-all duration-300"
                     style={{
-                      marginLeft: 58,
-                      height: "clamp(8px, 1.4vh, 14px)",
-                      width: 1,
-                      background: "rgba(255,255,255,0.1)",
-                      transformOrigin: "top",
+                      height: 6,
+                      width: activeIndex === i ? 22 : 6,
+                      backgroundColor: activeIndex === i ? "#22D3EE" : "rgba(255,255,255,0.18)",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: 0,
                     }}
                   />
-                )}
-              </div>
-            ))}
+                ))}
+              </motion.div>
+            </div>
+
+            {/* ══ RIGHT COLUMN — accordion cards ══ */}
+            <motion.div
+              initial={{ opacity: 0, y: 32 }}
+              animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 32 }}
+              transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1], delay: 0.28 }}
+              className="flex flex-col"
+              style={{ gap: 8 }}
+            >
+              {STEPS.map((step, i) => (
+                <StepCard
+                  key={step.num}
+                  step={step}
+                  isActive={activeIndex === i}
+                  onClick={() => handleClick(i)}
+                  timerKey={`${i}-${timerKey}`}
+                />
+              ))}
+            </motion.div>
+
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }

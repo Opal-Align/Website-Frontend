@@ -1,71 +1,39 @@
-// ScrollHero.jsx — Leo Burnett-style pinned hero with enamel particle background
-// Drop-in ready. No external assets needed except your opalLogo import.
-// Replace the opalLogo import path to match your project.
+"use client";
 
+import { useRef, useEffect } from "react";
 // eslint-disable-next-line no-unused-vars
-import { motion, useScroll, useSpring, useTransform } from "framer-motion";
-import { useRef, useEffect, useState, useId } from "react";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import opalLogo from "../../assets/OPALgos GreyWhite Website.png";
 
+/**
+ * ScrollHero.jsx
+ * --------------
+ * Requires: npm install framer-motion
+ *
+ * Add Fraunces font to your project:
+ *   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;1,400&display=swap" rel="stylesheet" />
+ *
+ * Scroll sequence (section is 250vh tall, panel is sticky):
+ *   0 → 35%   OPAL logo sits centered, full opacity
+ *   35 → 45%  Logo drifts upward, shrinks, fades out
+ *   32 → 65%  Headline + body rises in from below
+ *   44 → 72%  CTAs follow with slight delay
+ */
+
 const NAVY = "#08060C";
-/** Same scale as all hero h1 lines — use for the logo wrapper so 1.1em matches the type. */
-const HERO_HEADLINE_SIZE = "clamp(2.4rem, 6.2vw, 5.2rem)";
-const SCROLL_LENGTH = "300vh";
 
-// ─── OPAL cosmic palette (matches ModuleSection.jsx section title) ────────
-const OPAL_STOPS = [
-  { offset: "0%",   color: "#B8EEFF" },
-  { offset: "30%",  color: "#D4AAFF" },
-  { offset: "60%",  color: "#FFB8F5" },
-  { offset: "100%", color: "#AAFFD4" },
-];
-const OPAL_TEXT_GRADIENT =
-  "linear-gradient(120deg, #B8EEFF 0%, #D4AAFF 30%, #FFB8F5 60%, #AAFFD4 100%)";
-
-// ─── Animated word ──────────────────────────────────────────────────────────
-function AnimatedWord({ children, start, end, progress, accent = false }) {
-  const opacity = useTransform(progress, [start, end], [0, 1]);
-  const y = useTransform(progress, [start, end], [40, 0]);
-  const accentStyle = accent
-    ? {
-        backgroundImage: OPAL_TEXT_GRADIENT,
-        WebkitBackgroundClip: "text",
-        backgroundClip: "text",
-        WebkitTextFillColor: "transparent",
-        color: "transparent",
-      }
-    : { color: "inherit" };
-
-  return (
-    <span className="inline-block overflow-hidden align-bottom leading-tight">
-      <motion.span
-        style={{
-          opacity,
-          y,
-          display: "inline-block",
-          willChange: "transform, opacity",
-          ...accentStyle,
-        }}
-      >
-        {children}
-      </motion.span>
-      {"\u00A0"}
-    </span>
-  );
-}
-
-// ─── Enamel particles hook ──────────────────────────────────────────────────
-// Replaces useFilmGrain. Accepts the same canvasRef signature so the JSX below
-// needs zero changes. Particles drift upward with a gentle sine-wave sway,
-// fading in from the bottom and out near the top — evoking mineral enamel
-// crystallisation against the dark background.
+/* ─── Enamel particles hook ──────────────────────────────────────────────
+   Particles drift upward with a gentle sine-wave sway, fading in from the
+   bottom and out near the top — evoking mineral enamel crystallisation
+   against the dark background.
+   ───────────────────────────────────────────────────────────────────── */
 function useEnamelParticles(canvasRef) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
 
-    // ── Particle colours: pearl whites + the OPAL accent hues at low alpha ──
+    // Pearl whites + OPAL accent hues at low alpha
     const PALETTE = [
       [220, 235, 255], // cool pearl white
       [200, 220, 255], // icy blue-white
@@ -75,7 +43,7 @@ function useEnamelParticles(canvasRef) {
       [170, 255, 212], // OPAL mint
     ];
 
-    const N = 220; // particle count
+    const N = 220;
     let W = 0, H = 0;
     let particles = [];
     let raf;
@@ -91,15 +59,12 @@ function useEnamelParticles(canvasRef) {
       const col = PALETTE[Math.floor(Math.random() * PALETTE.length)];
       return {
         x: Math.random() * W,
-        // Spread initial positions across full height so the canvas isn't
-        // empty on first frame; new particles always spawn at the bottom.
         y: forceY !== null ? forceY : Math.random() * H,
-        r: Math.random() * 5.5 + 1.2,          // 1.2–6.7 px radius
-        speed: Math.random() * 0.28 + 0.07,     // upward drift speed
-        drift: (Math.random() - 0.5) * 0.22,    // horizontal sway amplitude
-        phase: Math.random() * Math.PI * 2,     // sway phase offset
+        r: Math.random() * 5.5 + 1.2,
+        speed: Math.random() * 0.28 + 0.07,
+        drift: (Math.random() - 0.5) * 0.22,
+        phase: Math.random() * Math.PI * 2,
         col,
-        // Max alpha varies per particle so the field has visual depth
         maxAlpha: Math.random() * 0.28 + 0.05,
       };
     }
@@ -109,7 +74,6 @@ function useEnamelParticles(canvasRef) {
     }
 
     function draw() {
-      // Sync size if the element has resized between frames
       if (canvas.offsetWidth !== W || canvas.offsetHeight !== H) {
         resize();
         init();
@@ -119,23 +83,17 @@ function useEnamelParticles(canvasRef) {
       const t = performance.now() / 1000;
 
       for (const p of particles) {
-        // Move upward
         p.y -= p.speed;
-        // Sine-wave horizontal sway
         p.x += Math.sin(t * 0.45 + p.phase) * p.drift;
 
-        // Wrap horizontally so particles never leave the sides
         if (p.x < -5) p.x = W + 5;
         if (p.x > W + 5) p.x = -5;
 
-        // Recycle when it leaves the top
         if (p.y < -5) {
-          const fresh = makeParticle(H + 5);
-          Object.assign(p, fresh);
+          Object.assign(p, makeParticle(H + 5));
           continue;
         }
 
-        // Fade in over the bottom 18% of the canvas, fade out over the top 18%
         const fadeIn  = Math.min(1, (H - p.y) / (H * 0.18));
         const fadeOut = Math.min(1, p.y / (H * 0.18));
         const alpha   = p.maxAlpha * Math.min(fadeIn, fadeOut);
@@ -167,247 +125,160 @@ function useEnamelParticles(canvasRef) {
   }, [canvasRef]);
 }
 
-// ─── Main component ─────────────────────────────────────────────────────────
+/* ─── Main Hero Component ─────────────────────────────────────────── */
 export default function ScrollHero() {
-  const sectionRef = useRef(null);
+  const ref = useRef(null);
   const grainRef = useRef(null);
-  const pillGradientId = `opal-pill-${useId()}`;
 
-  // Swap: useFilmGrain → useEnamelParticles (same ref, same signature)
   useEnamelParticles(grainRef);
 
   const { scrollYProgress } = useScroll({
-    target: sectionRef,
+    target: ref,
     offset: ["start start", "end end"],
   });
 
-  const progress = useSpring(scrollYProgress, {
-    stiffness: 200,
-    damping: 30,
-    mass: 0.3,
-  });
+  const springCfg = { stiffness: 80, damping: 22 };
 
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 80);
-    return () => clearTimeout(t);
-  }, []);
+  /* Logo transforms */
+  const logoYRaw     = useTransform(scrollYProgress, [0, 0.45], ["0vh", "-22vh"]);
+  const logoScaleRaw = useTransform(scrollYProgress, [0, 0.45], [1, 0.7]);
+  const logoOpRaw    = useTransform(scrollYProgress, [0, 0.18, 0.42], [1, 1, 0]);
+  const logoY        = useSpring(logoYRaw,     springCfg);
+  const logoScale    = useSpring(logoScaleRaw, springCfg);
+  const logoOp       = useSpring(logoOpRaw,    springCfg);
 
-  // Logo animation — size is driven by HERO_HEADLINE_SIZE (1.1em inside wrapper).
-  // scroll scale: large hero moment → 1 (final size = headline line height, not a tiny 0.4x).
-  const logoScale = useTransform(progress, [0.12, 0.32], [2.35, 1]);
-  const logoX     = useTransform(progress, [0.12, 0.32], ["0vw", "0vw"]);
-  const logoY     = useTransform(progress, [0.12, 0.32], ["0vh", "-35vh"]);
+  /* Content transforms */
+  const contentYRaw  = useTransform(scrollYProgress, [0.32, 0.65], ["44px", "0px"]);
+  const contentOpRaw = useTransform(scrollYProgress, [0.32, 0.65], [0, 1]);
+  const contentY     = useSpring(contentYRaw,  springCfg);
+  const contentOp    = useSpring(contentOpRaw, springCfg);
 
-  // Headline lines
-  const line1Opacity = useTransform(progress, [0.30, 0.36], [0, 1]);
-  const line2Opacity = useTransform(progress, [0.46, 0.52], [0, 1]);
-  const line3Opacity = useTransform(progress, [0.62, 0.68], [0, 1]);
-
-  // Pill border
-  const pillLength  = useTransform(progress, [0.76, 0.84], [0, 1]);
-  const pillOpacity = useTransform(progress, [0.74, 0.76], [0, 1]);
-
-  // Subhead + CTA
-  const subheadOpacity = useTransform(progress, [0.84, 0.90], [0, 1]);
-  const subheadY       = useTransform(progress, [0.84, 0.90], [20, 0]);
-
-  // Scroll hint
-  const hintOpacity = useTransform(progress, [0, 0.05], [1, 0]);
+  /* CTA transforms */
+  const ctaYRaw  = useTransform(scrollYProgress, [0.44, 0.72], ["32px", "0px"]);
+  const ctaOpRaw = useTransform(scrollYProgress, [0.44, 0.72], [0, 1]);
+  const ctaY     = useSpring(ctaYRaw,  springCfg);
+  const ctaOp    = useSpring(ctaOpRaw, springCfg);
 
   return (
-    <>
-      <style>{`
-        @keyframes logoIn {
-          0%   { opacity: 0; transform: scale(0.72); filter: blur(20px); }
-          55%  { opacity: 1; filter: blur(0px); }
-          78%  { transform: scale(1.05); }
-          100% { opacity: 1; transform: scale(1); filter: blur(0px); }
-        }
-        .logo-mount  { animation: logoIn 1.15s cubic-bezier(0.16,1,0.3,1) forwards; }
-        .logo-hidden { opacity: 0; }
-        .hero-h1     { font-size: inherit; }
-      `}</style>
+    /* Scroll track — 250vh gives enough runway for all animation phases */
+    <div ref={ref} className="relative h-[250vh]" style={{ backgroundColor: NAVY }}>
 
-      <section
-        ref={sectionRef}
-        className="relative w-full"
-        style={{ height: SCROLL_LENGTH, backgroundColor: NAVY }}
+      {/* Sticky viewport */}
+      <div
+        className="sticky top-0 h-screen flex items-center justify-center overflow-hidden"
+        style={{ backgroundColor: NAVY }}
       >
+        {/* Layer 1: enamel particle canvas */}
+        <canvas
+          ref={grainRef}
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          style={{ opacity: 0.85, mixBlendMode: "screen", zIndex: 1 }}
+        />
+
+        {/* Layer 2: radial vignette — keeps edges dark & dramatic */}
         <div
-          className="sticky top-0 h-screen w-full overflow-hidden"
-          style={{ backgroundColor: NAVY }}
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            zIndex: 2,
+            background: `radial-gradient(ellipse at 50% 42%, transparent 28%, ${NAVY}bb 68%, ${NAVY}f0 100%)`,
+          }}
+        />
+
+        {/* Layer 3: bottom fade — blends into next section */}
+        <div
+          className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none"
+          style={{
+            zIndex: 2,
+            background: `linear-gradient(to bottom, transparent, ${NAVY})`,
+          }}
+        />
+
+        {/* ── OPAL Logo — exits upward on scroll ── */}
+        <motion.div
+          style={{ y: logoY, scale: logoScale, opacity: logoOp }}
+          className="absolute z-20 flex items-center justify-center"
+          aria-label="OPAL gOS"
         >
-
-          {/* ── ENAMEL PARTICLES ──────────────────────────────────────────── */}
-          {/* Layer 1: animated particle canvas (same canvas ref as before) */}
-          <canvas
-            ref={grainRef}
-            className="absolute inset-0 w-full h-full pointer-events-none"
-            style={{
-              opacity: 0.85,
-              mixBlendMode: "screen",
-              zIndex: 1,
-            }}
+          <img
+            src={opalLogo}
+            alt="OPAL gOS"
+            className="h-auto w-auto max-w-[min(90vw,34rem)] object-contain object-center
+                       select-none pointer-events-none"
+            style={{ filter: "drop-shadow(0 8px 30px rgba(212,170,255,0.25))" }}
+            draggable={false}
           />
+        </motion.div>
 
-          {/* Layer 2: soft radial vignette — keeps edges dark & dramatic */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              zIndex: 2,
-              background: `radial-gradient(ellipse at 50% 42%, transparent 28%, ${NAVY}bb 68%, ${NAVY}f0 100%)`,
-            }}
-          />
+        {/* ── Hero Copy — enters on scroll ── */}
+        <motion.div
+          style={{ y: contentY, opacity: contentOp }}
+          className="relative z-10 w-full max-w-[760px] px-6 md:px-10"
+        >
+          {/* Eyebrow */}
+          <p className="text-[11px] font-medium tracking-[0.22em] uppercase text-white/[0.28] mb-6">
+            The guided operating system for healthcare
+          </p>
 
-          {/* Layer 3: bottom fade — blends into next section */}
-          <div
-            className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none"
-            style={{
-              zIndex: 2,
-              background: `linear-gradient(to bottom, transparent, ${NAVY})`,
-            }}
-          />
-          {/* ─────────────────────────────────────────────────────────────── */}
-
-          {/* Logo: same type scale as headlines — img is 1.1em of HERO_HEADLINE_SIZE */}
-          <motion.div
-            className="absolute left-1/2 top-1/2 z-20 flex items-center justify-center"
-            style={{
-              fontSize: HERO_HEADLINE_SIZE,
-              x: logoX,
-              y: logoY,
-              translateX: "-50%",
-              translateY: "-50%",
-              scale: logoScale,
-              transformOrigin: "center center",
-              willChange: "transform",
-            }}
+          {/* Headline */}
+          <h1
+            className="m-0 font-semibold text-[clamp(2.4rem,5.5vw,4.2rem)] leading-[1.08] tracking-[-0.01em] text-[#f0ede6]"
+            style={{ fontFamily: "'Fraunces', Georgia, serif" }}
           >
-            <div className={mounted ? "logo-mount" : "logo-hidden"}>
-              <img
-                src={opalLogo}
-                alt="OPAL gOS"
-                className="h-[1.1em] w-auto max-w-[min(92vw,36rem)] object-contain object-center
-                           select-none pointer-events-none"
-                style={{
-                  filter: "drop-shadow(0 8px 30px rgba(212,170,255,0.25))",
-                }}
-                draggable={false}
-              />
-            </div>
-          </motion.div>
-
-          {/* Scroll hint */}
-          <motion.div
-            className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 pointer-events-none"
-            style={{ opacity: hintOpacity }}
-          >
-            <span className="font-['Montserrat'] text-white/40 text-[10px] tracking-[0.3em] uppercase">
-              Scroll
-            </span>
-            <motion.div
-              className="w-px h-8 origin-top"
-              style={{ backgroundImage: OPAL_TEXT_GRADIENT, opacity: 0.6 }}
-              animate={{ scaleY: [0, 1, 0] }}
-              transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-            />
-          </motion.div>
-
-          {/* Headlines (font size = HERO_HEADLINE_SIZE) */}
-          <div className="absolute inset-0 z-10 flex items-center justify-center px-6">
-            <div
-              className="w-full max-w-5xl text-center text-white"
-              style={{ fontSize: HERO_HEADLINE_SIZE }}
+            Your team is doing everything right.
+            <span
+              className="block italic font-normal text-[#f0ede6]/40 mt-1"
+              style={{ fontFamily: "'Fraunces', Georgia, serif" }}
             >
+              Revenue is still leaking.
+            </span>
+          </h1>
 
-              <motion.h1
-                style={{ opacity: line1Opacity }}
-                className="hero-h1 font-['Montserrat'] font-light leading-[1.05]
-                           tracking-tight"
-              >
-                <AnimatedWord progress={progress} start={0.34} end={0.42}>Recover</AnimatedWord>
-                <AnimatedWord progress={progress} start={0.40} end={0.48} accent>Revenue.</AnimatedWord>
-              </motion.h1>
+          {/* Body copy */}
+          <p className="text-[clamp(15px,1.5vw,17px)] leading-[1.72] text-[#f0ede6]/60 max-w-[560px] mt-9 mb-0">
+            <strong className="text-[#f0ede6]/90 font-semibold">
+              Not a people problem. A volume problem.
+            </strong>{" "}
+            The work physically cannot be done at the scale your practice requires. OPAL gOS runs
+            the operating layer — automatically identifying gaps, executing outreach, and guiding
+            your team to only what needs a human decision.
+          </p>
+        </motion.div>
 
-              <motion.h1
-                style={{ opacity: line2Opacity }}
-                className="hero-h1 font-['Montserrat'] font-light leading-[1.05]
-                           tracking-tight mt-2 md:mt-3"
-              >
-                <AnimatedWord progress={progress} start={0.48} end={0.55}>Maximize</AnimatedWord>
-                <AnimatedWord progress={progress} start={0.54} end={0.61} accent>Margins.</AnimatedWord>
-              </motion.h1>
+        {/* ── CTAs — slightly delayed entry ── */}
+        <motion.div
+          style={{ y: ctaY, opacity: ctaOp }}
+          className="absolute z-10 bottom-[max(56px,10vh)] left-0 right-0 px-6 md:px-10 max-w-[760px] mx-auto"
+        >
+          <div className="flex flex-wrap gap-4">
 
-              <motion.div
-                style={{ opacity: line3Opacity }}
-                className="relative inline-block mt-2 md:mt-3"
-              >
-                <motion.svg
-                  aria-hidden
-                  className="absolute inset-0 h-full w-full overflow-visible pointer-events-none"
-                  preserveAspectRatio="none"
-                  style={{ opacity: pillOpacity }}
-                >
-                  <defs>
-                    <linearGradient
-                      id={pillGradientId}
-                      x1="0" y1="1" x2="1" y2="0"
-                    >
-                      {OPAL_STOPS.map((s) => (
-                        <stop key={s.offset} offset={s.offset} stopColor={s.color} />
-                      ))}
-                    </linearGradient>
-                  </defs>
-                  <motion.rect
-                    x="2" y="2"
-                    width="calc(100% - 4px)"
-                    height="calc(100% - 4px)"
-                    rx="9999" ry="9999"
-                    fill="transparent"
-                    stroke={`url(#${pillGradientId})`}
-                    strokeWidth="1.5"
-                    style={{ pathLength: pillLength }}
-                  />
-                </motion.svg>
+            {/* Primary CTA */}
+            <a
+              href="#demo"
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg text-sm font-semibold no-underline
+                         bg-[#f0ede6] text-[#0c1828]
+                         shadow-[0_4px_20px_rgba(0,0,0,0.35)]
+                         hover:shadow-[0_8px_28px_rgba(0,0,0,0.45)]
+                         hover:-translate-y-0.5
+                         transition-all duration-200 group"
+            >
+              Book a demo
+              <span className="transition-transform duration-200 group-hover:translate-x-1">→</span>
+            </a>
 
-                <h1
-                  className="hero-h1 relative font-['Montserrat'] font-light
-                             leading-[1.05] tracking-tight px-6 md:px-10 py-2 md:py-3"
-                >
-                  <AnimatedWord progress={progress} start={0.66} end={0.71}>Zero</AnimatedWord>
-                  <AnimatedWord progress={progress} start={0.69} end={0.74}>new</AnimatedWord>
-                  <AnimatedWord progress={progress} start={0.72} end={0.77} accent>hires.</AnimatedWord>
-                </h1>
-              </motion.div>
-
-              <motion.p
-                style={{ opacity: subheadOpacity, y: subheadY }}
-                className="mt-8 md:mt-10 font-['Montserrat'] font-light text-white/55
-                           text-[clamp(0.9rem,1.4vw,1.15rem)] tracking-[0.06em]"
-              >
-                The Guided Operating System for provider practices.
-              </motion.p>
-
-              {/* <motion.div
-                style={{ opacity: ctaOpacity, y: ctaY }}
-                className="mt-8 flex justify-center"
-              >
-                <button
-                  className="font-['Montserrat'] text-[11px] tracking-[0.22em] uppercase
-                             border px-8 py-3 rounded-full transition-all duration-300
-                             text-white/80 hover:text-white hover:bg-white/10 cursor-pointer"
-                  style={{ borderColor: `${TEAL}66` }}
-                >
-                  Get Started
-                </button>
-              </motion.div> */}
-
-            </div>
+            {/* Secondary CTA */}
+            <a
+              href="#services"
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg text-sm font-semibold no-underline
+                         text-[#f0ede6]/75 border border-white/16
+                         hover:border-white/35 hover:text-[#f0ede6]
+                         hover:-translate-y-0.5
+                         transition-all duration-200"
+            >
+              See how it works
+            </a>
           </div>
-
-        </div>
-      </section>
-    </>
+        </motion.div>
+      </div>
+    </div>
   );
 }
