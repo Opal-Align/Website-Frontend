@@ -1,6 +1,57 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
+
+/* ─── Particle field ──────────────────────────────────────────────────
+   Drifting dots in the OPAL hues — ported from MechanismSection so the
+   ambient background is uniform across the site.
+   ─────────────────────────────────────────────────────────────────── */
+function ParticleField() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    let animId: number;
+    let dots: {
+      x: number; y: number; r: number;
+      vx: number; vy: number; a: number; hue: number;
+    }[] = [];
+    const resize = () => {
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      dots = Array.from({ length: Math.floor((canvas.width * canvas.height) / 14000) }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.2 + 0.2,
+        vx: (Math.random() - 0.5) * 0.15,
+        vy: (Math.random() - 0.5) * 0.15,
+        a: Math.random() * 0.3 + 0.06,
+        hue: [190, 230, 275, 315, 155][Math.floor(Math.random() * 5)],
+      }));
+    };
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const d of dots) {
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${d.hue},80%,82%,${d.a})`;
+        ctx.fill();
+        d.x += d.vx; d.y += d.vy;
+        if (d.x < -2) d.x = canvas.width + 2;
+        if (d.x > canvas.width + 2) d.x = -2;
+        if (d.y < -2) d.y = canvas.height + 2;
+        if (d.y > canvas.height + 2) d.y = -2;
+      }
+      animId = requestAnimationFrame(draw);
+    };
+    resize(); draw();
+    window.addEventListener("resize", resize);
+    return () => { cancelAnimationFrame(animId); window.removeEventListener("resize", resize); };
+  }, []);
+  return <canvas ref={canvasRef} className="gos-particles" />;
+}
 
 /**
  * Requires: npm install framer-motion lucide-react
@@ -82,7 +133,7 @@ export default function StackIntegrationSection() {
     <section className="gos-section" ref={rootRef}>
       <style>{`
         .gos-section {
-          --bg: #07070a;
+          --bg: #08060C;
           --ink: #f2f0e9;
           --ink-soft: #c7c5c0;
           --muted: #71707a;
@@ -103,17 +154,38 @@ export default function StackIntegrationSection() {
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
           color: var(--ink);
         }
+        /* Ambient glows — matches MechanismSection for cross-site uniformity */
         .gos-section::before {
           content: "";
           position: absolute;
           inset: 0;
-          background-image: radial-gradient(circle, rgba(255,255,255,0.045) 1px, transparent 1px);
-          background-size: 26px 26px;
-          opacity: 0.7;
+          z-index: 0;
           pointer-events: none;
+          background:
+            radial-gradient(ellipse at 18% 28%, rgba(155,109,255,0.09) 0%, transparent 40%),
+            radial-gradient(ellipse at 78% 68%, rgba(34,211,238,0.08) 0%, transparent 38%),
+            radial-gradient(ellipse at 50% 8%,  rgba(155,109,255,0.07) 0%, transparent 32%);
+        }
+        /* Vignette — matches MechanismSection */
+        .gos-section::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+          pointer-events: none;
+          background: radial-gradient(ellipse at 50% 50%, transparent 28%, #08060Cbb 72%, #08060Cee 100%);
+        }
+        .gos-particles {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
+          z-index: 0;
         }
         .gos-container {
           position: relative;
+          z-index: 1;
           width: 100%;
           max-width: 1240px;
           margin: 0 auto;
@@ -321,6 +393,8 @@ export default function StackIntegrationSection() {
           .gos-lead { margin-bottom: 48px; }
         }
       `}</style>
+
+      <ParticleField />
 
       <div className="gos-container">
         <motion.div className="gos-grid" initial="hidden" animate={state}>
