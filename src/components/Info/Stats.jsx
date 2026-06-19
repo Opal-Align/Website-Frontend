@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, useCallback } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, useInView, animate } from "framer-motion";
 
-const NAVY = "#08060C";
 const OPAL_LIGHT_GRADIENT =
   "linear-gradient(120deg, #B8EEFF 0%, #D4AAFF 30%, #FFB8F5 60%, #AAFFD4 100%)";
 const OPAL_SOFT_GLOW = "rgba(212,170,255,0.28)";
@@ -392,29 +391,9 @@ export default function Processes() {
     <div
       id="impact"
       className="relative overflow-hidden py-16 md:py-24"
-      style={{ backgroundColor: NAVY }}
+      style={{ backgroundColor: "transparent" }}
     >
-      <div
-        aria-hidden
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: `
-            radial-gradient(ellipse at 18% 12%, rgba(184,238,255,0.10) 0%, transparent 34%),
-            radial-gradient(ellipse at 82% 42%, rgba(255,184,245,0.11) 0%, transparent 36%),
-            radial-gradient(ellipse at 48% 92%, rgba(170,255,212,0.08) 0%, transparent 36%),
-            ${NAVY}
-          `,
-        }}
-      />
       <Process />
-
-      {/* Vignette */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: `radial-gradient(ellipse at center, transparent 44%, ${NAVY}cc 82%, ${NAVY}f7 100%)`,
-        }}
-      />
 
       <div ref={ref} className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 

@@ -133,7 +133,7 @@ export default function StackIntegrationSection() {
     <section className="gos-section" ref={rootRef}>
       <style>{`
         .gos-section {
-          --bg: #08060C;
+          --bg: transparent;
           --ink: #f2f0e9;
           --ink-soft: #c7c5c0;
           --muted: #71707a;
@@ -153,27 +153,6 @@ export default function StackIntegrationSection() {
           box-sizing: border-box;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
           color: var(--ink);
-        }
-        /* Ambient glows — matches MechanismSection for cross-site uniformity */
-        .gos-section::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          z-index: 0;
-          pointer-events: none;
-          background:
-            radial-gradient(ellipse at 18% 28%, rgba(155,109,255,0.09) 0%, transparent 40%),
-            radial-gradient(ellipse at 78% 68%, rgba(34,211,238,0.08) 0%, transparent 38%),
-            radial-gradient(ellipse at 50% 8%,  rgba(155,109,255,0.07) 0%, transparent 32%);
-        }
-        /* Vignette — matches MechanismSection */
-        .gos-section::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          z-index: 0;
-          pointer-events: none;
-          background: radial-gradient(ellipse at 50% 50%, transparent 28%, #08060Cbb 72%, #08060Cee 100%);
         }
         .gos-particles {
           position: absolute;

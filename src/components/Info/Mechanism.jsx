@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 
 /* ─── Constants ──────────────────────────────────────────────────────── */
-const NAVY = "#08060C";
 const AUTO_MS = 4200;
 
 const STEPS = [
@@ -63,7 +62,7 @@ const STEPS = [
 
 const HEADLINE = [
   { text: "FIVE",    color: "#FFFFFF" },
-  { text: "STEPS.",  color: "#9B6DFF" },
+  { text: "STEPS.",  color: "#7AAFC2" },
   { text: "ONE",     color: "outline" },
   { text: "CON-",    color: "#FFFFFF" },
   { text: "TINUOUS", color: "#22D3EE" },
@@ -273,27 +272,8 @@ export default function MechanismSection() {
         id="system"
         ref={sectionRef}
         className="relative overflow-hidden"
-        style={{ background: NAVY, minHeight: "100svh", fontFamily: "'Inter', sans-serif" }}
+        style={{ background: "transparent", minHeight: "100svh", fontFamily: "'Inter', sans-serif" }}
       >
-        {/* Ambient glows */}
-        <div
-          aria-hidden
-          className="absolute inset-0 pointer-events-none z-0"
-          style={{
-            background: `
-              radial-gradient(ellipse at 18% 28%, rgba(155,109,255,0.09) 0%, transparent 40%),
-              radial-gradient(ellipse at 78% 68%, rgba(34,211,238,0.08) 0%, transparent 38%),
-              radial-gradient(ellipse at 50% 8%,  rgba(155,109,255,0.07) 0%, transparent 32%)
-            `,
-          }}
-        />
-        {/* Vignette */}
-        <div
-          aria-hidden
-          className="absolute inset-0 pointer-events-none z-0"
-          style={{ background: `radial-gradient(ellipse at 50% 50%, transparent 28%, ${NAVY}bb 72%, ${NAVY}ee 100%)` }}
-        />
-
         <ParticleField />
 
         {/* ── Two-column layout ── */}
