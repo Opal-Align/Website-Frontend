@@ -33,9 +33,9 @@ const testimonials: Testimonial[] = [
   },
 ];
 
-const NAVY = "#08060C";
+const NAVY = "#07080D";
 const OPAL_LIGHT_GRADIENT =
-  "linear-gradient(120deg, #B8EEFF 0%, #D4AAFF 30%, #FFB8F5 60%, #AAFFD4 100%)";
+  "linear-gradient(120deg, #FFFFFF 0%, #F8FAFC 30%, #F3F4F6 65%, #FFFFFF 100%)";
 const gradientText: React.CSSProperties = {
   backgroundImage: OPAL_LIGHT_GRADIENT,
   WebkitBackgroundClip: "text",
@@ -162,10 +162,10 @@ function StarsCanvas() {
         if (s.tw) a = s.base * (0.35 + 0.65 * Math.sin(t * 0.001 * s.sp + s.ph));
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(${s.hue}, 85%, 86%, ${a})`;
+        ctx.fillStyle = `rgba(255,255,255,${a})`;
         ctx.fill();
         if (s.r > 1.2) {
-          ctx.strokeStyle = `hsla(${s.hue}, 85%, 86%, ${a * 0.32})`;
+          ctx.strokeStyle = `rgba(255,255,255,${a * 0.32})`;
           ctx.lineWidth = 0.5;
           ctx.beginPath();
           ctx.moveTo(s.x - s.r * 3, s.y);
@@ -270,11 +270,10 @@ const TestimonialSection = () => {
         className="absolute inset-0 pointer-events-none"
         style={{
           background: `
-            radial-gradient(ellipse at 16% 18%, rgba(184,238,255,0.10) 0%, transparent 34%),
-            radial-gradient(ellipse at 86% 38%, rgba(255,184,245,0.11) 0%, transparent 38%),
-            radial-gradient(ellipse at 50% 92%, rgba(170,255,212,0.09) 0%, transparent 38%),
-            ${NAVY}
-          `,
+          radial-gradient(ellipse at 15% 20%, rgba(155,109,255,0.07) 0%, transparent 45%),
+          radial-gradient(ellipse at 82% 70%, rgba(34,211,238,0.06) 0%, transparent 42%),
+          #07080D
+        `,
         }}
       />
 
@@ -304,7 +303,7 @@ const TestimonialSection = () => {
               className="h-px w-8 sm:w-10"
               style={{
                 background:
-                  "linear-gradient(to right, transparent, rgba(212,170,255,0.6))",
+                  "linear-gradient(to right, transparent, rgba(255,255,255,0.6))",
               }}
             />
             <p
@@ -317,7 +316,7 @@ const TestimonialSection = () => {
               className="h-px w-8 sm:w-10"
               style={{
                 background:
-                  "linear-gradient(to left, transparent, rgba(184,238,255,0.6))",
+                  "linear-gradient(to left, transparent, rgba(255,255,255,0.6))",
               }}
             />
           </div>
@@ -328,7 +327,7 @@ const TestimonialSection = () => {
               ...gradientText,
               fontSize: "clamp(32px, 6vw, 64px)",
               letterSpacing: "-0.02em",
-              textShadow: "0 0 50px rgba(212,170,255,0.10)",
+              textShadow: "0 0 50px rgba(255,255,255,0.10)",
             }}
           >
             Testimonials
@@ -392,7 +391,7 @@ const TestimonialSection = () => {
                       className="w-[7px] h-[7px] rounded-full"
                       style={{
                         backgroundImage: OPAL_LIGHT_GRADIENT,
-                        boxShadow: "0 0 14px 4px rgba(212,170,255,0.45)",
+                        boxShadow: "0 0 14px 4px rgba(255,255,255,0.45)",
                       }}
                     />
                   </div>
@@ -464,7 +463,7 @@ const TestimonialSection = () => {
                       width: `${fill * 100}%`,
                       backgroundImage: OPAL_LIGHT_GRADIENT,
                       boxShadow: isActive
-                        ? "0 0 12px rgba(212,170,255,0.45)"
+                        ? "0 0 12px rgba(255,255,255,0.45)"
                         : "none",
                       transition: isActive
                         ? "none"
@@ -486,7 +485,7 @@ const TestimonialSection = () => {
               className="flex-1 h-px"
               style={{
                 background:
-                  "linear-gradient(to right, transparent, rgba(212,170,255,0.28), transparent)",
+                  "linear-gradient(to right, transparent, rgba(255,255,255,0.28), transparent)",
               }}
             />
             <span
@@ -499,7 +498,7 @@ const TestimonialSection = () => {
               className="flex-1 h-px"
               style={{
                 background:
-                  "linear-gradient(to right, transparent, rgba(184,238,255,0.28), transparent)",
+                  "linear-gradient(to right, transparent, rgba(255,255,255,0.28), transparent)",
               }}
             />
           </motion.div>

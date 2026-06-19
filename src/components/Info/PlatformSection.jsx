@@ -1,230 +1,271 @@
 "use client";
 
 /**
- * PlatformSection.jsx
- * -------------------
+ * PlatformSection.jsx — Hover-to-flip card variant
+ * --------------------------------------------------
  * Requires: npm install framer-motion
- * Fonts:    Inter via Google Fonts (or next/font)
  *
- * Interactive strategy — keeps all content without bulk:
- *  • Toggle pill switches between "The Problem" and "gOS in Action"
- *  • Cards animate out (stagger fade-up) then new content staggers in
- *  • Hovering a card in Problem mode reveals a subtle "gOS solves this" hint
- *  • Feature tags animate in with a spring on the Solution view
- *  • Entire section entrance driven by useInView (fires once)
- *  • Responsive: 4-col → 2-col → 1-col
+ * Each card shows the Problem on the front face.
+ * Hovering (desktop) or tapping (mobile) flips it to reveal the Solution.
+ * Text is strictly white / grey only — no brand colour on text.
  */
 
-import { useState, useRef } from "react";
-import { motion, AnimatePresence, useInView } from "framer-motion";
+import { useRef, useState } from "react";
+// eslint-disable-next-line no-unused-vars
+import { motion, useInView } from "framer-motion";
 
 /* ─── Data ────────────────────────────────────────────────────────── */
 const MODULES = [
   {
-    id: "schedule",
-    label: "Schedule",
+    id: "schedule", label: "Schedule", num: "01",
     problem: {
       title: "Empty chairs cost you before anyone notices.",
-      body:  "Open slots, no-shows, and cancellations happen faster than any front desk can respond. By the time staff react, the revenue is already gone.",
+      body: "Open slots, no-shows, and cancellations happen faster than any front desk can respond. By the time staff react, the revenue is already gone.",
     },
     solution: {
       title: "gOS protects the schedule before a chair goes cold.",
-      body:  "Gaps are identified the moment they open. The right patients are contacted automatically. Eligibility verified. No-shows rerouted. Recall running every day.",
-      tags:  ["Gap fill", "Eligibility check", "Recall"],
+      body: "Gaps are identified the moment they open. The right patients are contacted automatically. No-shows rerouted. Recall running every day.",
+      tags: ["Gap fill", "Eligibility check", "Recall"],
     },
   },
   {
-    id: "produce",
-    label: "Produce",
+    id: "produce", label: "Produce", num: "02",
     problem: {
       title: "Accepted treatment walks out unscheduled every day.",
-      body:  "Patients say yes and leave without booking. Follow-up never comes. The production those cases represented quietly disappears into a list no one has time to work.",
+      body: "Patients say yes and leave without booking. Follow-up never comes. That production quietly disappears into a list no one has time to work.",
     },
     solution: {
       title: "gOS follows up on every unscheduled case automatically.",
-      body:  "Every accepted treatment plan that left without booking gets worked. The right message, the right channel, the right time — until it converts or your team steps in.",
-      tags:  ["Treatment follow-up", "Care gaps", "Production recovery"],
+      body: "Every accepted plan that left without booking gets worked. Right message, right channel, right time — until it converts or your team steps in.",
+      tags: ["Treatment follow-up", "Care gaps", "Production recovery"],
     },
   },
   {
-    id: "collect",
-    label: "Collect",
+    id: "collect", label: "Collect", num: "03",
     problem: {
       title: "Aging A/R gets harder to collect with every passing day.",
-      body:  "Your billing team is outnumbered. Balances go untouched. Accounts age past 90 days. Revenue that was collectible becomes revenue that's written off.",
+      body: "Your billing team is outnumbered. Balances go untouched. Accounts age past 90 days. Revenue that was collectible becomes revenue that's written off.",
     },
     solution: {
       title: "gOS runs A/R outreach at a volume your team never could.",
-      body:  "Every outstanding balance worked automatically. Multi-channel. Audit-ready. Insurance gaps flagged before they become denials. Your team handles conversations — gOS handles the rest.",
-      tags:  ["A/R outreach", "Balance recovery", "Audit log"],
+      body: "Every outstanding balance worked automatically. Multi-channel. Audit-ready. Insurance gaps flagged before they become denials.",
+      tags: ["A/R outreach", "Balance recovery", "Audit log"],
     },
   },
   {
-    id: "relay",
-    label: "Relay",
+    id: "relay", label: "Relay", num: "04",
     problem: {
       title: "Communication in five tools means things fall through every time.",
-      body:  "Reminders here. Follow-ups there. Patient responses somewhere else. No single person has the full picture — and patients slip through every gap.",
+      body: "Reminders here. Follow-ups there. Patient responses somewhere else. No single person has the full picture — and patients slip through every gap.",
     },
     solution: {
       title: "gOS centralizes every communication into one place.",
-      body:  "Every channel. Every touchpoint. Every response — in one dashboard with a full audit trail. Your team sees everything. Nothing drops. No channel-switching required.",
-      tags:  ["Unified dashboard", "Audit trail", "Multi-channel"],
+      body: "Every channel, every touchpoint, every response — in one dashboard with a full audit trail. Your team sees everything. Nothing drops.",
+      tags: ["Unified dashboard", "Audit trail", "Multi-channel"],
     },
   },
 ];
 
 const EASE = [0.16, 1, 0.3, 1];
 
-/* ─── Feature tag pill ────────────────────────────────────────────── */
-function Tag({ label, delay = 0 }) {
+/* ─── Shared card surface styles ─────────────────────────────────── */
+const FACE_BASE = {
+  borderRadius: 16,
+  padding: "clamp(20px, 2vw, 28px)",
+  display: "flex",
+  flexDirection: "column",
+  overflow: "hidden",
+};
+
+const FRONT_STYLE = {
+  ...FACE_BASE,
+  background: "linear-gradient(150deg, #0c0b13 0%, #0f0d18 100%)",
+  border: "1px solid rgba(255,255,255,0.07)",
+  // both faces share the same grid cell so the card grows to fit the taller face
+  gridArea: "1 / 1",
+  // webkit prefix needed for Safari
+  WebkitBackfaceVisibility: "hidden",
+  backfaceVisibility: "hidden",
+};
+
+const BACK_STYLE = {
+  ...FACE_BASE,
+  background: "linear-gradient(150deg, #0f0e1a 0%, #131220 100%)",
+  border: "1px solid rgba(255,255,255,0.13)",
+  gridArea: "1 / 1",
+  transform: "rotateY(180deg)",
+  WebkitBackfaceVisibility: "hidden",
+  backfaceVisibility: "hidden",
+};
+
+/* ─── Small badge ────────────────────────────────────────────────── */
+function Badge({ children, bright = false }) {
   return (
-    <motion.span
-      initial={{ opacity: 0, scale: 0.8, y: 4 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.35, delay, ease: EASE }}
-      className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-full
-                 text-[11px] font-medium tracking-wide text-white/50
-                 border border-white/9 bg-white/4
-                 hover:border-[#22D3EE]/30 hover:text-white/70
-                 transition-colors duration-200 cursor-default"
+    <div
+      className="inline-flex items-center gap-1.5 self-start mb-4"
+      style={{
+        padding: "4px 10px",
+        borderRadius: 999,
+        background: bright ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)",
+        border: `1px solid ${bright ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.08)"}`,
+      }}
     >
-      {label}
-    </motion.span>
+      <span
+        style={{
+          width: 5, height: 5, borderRadius: "50%",
+          background: bright ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.22)",
+          flexShrink: 0,
+        }}
+      />
+      <span
+        style={{
+          fontSize: 9.5, fontWeight: 600, letterSpacing: "0.14em",
+          textTransform: "uppercase",
+          color: bright ? "rgba(255,255,255,0.62)" : "rgba(255,255,255,0.30)",
+        }}
+      >
+        {children}
+      </span>
+    </div>
   );
 }
 
-/* ─── Single module card ──────────────────────────────────────────── */
-function ModuleCard({ module, mode, index }) {
-  const [hovered, setHovered] = useState(false);
-  const isSolution = mode === "solution";
-  const content = isSolution ? module.solution : module.problem;
+/* ─── Single flip card ───────────────────────────────────────────── */
+function FlipCard({ mod, index, inView }) {
+  const [flipped, setFlipped] = useState(false);
 
   return (
     <motion.div
-      key={`${module.id}-${mode}`}
-      initial={{ opacity: 0, y: 18 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -12, scale: 0.97 }}
-      transition={{ duration: 0.42, delay: index * 0.06, ease: EASE }}
-      onHoverStart={() => setHovered(true)}
-      onHoverEnd={() => setHovered(false)}
-      className="relative flex flex-col rounded-2xl border overflow-hidden"
-      style={{
-        borderColor: isSolution
-          ? hovered ? "rgba(34,211,238,0.22)" : "rgba(34,211,238,0.10)"
-          : hovered ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.07)",
-        background: isSolution
-          ? "linear-gradient(145deg, #090e14 0%, #0b0d16 100%)"
-          : "linear-gradient(145deg, #0c0b12 0%, #0e0d15 100%)",
-        transition: "border-color 0.3s",
-        padding: "clamp(15px, 1.5vw, 22px)",
-        minHeight: 200,
-      }}
+      initial={{ opacity: 0, y: 22 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.65, delay: 0.08 + index * 0.09, ease: EASE }}
+      /* perspective must sit on the wrapper, not the rotating element.
+         height:100% lets the card fill its grid cell so every card in a
+         row is the same height. */
+      style={{ perspective: "1100px", cursor: "pointer", height: "100%" }}
+      onHoverStart={() => setFlipped(true)}
+      onHoverEnd={() => setFlipped(false)}
+      /* tap-to-flip for touch devices */
+      onClick={() => setFlipped(f => !f)}
     >
-      {/* Top accent line */}
-      <div
-        className="absolute top-0 left-0 right-0 h-[1.5px] transition-opacity duration-300"
-        style={{
-          background: isSolution
-            ? "linear-gradient(90deg, transparent, rgba(34,211,238,0.35), transparent)"
-            : "linear-gradient(90deg, transparent, rgba(155,109,255,0.22), transparent)",
-          opacity: hovered ? 1 : 0.6,
-        }}
-      />
-
-      {/* Module label */}
-      <span
-        className="text-[10px] font-semibold tracking-[0.18em] uppercase mb-2 block"
-        style={{ color: isSolution ? "#22D3EE" : "#9B6DFF" }}
+      {/* Rotating layer — grid stacks both faces in one cell so the card
+          height is driven by the taller face (tags always fit). */}
+      <motion.div
+        animate={{ rotateY: flipped ? 180 : 0 }}
+        transition={{ duration: 0.72, ease: [0.25, 0.46, 0.45, 0.94] }}
+        style={{ display: "grid", transformStyle: "preserve-3d", height: "100%" }}
       >
-        {module.label}
-      </span>
 
-      {/* Title */}
-      <h3
-        className="font-bold text-white leading-[1.28] mb-2"
-        style={{ fontSize: "clamp(14px, 1.1vw, 16px)" }}
-      >
-        {content.title}
-      </h3>
+        {/* ══ FRONT — Problem ══ */}
+        <div style={FRONT_STYLE}>
+          {/* Top shimmer line */}
+          <div style={{
+            position: "absolute", top: 0, left: 16, right: 16, height: 1,
+            background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.10), transparent)",
+          }} />
 
-      {/* Body */}
-      <p
-        className="text-white/45 leading-[1.72] flex-1"
-        style={{ fontSize: "clamp(12.5px, 0.95vw, 13.5px)" }}
-      >
-        {content.body}
-      </p>
+          {/* Label row */}
+          <div className="flex items-center justify-between mb-1">
+            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>
+              {mod.label}
+            </span>
+            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.16)", fontVariantNumeric: "tabular-nums" }}>
+              {mod.num} / 04
+            </span>
+          </div>
 
-      {/* Problem hover hint */}
-      {!isSolution && (
-        <motion.div
-          animate={{ opacity: hovered ? 1 : 0, y: hovered ? 0 : 4 }}
-          transition={{ duration: 0.2 }}
-          className="mt-3 flex items-center gap-1.5"
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-[#22D3EE] opacity-80" />
-          <span className="text-[11px] text-[#22D3EE]/70 font-medium">gOS solves this</span>
-        </motion.div>
-      )}
+          <Badge>The Problem</Badge>
 
-      {/* Solution tags */}
-      {isSolution && content.tags && (
-        <div className="flex flex-wrap gap-1.5 mt-3">
-          {content.tags.map((tag, i) => (
-            <Tag key={tag} label={tag} delay={0.18 + i * 0.06} />
-          ))}
+          {/* Headline */}
+          <h3 style={{
+            color: "#ffffff", fontWeight: 700, lineHeight: 1.3, marginBottom: 10,
+            fontSize: "clamp(14.5px, 1.2vw, 16.5px)",
+          }}>
+            {mod.problem.title}
+          </h3>
+
+          {/* Body */}
+          <p style={{
+            color: "rgba(255,255,255,0.42)", lineHeight: 1.72, flex: 1,
+            fontSize: "clamp(12.5px, 0.95vw, 13.5px)",
+          }}>
+            {mod.problem.body}
+          </p>
+
+          {/* Flip hint */}
+          <div className="flex items-center gap-1.5 mt-5" style={{ opacity: 0.3 }}>
+            <span style={{ fontSize: 10, color: "#fff", letterSpacing: "0.06em" }}>
+              hover to reveal
+            </span>
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+              <path d="M5.5 1.5A4 4 0 1 1 1.5 5.5" stroke="#fff" strokeWidth="1.2" strokeLinecap="round"/>
+              <path d="M5.5 1.5 3.5 3.5M5.5 1.5 7.5 3.5" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
         </div>
-      )}
+
+        {/* ══ BACK — Solution ══ */}
+        <div style={BACK_STYLE}>
+          {/* Top shimmer — brighter than front */}
+          <div style={{
+            position: "absolute", top: 0, left: 16, right: 16, height: 1,
+            background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent)",
+          }} />
+
+          {/* Label row */}
+          <div className="flex items-center justify-between mb-1">
+            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.55)" }}>
+              {mod.label}
+            </span>
+            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.20)", fontVariantNumeric: "tabular-nums" }}>
+              {mod.num} / 04
+            </span>
+          </div>
+
+          <Badge bright>gOS in Action</Badge>
+
+          {/* Headline */}
+          <h3 style={{
+            color: "#ffffff", fontWeight: 700, lineHeight: 1.3, marginBottom: 10,
+            fontSize: "clamp(14.5px, 1.2vw, 16.5px)",
+          }}>
+            {mod.solution.title}
+          </h3>
+
+          {/* Body */}
+          <p style={{
+            color: "rgba(255,255,255,0.45)", lineHeight: 1.72, flex: 1,
+            fontSize: "clamp(12.5px, 0.95vw, 13.5px)",
+          }}>
+            {mod.solution.body}
+          </p>
+
+          {/* Tags */}
+          <div className="flex flex-wrap gap-1.5 mt-4">
+            {mod.solution.tags.map((tag) => (
+              <span
+                key={tag}
+                style={{
+                  fontSize: 11, fontWeight: 500,
+                  color: "rgba(255,255,255,0.48)",
+                  padding: "4px 10px", borderRadius: 999,
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.10)",
+                }}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+
+      </motion.div>
     </motion.div>
-  );
-}
-
-/* ─── Toggle pill ─────────────────────────────────────────────────── */
-function TogglePill({ mode, setMode }) {
-  const items = [
-    { id: "problem",  dot: "#ef4444", label: "Practices Major Issues" },
-    { id: "solution", dot: "#22D3EE", label: "gOS in Action"         },
-  ];
-
-  return (
-    <div
-      className="inline-flex rounded-full p-[3px] gap-0.5"
-      style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}
-    >
-      {items.map(item => {
-        const active = mode === item.id;
-        return (
-          <button
-            key={item.id}
-            onClick={() => setMode(item.id)}
-            className="relative flex items-center gap-2 px-4 py-2 rounded-full text-[11px] font-medium tracking-wide transition-colors duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30"
-            style={{ color: active ? "#fff" : "rgba(255,255,255,0.42)", cursor: "pointer", border: "none", background: "transparent" }}
-          >
-            {active && (
-              <motion.div
-                layoutId="toggle-bg"
-                className="absolute inset-0 rounded-full"
-                style={{ background: "rgba(255,255,255,0.09)", border: "1px solid rgba(255,255,255,0.11)" }}
-                transition={{ type: "spring", stiffness: 380, damping: 34 }}
-              />
-            )}
-            <span
-              className="relative z-10 w-[7px] h-[7px] rounded-full shrink-0"
-              style={{ background: active ? item.dot : "rgba(255,255,255,0.2)", transition: "background 0.3s" }}
-            />
-            <span className="relative z-10 whitespace-nowrap">{item.label}</span>
-          </button>
-        );
-      })}
-    </div>
   );
 }
 
 /* ─── Main section ────────────────────────────────────────────────── */
 export default function PlatformSection() {
-  const [mode, setMode] = useState("problem");
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-12% 0px" });
 
@@ -247,7 +288,7 @@ export default function PlatformSection() {
         style={{
           background: "transparent",
           fontFamily: "'Inter', sans-serif",
-          padding: "clamp(36px, 5vh, 72px) 0",
+          padding: "clamp(48px, 7vh, 96px) 0",
           minHeight: "100vh",
           display: "flex",
           flexDirection: "column",
@@ -258,94 +299,103 @@ export default function PlatformSection() {
           className="relative z-10 mx-auto w-full"
           style={{ maxWidth: 1280, padding: "0 clamp(20px, 4vw, 56px)" }}
         >
-
           {/* ── Header ── */}
-          <div className="mb-6 md:mb-7">
+          <div className="mb-8 md:mb-10">
             <motion.p
               {...fadeUp(0.05)}
-              className="text-[11px] font-semibold tracking-[0.2em] uppercase text-white/30 mb-3"
+              style={{
+                fontSize: 11, fontWeight: 600, letterSpacing: "0.2em",
+                textTransform: "uppercase", color: "rgba(255,255,255,0.28)",
+                marginBottom: 14,
+              }}
             >
               The Platform
             </motion.p>
 
-            <motion.div {...fadeUp(0.12)} className="mb-3">
-              <h2
-                className="font-bold text-white leading-[1.08]"
-                style={{ fontSize: "clamp(26px, 3.6vw, 42px)" }}
-              >
+            <motion.div {...fadeUp(0.12)} style={{ marginBottom: 12 }}>
+              <h2 style={{
+                fontWeight: 700, color: "#fff", lineHeight: 1.08,
+                fontSize: "clamp(26px, 3.6vw, 48px)", margin: 0,
+              }}>
                 Four levers.
               </h2>
-              <h2
-                className="font-bold leading-[1.08]"
-                style={{
-                  fontSize: "clamp(26px, 3.6vw, 42px)",
-                  color: "rgba(255,255,255,0.38)",
-                }}
-              >
+              <h2 style={{
+                fontWeight: 700, lineHeight: 1.08, margin: 0,
+                fontSize: "clamp(26px, 3.6vw, 48px)",
+                color: "rgba(255,255,255,0.30)",
+              }}>
                 One operating layer.
               </h2>
             </motion.div>
 
             <motion.p
               {...fadeUp(0.22)}
-              className="text-white/48 leading-[1.6] max-w-[540px]"
-              style={{ fontSize: "clamp(13px, 1vw, 15px)", fontWeight: 300 }}
+              style={{
+                color: "rgba(255,255,255,0.42)", lineHeight: 1.65,
+                maxWidth: 520, fontWeight: 300,
+                fontSize: "clamp(13.5px, 1vw, 15.5px)",
+              }}
             >
               Every module targets a specific place revenue leaks. Together they run as a
               single system — automatically, continuously, without adding headcount.
             </motion.p>
-          </div>
 
-          {/* ── Toggle ── */}
-          <motion.div {...fadeUp(0.32)} className="mb-5 md:mb-6">
-            <TogglePill mode={mode} setMode={setMode} />
-          </motion.div>
-
-          {/* ── Cards grid ── */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={mode}
-              className="grid gap-3 md:gap-4"
+            {/* Hover instruction */}
+            <motion.p
+              {...fadeUp(0.3)}
               style={{
-                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
+                marginTop: 14, fontSize: 11.5,
+                color: "rgba(255,255,255,0.20)",
+                fontStyle: "italic",
               }}
             >
-              {MODULES.map((module, i) => (
-                <ModuleCard
-                  key={module.id}
-                  module={module}
-                  mode={mode}
-                  index={i}
-                />
-              ))}
-            </motion.div>
-          </AnimatePresence>
+              Hover any card to see how gOS solves it.
+            </motion.p>
+          </div>
+
+          {/* ── Flip card grid ── */}
+          <div
+            className="grid gap-3 md:gap-4"
+            style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))" }}
+          >
+            {MODULES.map((mod, i) => (
+              <FlipCard key={mod.id} mod={mod} index={i} inView={inView} />
+            ))}
+          </div>
 
           {/* ── Footer bar ── */}
           <motion.div
-            {...fadeUp(0.5)}
-            className="mt-6 md:mt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-5"
+            {...fadeUp(0.55)}
+            className="mt-8 md:mt-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-6"
             style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
           >
             <p
-              className="text-white/35 font-light italic leading-snug"
-              style={{ fontSize: "clamp(12.5px, 1vw, 14px)", maxWidth: 480 }}
+              style={{
+                color: "rgba(255,255,255,0.28)", fontStyle: "italic",
+                fontWeight: 300, lineHeight: 1.5,
+                fontSize: "clamp(12.5px, 1vw, 14px)", maxWidth: 480,
+              }}
             >
               Every module runs automatically. Every action logged. Every gap worked.
             </p>
 
             <button
-              className="shrink-0 inline-flex items-center gap-2.5 font-semibold text-[#07080D] rounded-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-[0_6px_24px_rgba(34,211,238,0.25)] active:scale-[0.97]"
+              className="shrink-0 inline-flex items-center gap-2.5 hover:scale-[1.02] active:scale-[0.97] transition-transform duration-200"
               style={{
-                background: "linear-gradient(135deg, #c8f5f0 0%, #22D3EE 60%, #a78bfa 100%)",
-                padding: "12px 24px",
-                fontSize: 13,
-                letterSpacing: "0.04em",
+                padding: "12px 26px", borderRadius: 8,
+                background: "#ffffff",
+                color: "#08060C",
+                fontSize: 12.5, fontWeight: 700,
+                letterSpacing: "0.06em",
+                border: "none", cursor: "pointer",
+                boxShadow: "0 4px 20px rgba(255,255,255,0.08)",
               }}
+              onMouseEnter={e => { e.currentTarget.style.background = "#f0f0f0"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "#ffffff"; }}
             >
               BOOK A DEMO
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                <path d="M1 12L11 2M11 2H4.5M11 2V8.5" stroke="#07080D" strokeWidth="1.8" strokeLinecap="round" />
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M1 11L10 2M10 2H4.5M10 2V7.5" stroke="#08060C" strokeWidth="1.8" strokeLinecap="round"/>
               </svg>
             </button>
           </motion.div>

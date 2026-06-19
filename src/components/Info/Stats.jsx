@@ -3,8 +3,8 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, useInView, animate } from "framer-motion";
 
 const OPAL_LIGHT_GRADIENT =
-  "linear-gradient(120deg, #B8EEFF 0%, #D4AAFF 30%, #FFB8F5 60%, #AAFFD4 100%)";
-const OPAL_SOFT_GLOW = "rgba(212,170,255,0.28)";
+  "linear-gradient(120deg, #FFFFFF 0%, #F8FAFC 30%, #F3F4F6 65%, #FFFFFF 100%)";
+const OPAL_SOFT_GLOW = "rgba(255,255,255,0.28)";
 const gradientText = {
   backgroundImage: OPAL_LIGHT_GRADIENT,
   WebkitBackgroundClip: "text",
@@ -69,11 +69,10 @@ function Process() {
         if (s.tw) a = s.base * (0.35 + 0.65 * Math.sin(t * 0.001 * s.sp + s.ph));
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        const hue = s.r > 1.2 ? 280 : 210;
-        ctx.fillStyle = `hsla(${hue}, 85%, 86%, ${a})`;
+        ctx.fillStyle = `rgba(255,255,255,${a})`;
         ctx.fill();
         if (s.r > 1.2) {
-          ctx.strokeStyle = `hsla(285, 90%, 86%, ${a * 0.28})`;
+          ctx.strokeStyle = `rgba(255,255,255,${a * 0.28})`;
           ctx.lineWidth = 0.5;
           ctx.beginPath();
           ctx.moveTo(s.x - s.r * 3, s.y); ctx.lineTo(s.x + s.r * 3, s.y);
@@ -171,7 +170,7 @@ function InvisibleInk({ children, hideDelay = 2000 }) {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(212,170,255,${flicker})`;
+        ctx.fillStyle = `rgba(255,255,255,${flicker})`;
         ctx.fill();
       }
 
@@ -248,7 +247,7 @@ function InvisibleInk({ children, hideDelay = 2000 }) {
           opacity: revealed ? 1 : 0,
           ...(revealed ? gradientText : {}),
           textShadow: revealed
-            ? "0 0 20px rgba(212,170,255,0.55), 0 0 44px rgba(184,238,255,0.24)"
+            ? "0 0 20px rgba(255,255,255,0.55), 0 0 44px rgba(255,255,255,0.24)"
             : "none",
           transition: revealed
             ? "filter 0.7s ease-out, opacity 0.7s ease-out, text-shadow 0.7s ease-out 0.3s"
@@ -310,8 +309,8 @@ function Card({ stat, index, inView }) {
       animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
       whileHover={{
         scale: 1.035,
-        borderColor: "rgba(212,170,255,0.42)",
-        boxShadow: "0 18px 70px rgba(212,170,255,0.12)",
+        borderColor: "rgba(255,255,255,0.42)",
+        boxShadow: "0 18px 70px rgba(255,255,255,0.12)",
       }}
       transition={{ duration: 0.6, delay: index * 0.12, ease: "easeOut" }}
       onMouseEnter={() => setHovered(true)}
@@ -330,7 +329,7 @@ function Card({ stat, index, inView }) {
         className="absolute inset-0 opacity-70"
         style={{
           background:
-            "radial-gradient(circle at 20% 10%, rgba(184,238,255,0.12), transparent 36%), radial-gradient(circle at 85% 90%, rgba(255,184,245,0.10), transparent 42%)",
+            "radial-gradient(circle at 20% 10%, rgba(255,255,255,0.10), transparent 36%), radial-gradient(circle at 85% 90%, rgba(255,255,255,0.08), transparent 42%)",
         }}
       />
       <div
@@ -356,7 +355,7 @@ function Card({ stat, index, inView }) {
               animate={{ scale: 5, opacity: 0 }}
               transition={{ duration: 1.8, repeat: Infinity }}
               className="absolute inset-0 rounded-full border"
-              style={{ borderColor: "rgba(212,170,255,0.35)" }}
+              style={{ borderColor: "rgba(255,255,255,0.35)" }}
             />
           )}
         </div>
@@ -421,7 +420,7 @@ export default function Processes() {
             color: "#ffffff",
             letterSpacing: "-0.02em",
             lineHeight: 1.05,
-            textShadow: "0 0 60px rgba(212,170,255,0.10)",
+            textShadow: "0 0 60px rgba(255,255,255,0.10)",
           }}
         >
           gOS in Action
@@ -441,11 +440,11 @@ export default function Processes() {
           transition={{ delay: 0.9, duration: 0.8 }}
           className="flex items-center gap-4 mt-10 border-t border-white/10 pt-6"
         >
-          <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(212,170,255,0.28), transparent)` }} />
+          <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(255,255,255,0.28), transparent)` }} />
           <span className="text-[10px] tracking-[0.3em] uppercase text-white/28">
              observed · catalogued · verified
           </span>
-          <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(184,238,255,0.25), transparent)` }} />
+          <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(255,255,255,0.25), transparent)` }} />
         </motion.div>
 
       </div>

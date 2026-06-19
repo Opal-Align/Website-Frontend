@@ -8,14 +8,10 @@ import opalGosLogo from "../../assets/opal-gos.svg";
 
 const NAVY = "#08060C";
 const OPAL_LIGHT_GRADIENT =
-  "linear-gradient(120deg, #B8EEFF 0%, #D4AAFF 30%, #FFB8F5 60%, #AAFFD4 100%)";
+  "linear-gradient(120deg, #FFFFFF 0%, #FFFFFF 100%)";
 
 const gradientText = {
-  backgroundImage: OPAL_LIGHT_GRADIENT,
-  WebkitBackgroundClip: "text",
-  backgroundClip: "text",
-  WebkitTextFillColor: "transparent",
-  color: "transparent",
+  color: "#FFFFFF",
 };
 
 /**
@@ -38,7 +34,7 @@ function NavButton({ label, target, accent = false, onClick }) {
             ${OPAL_LIGHT_GRADIENT} border-box
           `,
           border: "1px solid transparent",
-          boxShadow: "0 0 0 rgba(212,170,255,0)",
+          boxShadow: "0 0 0 rgba(255,255,255,0)",
         }}
       >
         <span style={gradientText}>{label}</span>
@@ -48,7 +44,7 @@ function NavButton({ label, target, accent = false, onClick }) {
 
   return (
     <motion.button
-      whileHover={{ scale: 1.04, color: "#fff", borderColor: "rgba(212,170,255,0.55)" }}
+      whileHover={{ scale: 1.04, color: "#fff", borderColor: "rgba(255,255,255,0.55)" }}
       whileTap={{ scale: 0.96 }}
       onClick={() => onClick(target)}
       className="px-5 py-2 rounded-full border text-[11px] tracking-[0.18em] uppercase whitespace-nowrap cursor-pointer transition-colors"
@@ -91,8 +87,8 @@ export default function Navbar() {
           style={{
             scaleX,
             transformOrigin: "0% 50%",
-            backgroundImage: OPAL_LIGHT_GRADIENT,
-            boxShadow: "0 0 12px rgba(212,170,255,0.35)",
+            backgroundColor: "#22D3EE",
+            boxShadow: "0 0 12px rgba(34,211,238,0.35)",
           }}
         />
 
@@ -154,7 +150,7 @@ export default function Navbar() {
           <motion.button
             onClick={() => setMenuOpen(true)}
             whileTap={{ scale: 0.92 }}
-            whileHover={{ borderColor: "rgba(212,170,255,0.6)" }}
+            whileHover={{ borderColor: "rgba(255,255,255,0.6)" }}
             aria-label="Open navigation"
             className="w-10 h-10 flex items-center justify-center rounded-full border cursor-pointer transition-colors"
             style={{ borderColor: "rgba(255,255,255,0.18)" }}

@@ -25,7 +25,7 @@ const logos = [
 ];
 
 const OPAL_LIGHT_GRADIENT =
-  "linear-gradient(120deg, #B8EEFF 0%, #D4AAFF 30%, #FFB8F5 60%, #AAFFD4 100%)";
+  "linear-gradient(120deg, #FFFFFF 0%, #F8FAFC 30%, #F3F4F6 65%, #FFFFFF 100%)";
 
 export default function LogoStream() {
   return (
@@ -33,16 +33,15 @@ export default function LogoStream() {
       className="relative overflow-hidden w-full py-8 md:py-12 flex items-center justify-center"
       style={{
         background: `
-          radial-gradient(ellipse at 20% 50%, rgba(184,238,255,0.08) 0%, transparent 40%),
-          radial-gradient(ellipse at 80% 50%, rgba(255,184,245,0.08) 0%, transparent 40%),
-          radial-gradient(ellipse at 50% 0%,  rgba(212,170,255,0.07) 0%, transparent 35%),
-          #08060C
+          radial-gradient(ellipse at 15% 20%, rgba(155,109,255,0.07) 0%, transparent 45%),
+          radial-gradient(ellipse at 82% 70%, rgba(34,211,238,0.06) 0%, transparent 42%),
+          #07080D
         `,
       }}
     >
-      {/* Fade at edges — matched to navy */}
-      <div className="absolute top-0 left-0 w-12 md:w-32 h-full z-10" style={{ background: "linear-gradient(to right, #08060C, transparent)" }} />
-      <div className="absolute top-0 right-0 w-12 md:w-32 h-full z-10" style={{ background: "linear-gradient(to left, #08060C, transparent)" }} />
+      {/* Fade at edges — matched to the shared backdrop */}
+      <div className="absolute top-0 left-0 w-12 md:w-32 h-full z-10" style={{ background: "linear-gradient(to right, #07080D, transparent)" }} />
+      <div className="absolute top-0 right-0 w-12 md:w-32 h-full z-10" style={{ background: "linear-gradient(to left, #07080D, transparent)" }} />
 
       {/* Looping Row */}
       <div className="flex overflow-hidden w-full">

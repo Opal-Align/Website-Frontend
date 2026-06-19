@@ -8,7 +8,7 @@ import { MdEmail } from "react-icons/md";
 import { submitToHubSpot } from "../services/hubspotService.js";
 
 const OPAL_GRADIENT =
-  "linear-gradient(120deg, #B8EEFF 0%, #D4AAFF 30%, #FFB8F5 60%, #AAFFD4 100%)";
+  "linear-gradient(120deg, #FFFFFF 0%, #F8FAFC 30%, #F3F4F6 65%, #FFFFFF 100%)";
 
 const gradientText = {
   backgroundImage: OPAL_GRADIENT,
