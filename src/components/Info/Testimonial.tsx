@@ -262,21 +262,9 @@ const TestimonialSection = () => {
       style={{
         minHeight: "100svh",
         height: "100svh",
-        backgroundColor: NAVY,
+        backgroundColor: "transparent",
       }}
     >
-      <div
-        aria-hidden
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: `
-          radial-gradient(ellipse at 15% 20%, rgba(155,109,255,0.07) 0%, transparent 45%),
-          radial-gradient(ellipse at 82% 70%, rgba(34,211,238,0.06) 0%, transparent 42%),
-          #07080D
-        `,
-        }}
-      />
-
       <StarsCanvas />
 
       <div

@@ -36,12 +36,12 @@ export default function HomePageLayout() {
           }}
         >
           <div
-            style={{
+              style={{
               position: "sticky",
               top: 0,
               height: "100vh",
               background: `
-                radial-gradient(ellipse at 15% 20%, rgba(155,109,255,0.07) 0%, transparent 45%),
+                radial-gradient(ellipse at 15% 20%, rgba(96,165,250,0.07) 0%, transparent 45%),
                 radial-gradient(ellipse at 82% 70%, rgba(34,211,238,0.06) 0%, transparent 42%)
               `,
             }}
@@ -54,29 +54,11 @@ export default function HomePageLayout() {
           <MechanismSection/>
           <PlatformSection/>
           <Processes />
+          <LogoStream />
+          <TestimonialSection />
         </div>
       </div>
-      
-      {/* <div>
-        <HeroFlow />
-      </div> */}
-      <div>
-        <LogoStream />
-      </div>
-      {/* <div
-        className="relative w-full flex items-center justify-center"
-        style={{
-          minHeight: "100svh",
-          height: "100svh",
-          overflow: "hidden",
-          padding: "0",
-        }}
-      >
-        <SpaceRacer />
-      </div> */}
-      <div>
-        <TestimonialSection />
-      </div>
+
       <div>
         <Footer />
       </div>

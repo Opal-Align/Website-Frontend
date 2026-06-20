@@ -20,7 +20,7 @@ const CRAFTS = [
         <defs>
           <linearGradient id="cg1" x1="1" y1="14.5" x2="15" y2="1">
             <stop offset="0%" stopColor="#B8EEFF" />
-            <stop offset="100%" stopColor="#D4AAFF" />
+            <stop offset="100%" stopColor="#38BDF8" />
           </linearGradient>
         </defs>
       </svg>
@@ -37,8 +37,8 @@ const CRAFTS = [
         <path d="M9 1L5 9H8L7 15L13 7H9.5L9 1Z" fill="url(#cg2)" />
         <defs>
           <linearGradient id="cg2" x1="5" y1="15" x2="13" y2="1">
-            <stop offset="0%" stopColor="#D4AAFF" />
-            <stop offset="100%" stopColor="#FFB8F5" />
+            <stop offset="0%" stopColor="#38BDF8" />
+            <stop offset="100%" stopColor="#7DD3FC" />
           </linearGradient>
         </defs>
       </svg>
@@ -46,7 +46,7 @@ const CRAFTS = [
     pts: "+300 pts",
     label: "Revenue gap closed",
     sub: "A missed charge recovered",
-    accent: "#D4AAFF",
+    accent: "#38BDF8",
     delay: "0.4s",
   },
   {
@@ -58,8 +58,8 @@ const CRAFTS = [
           strokeLinecap="round" strokeLinejoin="round" />
         <defs>
           <linearGradient id="cg3" x1="2" y1="14" x2="14" y2="2">
-            <stop offset="0%" stopColor="#FFB8F5" />
-            <stop offset="100%" stopColor="#AAFFD4" />
+            <stop offset="0%" stopColor="#7DD3FC" />
+            <stop offset="100%" stopColor="#22D3EE" />
           </linearGradient>
         </defs>
       </svg>
@@ -67,7 +67,7 @@ const CRAFTS = [
     pts: "+500 pts",
     label: "Account fully recovered",
     sub: "Zero balance, max essence",
-    accent: "#AAFFD4",
+    accent: "#22D3EE",
     delay: "0.8s",
   },
 ];
@@ -103,7 +103,7 @@ export default function SpaceRacer() {
       y: Math.random() * H,
       rx: 100 + Math.random() * 160,
       ry: 60 + Math.random() * 100,
-      hue: [220, 260, 200, 280, 240, 210, 250][i],
+      hue: [220, 210, 200, 195, 240, 210, 250][i],
       a: 0.03 + Math.random() * 0.04,
     }));
 
@@ -303,11 +303,11 @@ export default function SpaceRacer() {
                   vx: Math.cos(ang) * spd,
                   vy: Math.sin(ang) * spd - 1,
                   life: 1,
-                  hue: 260 + Math.random() * 80,
+                  hue: 185 + Math.random() * 25,
                   r: 2 + Math.random() * 2.5,
                 });
               }
-              bursts.push({ x: s.tx, y: s.ty, age: 0, max: 20, hue: 290, size: 38 });
+              bursts.push({ x: s.tx, y: s.ty, age: 0, max: 20, hue: 195, size: 38 });
             }
             triggerCardHit(s.cardIdx);
           }
@@ -486,10 +486,10 @@ export default function SpaceRacer() {
         }
 
         @keyframes cardHitFlash {
-          0%   { box-shadow: 0 0 0   0   rgba(212,170,255,0);   border-color: rgba(255,255,255,0.12); transform: scale(1); }
-          18%  { box-shadow: 0 0 36px 10px rgba(212,170,255,0.75); border-color: rgba(212,170,255,0.9); transform: scale(1.06); }
-          55%  { box-shadow: 0 0 18px 4px  rgba(212,170,255,0.3);  border-color: rgba(212,170,255,0.4); transform: scale(1.02); }
-          100% { box-shadow: 0 0 0   0   rgba(212,170,255,0);   border-color: rgba(255,255,255,0.12); transform: scale(1); }
+          0%   { box-shadow: 0 0 0   0   rgba(34,211,238,0);   border-color: rgba(255,255,255,0.12); transform: scale(1); }
+          18%  { box-shadow: 0 0 36px 10px rgba(34,211,238,0.75); border-color: rgba(34,211,238,0.9); transform: scale(1.06); }
+          55%  { box-shadow: 0 0 18px 4px  rgba(34,211,238,0.3);  border-color: rgba(34,211,238,0.4); transform: scale(1.02); }
+          100% { box-shadow: 0 0 0   0   rgba(34,211,238,0);   border-color: rgba(255,255,255,0.12); transform: scale(1); }
         }
 
         .craft-card {
@@ -497,8 +497,8 @@ export default function SpaceRacer() {
           transition: border-color 0.25s, background-color 0.25s;
         }
         .craft-card:hover {
-          border-color: rgba(212,170,255,0.55) !important;
-          background: rgba(212,170,255,0.06) !important;
+          border-color: rgba(34,211,238,0.55) !important;
+          background: rgba(34,211,238,0.06) !important;
         }
         .card-hit {
           animation: cardHitFlash 0.7s ease-out forwards !important;

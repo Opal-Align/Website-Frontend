@@ -31,13 +31,7 @@ export default function LogoStream() {
   return (
     <div
       className="relative overflow-hidden w-full py-8 md:py-12 flex items-center justify-center"
-      style={{
-        background: `
-          radial-gradient(ellipse at 15% 20%, rgba(155,109,255,0.07) 0%, transparent 45%),
-          radial-gradient(ellipse at 82% 70%, rgba(34,211,238,0.06) 0%, transparent 42%),
-          #07080D
-        `,
-      }}
+      style={{ background: "transparent" }}
     >
       {/* Fade at edges — matched to the shared backdrop */}
       <div className="absolute top-0 left-0 w-12 md:w-32 h-full z-10" style={{ background: "linear-gradient(to right, #07080D, transparent)" }} />

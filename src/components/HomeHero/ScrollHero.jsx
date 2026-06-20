@@ -290,7 +290,7 @@ export default function ScrollHero() {
                 className="h-[1.1em] w-auto max-w-[min(92vw,36rem)] object-contain object-center
                            select-none pointer-events-none"
                 style={{
-                  filter: "drop-shadow(0 8px 30px rgba(212,170,255,0.25))",
+                  filter: "drop-shadow(0 8px 30px rgba(255,255,255,0.18))",
                 }}
                 draggable={false}
               />

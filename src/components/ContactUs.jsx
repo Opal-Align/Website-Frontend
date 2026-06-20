@@ -146,9 +146,9 @@ export default function ContactUs() {
         <defs>
           <linearGradient id="opalContactGrad" x1="0%" y1="100%" x2="100%" y2="0%">
             <stop offset="0%"   stopColor="#B8EEFF" />
-            <stop offset="30%"  stopColor="#D4AAFF" />
-            <stop offset="60%"  stopColor="#FFB8F5" />
-            <stop offset="100%" stopColor="#AAFFD4" />
+            <stop offset="30%"  stopColor="#7DD3FC" />
+            <stop offset="60%"  stopColor="#38BDF8" />
+            <stop offset="100%" stopColor="#22D3EE" />
           </linearGradient>
         </defs>
       </svg>
@@ -168,7 +168,7 @@ export default function ContactUs() {
           transition: border-color 0.2s;
         }
         .opal-input::placeholder { color: rgba(184,238,255,0.32); }
-        .opal-input:focus       { outline: none; border-bottom-color: rgba(212,170,255,0.72); }
+        .opal-input:focus       { outline: none; border-bottom-color: rgba(34,211,238,0.72); }
         .opal-input.field-error { border-bottom-color: rgba(255,100,100,0.7); }
       `}</style>
 
@@ -210,9 +210,9 @@ export default function ContactUs() {
                   className="group-hover:translate-x-[-4px] transition-transform"
                 >
                   <defs>
-                    <linearGradient id="arrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <linearGradient id="arrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                       <stop offset="0%"   stopColor="#B8EEFF" />
-                      <stop offset="100%" stopColor="#D4AAFF" />
+                      <stop offset="100%" stopColor="#38BDF8" />
                     </linearGradient>
                   </defs>
                   <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="url(#arrowGrad)" strokeLinecap="round" strokeLinejoin="round"/>

@@ -126,9 +126,9 @@ export default function Footer() {
         <defs>
           <linearGradient id="opalIconGrad" x1="0%" y1="100%" x2="100%" y2="0%">
             <stop offset="0%"   stopColor="#B8EEFF" />
-            <stop offset="30%"  stopColor="#D4AAFF" />
-            <stop offset="60%"  stopColor="#FFB8F5" />
-            <stop offset="100%" stopColor="#AAFFD4" />
+            <stop offset="30%"  stopColor="#7DD3FC" />
+            <stop offset="60%"  stopColor="#38BDF8" />
+            <stop offset="100%" stopColor="#22D3EE" />
           </linearGradient>
         </defs>
       </svg>
