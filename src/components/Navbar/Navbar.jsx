@@ -87,8 +87,8 @@ export default function Navbar() {
           style={{
             scaleX,
             transformOrigin: "0% 50%",
-            backgroundColor: "#22D3EE",
-            boxShadow: "0 0 12px rgba(34,211,238,0.35)",
+            backgroundColor: "#FFFFFF",
+            boxShadow: "0 0 12px rgba(255,255,255,0.35)",
           }}
         />
 
