@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, useInView, animate } from "framer-motion";
+import clientLogo from "../../assets/client_white.png";
 
 const OPAL_LIGHT_GRADIENT =
   "linear-gradient(120deg, #FFFFFF 0%, #F8FAFC 30%, #F3F4F6 65%, #FFFFFF 100%)";
@@ -382,6 +383,46 @@ function Card({ stat, index, inView }) {
   );
 }
 
+/* ─── Client attribution pill (cyan hover) ─── */
+function ClientBadge() {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="flex items-center gap-4 px-7 py-4 rounded-full border transition-all duration-300"
+      style={{
+        borderColor: hovered ? "rgba(34,211,238,0.55)" : "rgba(255,255,255,0.12)",
+        background: hovered
+          ? "linear-gradient(145deg, rgba(34,211,238,0.12), rgba(34,211,238,0.03))"
+          : "linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))",
+        backdropFilter: "blur(10px)",
+        boxShadow: hovered ? "0 0 30px rgba(34,211,238,0.28)" : "none",
+        transform: hovered ? "translateY(-1px)" : "translateY(0)",
+      }}
+    >
+      <span
+        className="text-[11px] md:text-xs tracking-[0.22em] uppercase transition-colors duration-300"
+        style={{ color: hovered ? "rgba(34,211,238,0.9)" : "rgba(255,255,255,0.4)" }}
+      >
+        Client
+      </span>
+      
+      <img
+        src={clientLogo}
+        alt="Advanced Dental Arts"
+        className="h-9 md:h-11 w-auto object-contain transition-all duration-300"
+        style={{
+          filter: hovered
+            ? "drop-shadow(0 0 10px rgba(34,211,238,0.85))"
+            : "none",
+          opacity: hovered ? 1 : 0.85,
+        }}
+      />
+    </div>
+  );
+}
+
 export default function Processes() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: false, margin: "-80px" });
@@ -425,6 +466,25 @@ export default function Processes() {
         >
           gOS in Action
         </motion.h2>
+
+        {/* ─── Client attribution bridge ─── */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, delay: 0.45 }}
+          className="flex items-center gap-4 mb-10 md:mb-12"
+        >
+          <div
+            className="flex-1 h-px"
+            style={{ background: "linear-gradient(to right, transparent, rgba(255,255,255,0.15))" }}
+          />
+          <ClientBadge />
+          <div
+            className="flex-1 h-px"
+            style={{ background: "linear-gradient(to left, transparent, rgba(255,255,255,0.15))" }}
+          />
+        </motion.div>
+        {/* ─── End client attribution bridge ─── */}
 
         {/* Stats grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
