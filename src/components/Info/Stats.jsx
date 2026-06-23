@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, useInView, animate } from "framer-motion";
-import clientLogo from "../../assets/client_white.png";
+import clientLogo from "../../assets/marquee-logo.svg";
 
 const OPAL_LIGHT_GRADIENT =
   "linear-gradient(120deg, #FFFFFF 0%, #F8FAFC 30%, #F3F4F6 65%, #FFFFFF 100%)";

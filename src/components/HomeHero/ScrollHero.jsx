@@ -4,15 +4,13 @@
 
 // eslint-disable-next-line no-unused-vars
 import { motion, useScroll, useSpring, useTransform } from "framer-motion";
-import { useRef, useEffect, useState, useId } from "react";
+import { useRef, useEffect, useState, useId, useCallback } from "react";
 import opalLogo from "../../assets/OPALgos GreyWhite Website.png";
 
 const NAVY = "#08060C";
-/** Same scale as all hero h1 lines — use for the logo wrapper so 1.1em matches the type. */
 const HERO_HEADLINE_SIZE = "clamp(2.4rem, 6.2vw, 5.2rem)";
 const SCROLL_LENGTH = "300vh";
 
-// ─── OPAL cosmic palette (matches ModuleSection.jsx section title) ────────
 const OPAL_STOPS = [
   { offset: "0%",   color: "#FFFFFF" },
   { offset: "50%",  color: "#9AA2AE" },
@@ -53,97 +51,118 @@ function AnimatedWord({ children, start, end, progress, accent = false }) {
   );
 }
 
-// ─── Enamel particles hook ──────────────────────────────────────────────────
-// Replaces useFilmGrain. Accepts the same canvasRef signature so the JSX below
-// needs zero changes. Particles drift upward with a gentle sine-wave sway,
-// fading in from the bottom and out near the top — evoking mineral enamel
-// crystallisation against the dark background.
+// ─── Starfield hook ──────────────────────────────────────────────────────────
 function useEnamelParticles(canvasRef) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
 
-    // ── Particle colours: pearl whites + the OPAL accent hues at low alpha ──
-    const PALETTE = [
-      [220, 235, 255], // cool pearl white
-      [200, 220, 255], // icy blue-white
-      [212, 170, 255], // OPAL lavender
-      [184, 238, 255], // OPAL cyan
-      [255, 184, 245], // OPAL pink
-      [170, 255, 212], // OPAL mint
-    ];
+    let W = 0, H = 0, raf;
+    let mouseX = 0, mouseY = 0;
+    let smoothX = 0, smoothY = 0;
 
-    const N = 220; // particle count
-    let W = 0, H = 0;
-    let particles = [];
-    let raf;
+    const onMouseMove = (e) => {
+      mouseX = e.clientX / window.innerWidth  - 0.5;
+      mouseY = e.clientY / window.innerHeight - 0.5;
+    };
+    window.addEventListener("mousemove", onMouseMove, { passive: true });
+
+    let stars = [];
 
     function resize() {
       W = canvas.offsetWidth;
       H = canvas.offsetHeight;
-      canvas.width = W;
+      canvas.width  = W;
       canvas.height = H;
     }
 
-    function makeParticle(forceY = null) {
-      const col = PALETTE[Math.floor(Math.random() * PALETTE.length)];
+    function makeStar(randomZ = true) {
       return {
-        x: Math.random() * W,
-        // Spread initial positions across full height so the canvas isn't
-        // empty on first frame; new particles always spawn at the bottom.
-        y: forceY !== null ? forceY : Math.random() * H,
-        r: Math.random() * 5.5 + 1.2,          // 1.2–6.7 px radius
-        speed: Math.random() * 0.28 + 0.07,     // upward drift speed
-        drift: (Math.random() - 0.5) * 0.22,    // horizontal sway amplitude
-        phase: Math.random() * Math.PI * 2,     // sway phase offset
-        col,
-        // Max alpha varies per particle so the field has visual depth
-        maxAlpha: Math.random() * 0.28 + 0.05,
+        x: (Math.random() - 0.5),
+        y: (Math.random() - 0.5),
+        z: randomZ ? Math.random() : 1,
+        speed: Math.random() * 0.00065 + 0.00022,
+        twinkle: Math.random() > 0.55,
+        twinklePeriod: Math.random() * 4 + 2,
+        twinklePhase:  Math.random() * Math.PI * 2,
+        twinkleDepth:  Math.random() * 0.4 + 0.15,
+        px: null, py: null,
       };
     }
 
     function init() {
-      particles = Array.from({ length: N }, () => makeParticle());
+      stars = Array.from({ length: 1000 }, () => makeStar(true));
     }
 
     function draw() {
-      // Sync size if the element has resized between frames
-      if (canvas.offsetWidth !== W || canvas.offsetHeight !== H) {
-        resize();
-        init();
-      }
+      if (canvas.offsetWidth !== W || canvas.offsetHeight !== H) { resize(); init(); }
 
-      ctx.clearRect(0, 0, W, H);
+      smoothX += (mouseX - smoothX) * 0.055;
+      smoothY += (mouseY - smoothY) * 0.055;
+
+      ctx.fillStyle = "rgba(8,6,12,0.20)";
+      ctx.fillRect(0, 0, W, H);
+
       const t = performance.now() / 1000;
+      const cx = W / 2;
+      const cy = H / 2;
 
-      for (const p of particles) {
-        // Move upward
-        p.y -= p.speed;
-        // Sine-wave horizontal sway
-        p.x += Math.sin(t * 0.45 + p.phase) * p.drift;
+      for (const s of stars) {
+        s.z -= s.speed;
 
-        // Wrap horizontally so particles never leave the sides
-        if (p.x < -5) p.x = W + 5;
-        if (p.x > W + 5) p.x = -5;
-
-        // Recycle when it leaves the top
-        if (p.y < -5) {
-          const fresh = makeParticle(H + 5);
-          Object.assign(p, fresh);
+        if (s.z <= 0) {
+          Object.assign(s, makeStar(false));
+          s.px = null; s.py = null;
           continue;
         }
 
-        // Fade in over the bottom 18% of the canvas, fade out over the top 18%
-        const fadeIn  = Math.min(1, (H - p.y) / (H * 0.18));
-        const fadeOut = Math.min(1, p.y / (H * 0.18));
-        const alpha   = p.maxAlpha * Math.min(fadeIn, fadeOut);
+        const perspective = 1 / s.z;
+        const parallaxStrength = (1 - s.z) * 0.06;
+        const sx = cx + (s.x + smoothX * parallaxStrength) * W * perspective;
+        const sy = cy + (s.y + smoothY * parallaxStrength) * H * perspective;
 
-        const [r, g, b] = p.col;
+        if (sx < -4 || sx > W + 4 || sy < -4 || sy > H + 4) {
+          s.px = null; s.py = null;
+          continue;
+        }
+
+        const nearness = 1 - s.z;
+        const r = Math.max(0.12, nearness * 2.4);
+        let alpha = Math.min(1, nearness * 1.5);
+
+        if (s.twinkle && s.z > 0.35) {
+          const osc = Math.sin(t / s.twinklePeriod * Math.PI * 2 + s.twinklePhase);
+          alpha *= 1 - s.twinkleDepth * 0.5 + s.twinkleDepth * 0.5 * osc;
+        }
+        alpha = Math.max(0, Math.min(1, alpha));
+
+        if (s.px !== null && nearness > 0.5) {
+          ctx.beginPath();
+          ctx.moveTo(s.px, s.py);
+          ctx.lineTo(sx, sy);
+          ctx.strokeStyle = `rgba(255,255,255,${alpha * 0.30})`;
+          ctx.lineWidth = r * 0.55;
+          ctx.stroke();
+        }
+
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+        ctx.arc(sx, sy, r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${alpha})`;
         ctx.fill();
+
+        if (nearness > 0.75 && r > 1.2) {
+          const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * 3.5);
+          g.addColorStop(0, `rgba(255,255,255,${alpha * 0.22})`);
+          g.addColorStop(1, "rgba(255,255,255,0)");
+          ctx.beginPath();
+          ctx.arc(sx, sy, r * 3.5, 0, Math.PI * 2);
+          ctx.fillStyle = g;
+          ctx.fill();
+        }
+
+        s.px = sx;
+        s.py = sy;
       }
 
       raf = requestAnimationFrame(draw);
@@ -153,15 +172,13 @@ function useEnamelParticles(canvasRef) {
     init();
     draw();
 
-    const ro = new ResizeObserver(() => {
-      resize();
-      init();
-    });
+    const ro = new ResizeObserver(() => { resize(); init(); });
     ro.observe(canvas);
 
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      window.removeEventListener("mousemove", onMouseMove);
     };
   }, [canvasRef]);
 }
@@ -169,10 +186,9 @@ function useEnamelParticles(canvasRef) {
 // ─── Main component ─────────────────────────────────────────────────────────
 export default function ScrollHero() {
   const sectionRef = useRef(null);
-  const grainRef = useRef(null);
+  const grainRef   = useRef(null);
   const pillGradientId = `opal-pill-${useId()}`;
 
-  // Swap: useFilmGrain → useEnamelParticles (same ref, same signature)
   useEnamelParticles(grainRef);
 
   const { scrollYProgress } = useScroll({
@@ -192,26 +208,27 @@ export default function ScrollHero() {
     return () => clearTimeout(t);
   }, []);
 
-  // Logo animation — size is driven by HERO_HEADLINE_SIZE (1.1em inside wrapper).
-  // scroll scale: large hero moment → 1 (final size = headline line height, not a tiny 0.4x).
+  // ── Click handler — scrolls to 70% of the section so every headline
+  //    reveals naturally. Because all animations are purely scroll-driven,
+  //    scrolling back afterward is fully reversible with no extra state.
+  const handleLogoClick = useCallback(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    const sectionTop = section.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: sectionTop + section.offsetHeight * 0.50, behavior: "smooth" });
+  }, []);
+
+  // All animated values driven solely by scroll progress
+  const allLinesOpacity = useTransform(progress, [0.30, 0.38], [0, 1]);
+  const pillLength      = useTransform(progress, [0.46, 0.54], [0, 1]);
+  const pillOpacity     = useTransform(progress, [0.44, 0.46], [0, 1]);
+  const subheadOpacity  = useTransform(progress, [0.56, 0.62], [0, 1]);
+  const subheadY        = useTransform(progress, [0.56, 0.62], [20, 0]);
+
   const logoScale = useTransform(progress, [0.12, 0.32], [2.35, 1]);
   const logoX     = useTransform(progress, [0.12, 0.32], ["0vw", "0vw"]);
   const logoY     = useTransform(progress, [0.12, 0.32], ["0vh", "-35vh"]);
 
-  // Headline lines
-  const line1Opacity = useTransform(progress, [0.30, 0.36], [0, 1]);
-  const line2Opacity = useTransform(progress, [0.46, 0.52], [0, 1]);
-  const line3Opacity = useTransform(progress, [0.62, 0.68], [0, 1]);
-
-  // Pill border
-  const pillLength  = useTransform(progress, [0.76, 0.84], [0, 1]);
-  const pillOpacity = useTransform(progress, [0.74, 0.76], [0, 1]);
-
-  // Subhead + CTA
-  const subheadOpacity = useTransform(progress, [0.84, 0.90], [0, 1]);
-  const subheadY       = useTransform(progress, [0.84, 0.90], [20, 0]);
-
-  // Scroll hint
   const hintOpacity = useTransform(progress, [0, 0.05], [1, 0]);
 
   return (
@@ -226,6 +243,10 @@ export default function ScrollHero() {
         .logo-mount  { animation: logoIn 1.15s cubic-bezier(0.16,1,0.3,1) forwards; }
         .logo-hidden { opacity: 0; }
         .hero-h1     { font-size: inherit; }
+        .logo-clickable { cursor: pointer; }
+        .logo-clickable:hover img {
+          filter: drop-shadow(0 8px 40px rgba(255,255,255,0.32)) !important;
+        }
       `}</style>
 
       <section
@@ -237,20 +258,12 @@ export default function ScrollHero() {
           className="sticky top-0 h-screen w-full overflow-hidden"
           style={{ backgroundColor: NAVY }}
         >
-
-          {/* ── ENAMEL PARTICLES ──────────────────────────────────────────── */}
-          {/* Layer 1: animated particle canvas (same canvas ref as before) */}
           <canvas
             ref={grainRef}
             className="absolute inset-0 w-full h-full pointer-events-none"
-            style={{
-              opacity: 0.85,
-              mixBlendMode: "screen",
-              zIndex: 1,
-            }}
+            style={{ opacity: 0.85, mixBlendMode: "screen", zIndex: 1 }}
           />
 
-          {/* Layer 2: soft radial vignette — keeps edges dark & dramatic */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
@@ -259,19 +272,14 @@ export default function ScrollHero() {
             }}
           />
 
-          {/* Layer 3: bottom fade — blends into next section */}
           <div
             className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none"
-            style={{
-              zIndex: 2,
-              background: `linear-gradient(to bottom, transparent, ${NAVY})`,
-            }}
+            style={{ zIndex: 2, background: `linear-gradient(to bottom, transparent, ${NAVY})` }}
           />
-          {/* ─────────────────────────────────────────────────────────────── */}
 
-          {/* Logo: same type scale as headlines — img is 1.1em of HERO_HEADLINE_SIZE */}
+          {/* Logo — clickable */}
           <motion.div
-            className="absolute left-1/2 top-1/2 z-20 flex items-center justify-center"
+            className="absolute left-1/2 top-1/2 z-20 flex items-center justify-center logo-clickable"
             style={{
               fontSize: HERO_HEADLINE_SIZE,
               x: logoX,
@@ -282,15 +290,16 @@ export default function ScrollHero() {
               transformOrigin: "center center",
               willChange: "transform",
             }}
+            onClick={handleLogoClick}
           >
             <div className={mounted ? "logo-mount" : "logo-hidden"}>
               <img
                 src={opalLogo}
                 alt="OPAL gOS"
-                className="h-[1.1em] w-auto max-w-[min(92vw,36rem)] object-contain object-center
-                           select-none pointer-events-none"
+                className="h-[1.1em] w-auto max-w-[min(92vw,36rem)] object-contain object-center select-none pointer-events-none"
                 style={{
                   filter: "drop-shadow(0 8px 30px rgba(255,255,255,0.18))",
+                  transition: "filter 0.3s ease",
                 }}
                 draggable={false}
               />
@@ -313,33 +322,30 @@ export default function ScrollHero() {
             />
           </motion.div>
 
-          {/* Headlines (font size = HERO_HEADLINE_SIZE) */}
+          {/* Headlines */}
           <div className="absolute inset-0 z-10 flex items-center justify-center px-6">
             <div
               className="w-full max-w-5xl text-center text-white"
               style={{ fontSize: HERO_HEADLINE_SIZE }}
             >
-
               <motion.h1
-                style={{ opacity: line1Opacity }}
-                className="hero-h1 font-['Montserrat'] font-light leading-[1.05]
-                           tracking-tight"
+                style={{ opacity: allLinesOpacity }}
+                className="hero-h1 font-['Montserrat'] font-light leading-[1.05] tracking-tight"
               >
-                <AnimatedWord progress={progress} start={0.34} end={0.42}>Recover</AnimatedWord>
-                <AnimatedWord progress={progress} start={0.40} end={0.48} accent>Revenue.</AnimatedWord>
+                <AnimatedWord progress={progress} start={0.30} end={0.38}>Recover</AnimatedWord>
+                <AnimatedWord progress={progress} start={0.30} end={0.38} accent>Revenue.</AnimatedWord>
               </motion.h1>
 
               <motion.h1
-                style={{ opacity: line2Opacity }}
-                className="hero-h1 font-['Montserrat'] font-light leading-[1.05]
-                           tracking-tight mt-2 md:mt-3"
+                style={{ opacity: allLinesOpacity }}
+                className="hero-h1 font-['Montserrat'] font-light leading-[1.05] tracking-tight mt-2 md:mt-3"
               >
-                <AnimatedWord progress={progress} start={0.48} end={0.55}>Maximize</AnimatedWord>
-                <AnimatedWord progress={progress} start={0.54} end={0.61} accent>Margins.</AnimatedWord>
+                <AnimatedWord progress={progress} start={0.30} end={0.38}>Maximize</AnimatedWord>
+                <AnimatedWord progress={progress} start={0.30} end={0.38} accent>Margins.</AnimatedWord>
               </motion.h1>
 
               <motion.div
-                style={{ opacity: line3Opacity }}
+                style={{ opacity: allLinesOpacity }}
                 className="relative inline-block mt-2 md:mt-3"
               >
                 <motion.svg
@@ -349,10 +355,7 @@ export default function ScrollHero() {
                   style={{ opacity: pillOpacity }}
                 >
                   <defs>
-                    <linearGradient
-                      id={pillGradientId}
-                      x1="0" y1="1" x2="1" y2="0"
-                    >
+                    <linearGradient id={pillGradientId} x1="0" y1="1" x2="1" y2="0">
                       {OPAL_STOPS.map((s) => (
                         <stop key={s.offset} offset={s.offset} stopColor={s.color} />
                       ))}
@@ -370,38 +373,19 @@ export default function ScrollHero() {
                   />
                 </motion.svg>
 
-                <h1
-                  className="hero-h1 relative font-['Montserrat'] font-light
-                             leading-[1.05] tracking-tight px-6 md:px-10 py-2 md:py-3"
-                >
-                  <AnimatedWord progress={progress} start={0.66} end={0.71}>Zero</AnimatedWord>
-                  <AnimatedWord progress={progress} start={0.69} end={0.74}>new</AnimatedWord>
-                  <AnimatedWord progress={progress} start={0.72} end={0.77} accent>hires.</AnimatedWord>
+                <h1 className="hero-h1 relative font-['Montserrat'] font-light leading-[1.05] tracking-tight px-6 md:px-10 py-2 md:py-3">
+                  <AnimatedWord progress={progress} start={0.30} end={0.38}>Zero</AnimatedWord>
+                  <AnimatedWord progress={progress} start={0.30} end={0.38}>new</AnimatedWord>
+                  <AnimatedWord progress={progress} start={0.30} end={0.38} accent>hires.</AnimatedWord>
                 </h1>
               </motion.div>
 
               <motion.p
                 style={{ opacity: subheadOpacity, y: subheadY }}
-                className="mt-8 md:mt-10 font-['Montserrat'] font-light text-white/55
-                           text-[clamp(0.9rem,1.4vw,1.15rem)] tracking-[0.06em]"
+                className="mt-8 md:mt-10 font-['Montserrat'] font-light text-white/55 text-[clamp(0.9rem,1.4vw,1.15rem)] tracking-[0.06em]"
               >
                 The Guided Operating System for provider practices.
               </motion.p>
-
-              {/* <motion.div
-                style={{ opacity: ctaOpacity, y: ctaY }}
-                className="mt-8 flex justify-center"
-              >
-                <button
-                  className="font-['Montserrat'] text-[11px] tracking-[0.22em] uppercase
-                             border px-8 py-3 rounded-full transition-all duration-300
-                             text-white/80 hover:text-white hover:bg-white/10 cursor-pointer"
-                  style={{ borderColor: `${TEAL}66` }}
-                >
-                  Get Started
-                </button>
-              </motion.div> */}
-
             </div>
           </div>
 
