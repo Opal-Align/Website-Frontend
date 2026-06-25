@@ -8,6 +8,7 @@ import ScrollHero from "./HomeHero/ScrollHero";
 import MechanismSection from "./Info/Mechanism";
 import GosStack from "./GosStack.tsx";
 import PlatformSection from "./Info/PlatformSection.jsx";
+import FiveStepLoop from "./Info/FiveStepLoop.jsx";
 export default function HomePageLayout() {
   return (
     <div
@@ -50,9 +51,12 @@ export default function HomePageLayout() {
 
         {/* Section content rides above the backdrop */}
         <div style={{ position: "relative", zIndex: 1 }}>
-          <GosStack />
-          <MechanismSection/>
+          
+        <FiveStepLoop/>
+        
+          
           <PlatformSection/>
+          
           <Processes />
           <LogoStream />
           <TestimonialSection />

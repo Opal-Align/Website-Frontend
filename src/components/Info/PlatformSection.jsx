@@ -1,273 +1,290 @@
 "use client";
 
 /**
- * PlatformSection.jsx — Hover-to-flip card variant
- * --------------------------------------------------
- * Requires: npm install framer-motion
+ * PlatformSection.jsx
+ * ─────────────────────────────────────────────────────────────────────────
+ * • No inner scroll container — drives entirely off real window scroll
+ * • Section is 280vh tall; cards/header stick inside a 100vh viewport pin
+ * • Cards are free-floating (no wrapping dark box)
+ * • Dissolve particle transition (white pixel burst → dark card → solution)
+ * • Narrative bar fades from "The problems…" → "how gOS solves it"
+ * • Icon row lights up as each card reveals
  *
- * Each card shows the Problem on the front face.
- * Hovering (desktop) or tapping (mobile) flips it to reveal the Solution.
- * Text is strictly white / grey only — no brand colour on text.
+ * Props:
+ *   navbarHeight  number  Height of your fixed navbar in px (default 64).
+ *                         The sticky panel offsets by this amount so nothing
+ *                         hides behind the nav, and scroll tracking starts
+ *                         only once the section clears the navbar.
+ *
+ * Dependencies: framer-motion  (npm i framer-motion)
+ * Usage: drop into any Next.js / React page on a dark background (#0a0a0a)
  */
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 // eslint-disable-next-line no-unused-vars
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, useScroll, useMotionValueEvent } from "framer-motion";
+
+/* ─── Constants ───────────────────────────────────────────────────── */
+const N              = 4;
+const STAGGER        = 0.18;   // each card's reveal window starts this far apart (0–1)
+const REVEAL_RANGE   = 0.20;   // width of each card's fill window
+const THRESHOLD      = 0.88;   // progress at which the reveal fires
+const DISSOLVE_DUR   = 900;    // ms
+const PS             = 3;      // particle pixel size
+const EASE           = [0.22, 1, 0.36, 1];
 
 /* ─── Data ────────────────────────────────────────────────────────── */
 const MODULES = [
   {
     id: "schedule", label: "Schedule", num: "01",
+    glyph: "α · 001",
     problem: {
-      title: "Empty chairs cost you before anyone notices.",
-      body: "Open slots, no-shows, and cancellations happen faster than any front desk can respond. By the time staff react, the revenue is already gone.",
+      title: "Empty slots. Cancellations unbooked. Patients waiting.",
+      body: "Open chairs cost you before anyone on the front desk has time to react.",
     },
     solution: {
-      title: "gOS protects the schedule before a chair goes cold.",
-      body: "Gaps are identified the moment they open. The right patients are contacted automatically. No-shows rerouted. Recall running every day.",
-      tags: ["Gap fill", "Eligibility check", "Recall"],
+      title: "Identified, verified, and filled — automatically.",
+      features: [
+        "Fills from prioritized waitlist in real time",
+        "No-show risk flagged 48 hrs ahead",
+        "One view — no calls, no spreadsheets",
+      ],
     },
+    Icon: () => (
+      <svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round" }}>
+        <rect x="3" y="4" width="18" height="18" rx="2" />
+        <line x1="3" y1="9" x2="21" y2="9" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="7" y1="13" x2="7" y2="13" strokeWidth="2.5" />
+        <line x1="12" y1="13" x2="12" y2="13" strokeWidth="2.5" />
+        <line x1="7" y1="17" x2="7" y2="17" strokeWidth="2.5" />
+        <line x1="12" y1="17" x2="12" y2="17" strokeWidth="2.5" />
+      </svg>
+    ),
   },
   {
     id: "produce", label: "Produce", num: "02",
+    glyph: "β · 002",
     problem: {
-      title: "Accepted treatment walks out unscheduled every day.",
-      body: "Patients say yes and leave without booking. Follow-up never comes. That production quietly disappears into a list no one has time to work.",
+      title: "Unscheduled treatments. Declined cases. Overdue visits.",
+      body: "Patients say yes and leave without booking. Production quietly disappears.",
     },
     solution: {
-      title: "gOS follows up on every unscheduled case automatically.",
-      body: "Every accepted plan that left without booking gets worked. Right message, right channel, right time — until it converts or your team steps in.",
-      tags: ["Treatment follow-up", "Care gaps", "Production recovery"],
+      title: "Reengaged, reactivated, recovered — automatically.",
+      features: [
+        "Treatment plans auto-queued into workflow",
+        "Right outreach, right channel, right time",
+        "Accepted → scheduled → completed",
+      ],
     },
+    Icon: () => (
+      <svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round" }}>
+        <path d="M4 7h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z" />
+        <path d="M3 7l4-4h10l4 4" />
+        <circle cx="12" cy="13" r="2.5" />
+      </svg>
+    ),
   },
   {
     id: "collect", label: "Collect", num: "03",
+    glyph: "γ · 003",
     problem: {
-      title: "Aging A/R gets harder to collect with every passing day.",
-      body: "Your billing team is outnumbered. Balances go untouched. Accounts age past 90 days. Revenue that was collectible becomes revenue that's written off.",
+      title: "A/R aging out. Unjustified write-offs. No case files.",
+      body: "Accounts age past 90 days. Collectible revenue becomes revenue written off.",
     },
     solution: {
-      title: "gOS runs A/R outreach at a volume your team never could.",
-      body: "Every outstanding balance worked automatically. Multi-channel. Audit-ready. Insurance gaps flagged before they become denials.",
-      tags: ["A/R outreach", "Balance recovery", "Audit log"],
+      title: "Surfaced, pursued, collected, documented — automatically.",
+      features: [
+        "Highest-recovery balances surfaced first",
+        "Automated statements and payment links",
+        "Denial patterns caught before write-off",
+      ],
     },
+    Icon: () => (
+      <svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round" }}>
+        <circle cx="12" cy="7" r="3.5" />
+        <path d="M3 19c0-2 2.5-3.5 5-3.5h8c2.5 0 5 1.5 5 3.5" />
+      </svg>
+    ),
   },
   {
     id: "relay", label: "Relay", num: "04",
+    glyph: "δ · 004",
     problem: {
-      title: "Communication in five tools means things fall through every time.",
-      body: "Reminders here. Follow-ups there. Patient responses somewhere else. No single person has the full picture — and patients slip through every gap.",
+      title: "Every patient. Every channel. Scattered everywhere.",
+      body: "No single person has the full picture — patients slip through every gap.",
     },
     solution: {
-      title: "gOS centralizes every communication into one place.",
-      body: "Every channel, every touchpoint, every response — in one dashboard with a full audit trail. Your team sees everything. Nothing drops.",
-      tags: ["Unified dashboard", "Audit trail", "Multi-channel"],
+      title: "Centralized, real-time, prioritized, and interactive.",
+      features: [
+        "SMS, email, and portal unified in one view",
+        "Auto-routing to the right channel every time",
+        "Full patient history, always in context",
+      ],
     },
+    Icon: () => (
+      <svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round" }}>
+        <path d="M5 3v18M5 3l9 3-9 4M19 10v11M19 10l-9 3 9 4" />
+      </svg>
+    ),
   },
 ];
 
-const EASE = [0.16, 1, 0.3, 1];
+/* ─── Particle helpers ────────────────────────────────────────────── */
+function buildParticles(W, H) {
+  const cols = Math.ceil(W / PS), rows = Math.ceil(H / PS), pts = [];
+  for (let r = 0; r < rows; r++)
+    for (let c = 0; c < cols; c++)
+      pts.push({
+        x: c * PS, y: r * PS,
+        ox: (Math.random() - 0.5) * W * 0.6,
+        oy: (Math.random() - 0.5) * H * 0.6,
+        delay: Math.random() * 0.55,
+      });
+  return pts;
+}
+function lerp(a, b, t) { return a + (b - a) * t; }
+function easeOut3(t)    { return 1 - Math.pow(1 - t, 3); }
 
-/* ─── Shared card surface styles ─────────────────────────────────── */
-const FACE_BASE = {
-  borderRadius: 16,
-  padding: "clamp(20px, 2vw, 28px)",
-  display: "flex",
-  flexDirection: "column",
-  overflow: "hidden",
-};
-
-const FRONT_STYLE = {
-  ...FACE_BASE,
-  background: "linear-gradient(150deg, #0c0b13 0%, #0f0d18 100%)",
-  border: "1px solid rgba(255,255,255,0.07)",
-  // both faces share the same grid cell so the card grows to fit the taller face
-  gridArea: "1 / 1",
-  // webkit prefix needed for Safari
-  WebkitBackfaceVisibility: "hidden",
-  backfaceVisibility: "hidden",
-};
-
-const BACK_STYLE = {
-  ...FACE_BASE,
-  background: "linear-gradient(150deg, #0f0e1a 0%, #131220 100%)",
-  border: "1px solid rgba(255,255,255,0.13)",
-  gridArea: "1 / 1",
-  transform: "rotateY(180deg)",
-  WebkitBackfaceVisibility: "hidden",
-  backfaceVisibility: "hidden",
-};
-
-/* ─── Small badge ────────────────────────────────────────────────── */
-function Badge({ children, bright = false }) {
+/* ─── Tag badge ───────────────────────────────────────────────────── */
+function Tag({ type }) {
+  const isSol = type === "solution";
   return (
-    <div
-      className="inline-flex items-center gap-1.5 self-start mb-4"
-      style={{
-        padding: "4px 10px",
-        borderRadius: 999,
-        background: bright ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)",
-        border: `1px solid ${bright ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.08)"}`,
-      }}
-    >
-      <span
-        style={{
-          width: 5, height: 5, borderRadius: "50%",
-          background: bright ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.22)",
-          flexShrink: 0,
-        }}
-      />
-      <span
-        style={{
-          fontSize: 9.5, fontWeight: 600, letterSpacing: "0.14em",
-          textTransform: "uppercase",
-          color: bright ? "rgba(255,255,255,0.62)" : "rgba(255,255,255,0.30)",
-        }}
-      >
-        {children}
-      </span>
+    <div style={{
+      display: "inline-flex", alignItems: "center", gap: 5,
+      fontSize: 10, fontWeight: 600, letterSpacing: "0.05em",
+      textTransform: "uppercase", padding: "3px 8px", borderRadius: 99,
+      background: isSol ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.05)",
+      color: isSol ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.38)",
+      width: "fit-content", flexShrink: 0,
+    }}>
+      <span style={{
+        width: 5, height: 5, borderRadius: "50%", flexShrink: 0,
+        background: isSol ? "#ffffff" : "rgba(255,255,255,0.35)",
+        boxShadow: isSol ? "0 0 6px 2px rgba(255,255,255,0.35)" : "none",
+      }} />
+      {isSol ? "gOS" : "Problem"}
     </div>
   );
 }
 
-/* ─── Single flip card ───────────────────────────────────────────── */
-function FlipCard({ mod, index, inView }) {
-  const [flipped, setFlipped] = useState(false);
+/* ─── Main component ──────────────────────────────────────────────── */
+export default function PlatformSection({ navbarHeight = 64 }) {
+  const sectionRef  = useRef(null);
+  const slotRefs    = useRef([]);
+  const canvasRefs  = useRef([]);
+  const rafIdsRef   = useRef(new Array(N).fill(null));
+  const revealedRef = useRef(new Array(N).fill(false));
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 22 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.65, delay: 0.08 + index * 0.09, ease: EASE }}
-      /* perspective must sit on the wrapper, not the rotating element.
-         height:100% lets the card fill its grid cell so every card in a
-         row is the same height. */
-      style={{ perspective: "1100px", cursor: "pointer", height: "100%" }}
-      onHoverStart={() => setFlipped(true)}
-      onHoverEnd={() => setFlipped(false)}
-      /* tap-to-flip for touch devices */
-      onClick={() => setFlipped(f => !f)}
-    >
-      {/* Rotating layer — grid stacks both faces in one cell so the card
-          height is driven by the taller face (tags always fit). */}
-      <motion.div
-        animate={{ rotateY: flipped ? 180 : 0 }}
-        transition={{ duration: 0.72, ease: [0.25, 0.46, 0.45, 0.94] }}
-        style={{ display: "grid", transformStyle: "preserve-3d", height: "100%" }}
-      >
+  const [progs,    setProgs]    = useState(new Array(N).fill(0));
+  const [revealed, setRevealed] = useState(new Array(N).fill(false));
+  const [heroIdx,  setHeroIdx]  = useState(-1);
+  const [narrT,    setNarrT]    = useState(0);
 
-        {/* ══ FRONT — Problem ══ */}
-        <div style={FRONT_STYLE}>
-          {/* Top shimmer line */}
-          <div style={{
-            position: "absolute", top: 0, left: 16, right: 16, height: 1,
-            background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.10), transparent)",
-          }} />
+  const inView = useInView(sectionRef, { once: true, margin: "-8% 0px" });
 
-          {/* Label row */}
-          <div className="flex items-center justify-between mb-1">
-            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)" }}>
-              {mod.label}
-            </span>
-            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.16)", fontVariantNumeric: "tabular-nums" }}>
-              {mod.num} / 04
-            </span>
-          </div>
+  /* Framer scroll — offset accounts for navbar so tracking starts once
+     the section top reaches the bottom of the navbar, not the page top */
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: [`start ${navbarHeight}px`, "end end"],
+  });
 
-          <Badge>The Problem</Badge>
+  /* ── Dissolve animation ── */
+  const runDissolve = useCallback((i, dir, onDone) => {
+    const cv   = canvasRefs.current[i];
+    const slot = slotRefs.current[i];
+    const sol  = slot?.querySelector(".pf-sol");
+    if (!cv || !slot || !sol) return;
 
-          {/* Headline */}
-          <h3 style={{
-            color: "#ffffff", fontWeight: 700, lineHeight: 1.3, marginBottom: 10,
-            fontSize: "clamp(14.5px, 1.2vw, 16.5px)",
-          }}>
-            {mod.problem.title}
-          </h3>
+    const W = slot.clientWidth, H = slot.clientHeight;
+    cv.width = W; cv.height = H;
+    cv.style.display = "block";
+    const ctx = cv.getContext("2d");
+    const pts = buildParticles(W, H);
+    if (rafIdsRef.current[i]) cancelAnimationFrame(rafIdsRef.current[i]);
+    const t0 = performance.now();
+    sol.style.opacity = dir === "reveal" ? "0" : "1";
 
-          {/* Body */}
-          <p style={{
-            color: "rgba(255,255,255,0.42)", lineHeight: 1.72, flex: 1,
-            fontSize: "clamp(12.5px, 0.95vw, 13.5px)",
-          }}>
-            {mod.problem.body}
-          </p>
+    function tick(now) {
+      const t = Math.min(1, (now - t0) / DISSOLVE_DUR);
+      ctx.clearRect(0, 0, W, H);
+      sol.style.opacity = dir === "reveal"
+        ? String(Math.max(0, (t - 0.4) / 0.6))
+        : String(Math.max(0, 1 - t * 1.6));
 
-          {/* Flip hint */}
-          <div className="flex items-center gap-1.5 mt-5" style={{ opacity: 0.3 }}>
-            <span style={{ fontSize: 10, color: "#fff", letterSpacing: "0.06em" }}>
-              hover to reveal
-            </span>
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-              <path d="M5.5 1.5A4 4 0 1 1 1.5 5.5" stroke="#fff" strokeWidth="1.2" strokeLinecap="round"/>
-              <path d="M5.5 1.5 3.5 3.5M5.5 1.5 7.5 3.5" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-        </div>
+      for (const p of pts) {
+        const pt = Math.max(0, Math.min(1, (t - p.delay) / (1 - p.delay + 0.001)));
+        const e  = easeOut3(pt);
+        let rx, ry, cr, alpha;
+        if (dir === "reveal") {
+          rx = p.x + p.ox * (1 - e); ry = p.y + p.oy * (1 - e);
+          cr = Math.round(lerp(255, 24, e)); alpha = e;
+        } else {
+          rx = p.x + p.ox * e; ry = p.y + p.oy * e;
+          cr = Math.round(lerp(24, 255, e)); alpha = 1 - e;
+        }
+        if (alpha < 0.01) continue;
+        ctx.fillStyle = `rgba(${cr},${cr},${cr},${alpha.toFixed(3)})`;
+        ctx.fillRect(Math.round(rx), Math.round(ry), PS, PS);
+      }
 
-        {/* ══ BACK — Solution ══ */}
-        <div style={BACK_STYLE}>
-          {/* Top shimmer — brighter than front */}
-          <div style={{
-            position: "absolute", top: 0, left: 16, right: 16, height: 1,
-            background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent)",
-          }} />
+      if (t < 1) {
+        rafIdsRef.current[i] = requestAnimationFrame(tick);
+      } else {
+        cv.style.display = "none";
+        sol.style.opacity = dir === "reveal" ? "1" : "0";
+        rafIdsRef.current[i] = null;
+        if (onDone) onDone();
+      }
+    }
+    rafIdsRef.current[i] = requestAnimationFrame(tick);
+  }, []);
 
-          {/* Label row */}
-          <div className="flex items-center justify-between mb-1">
-            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.55)" }}>
-              {mod.label}
-            </span>
-            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.20)", fontVariantNumeric: "tabular-nums" }}>
-              {mod.num} / 04
-            </span>
-          </div>
+  const reveal = useCallback((i) => {
+    if (revealedRef.current[i]) return;
+    revealedRef.current[i] = true;
+    setRevealed(prev => { const n = [...prev]; n[i] = true; return n; });
+    setHeroIdx(i);
+    runDissolve(i, "reveal", null);
+  }, [runDissolve]);
 
-          <Badge bright>gOS in Action</Badge>
+  const hide = useCallback((i) => {
+    if (!revealedRef.current[i]) return;
+    revealedRef.current[i] = false;
+    runDissolve(i, "hide", () => {
+      setRevealed(prev => { const n = [...prev]; n[i] = false; return n; });
+    });
+    const last = revealedRef.current.lastIndexOf(true);
+    setHeroIdx(last);
+  }, [runDissolve]);
 
-          {/* Headline */}
-          <h3 style={{
-            color: "#ffffff", fontWeight: 700, lineHeight: 1.3, marginBottom: 10,
-            fontSize: "clamp(14.5px, 1.2vw, 16.5px)",
-          }}>
-            {mod.solution.title}
-          </h3>
+  /* Drive reveals from scroll progress */
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    const newProgs = MODULES.map((_, i) =>
+      Math.max(0, Math.min(1, (v - i * STAGGER) / REVEAL_RANGE))
+    );
+    setProgs(newProgs);
+    newProgs.forEach((cp, i) => {
+      if (cp >= THRESHOLD && !revealedRef.current[i]) reveal(i);
+      else if (cp < THRESHOLD && revealedRef.current[i]) hide(i);
+    });
+    const revCount = revealedRef.current.filter(Boolean).length;
+    setNarrT(revCount / N);
+  });
 
-          {/* Body */}
-          <p style={{
-            color: "rgba(255,255,255,0.45)", lineHeight: 1.72, flex: 1,
-            fontSize: "clamp(12.5px, 0.95vw, 13.5px)",
-          }}>
-            {mod.solution.body}
-          </p>
+  /* Cleanup RAF on unmount */
+  useEffect(() => {
+    const ids = rafIdsRef.current;
+    return () => { ids.forEach(id => id && cancelAnimationFrame(id)); };
+  }, []);
 
-          {/* Tags */}
-          <div className="flex flex-wrap gap-1.5 mt-4">
-            {mod.solution.tags.map((tag) => (
-              <span
-                key={tag}
-                style={{
-                  fontSize: 11, fontWeight: 500,
-                  color: "rgba(255,255,255,0.48)",
-                  padding: "4px 10px", borderRadius: 999,
-                  background: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.10)",
-                }}
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
-
-      </motion.div>
-    </motion.div>
-  );
-}
-
-/* ─── Main section ────────────────────────────────────────────────── */
-export default function PlatformSection() {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-12% 0px" });
+  /* Narrative bar interpolation */
+  const narrPOp = narrT === 0 ? 1 : Math.max(0, 1 - narrT * 2.5);
+  const narrSOp = narrT === 0 ? 0 : Math.max(0, narrT * 1.8 - 0.4);
+  const narrPY  = -Math.min(1, narrT * 2) * 8;
+  const narrSY  = narrT === 0 ? 14 : (1 - narrT) * 10;
 
   const fadeUp = (delay = 0) => ({
     initial: { opacity: 0, y: 20 },
@@ -279,127 +296,335 @@ export default function PlatformSection() {
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        .pf-card-slot { transition: transform 0.5s cubic-bezier(0.22,1,0.36,1); }
+        .pf-card-slot.hero { transform: scale(1.04); z-index: 5; }
+        .pf-icon-col { transition: transform 0.5s cubic-bezier(0.22,1,0.36,1); }
+        .pf-icon-col.hero .pf-icon-box { transform: scale(1.18) translateY(-3px); background: rgba(255,255,255,0.12) !important; }
+        .pf-icon-col.hero .pf-icon-box svg { stroke: #ffffff !important; }
+        .pf-icon-col.hero .pf-icon-name { color: #ffffff !important; font-weight: 700; }
+        .pf-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(10px,1.4vw,18px); }
+        .pf-icon-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(6px,1vw,14px); flex-shrink: 0; margin-bottom: clamp(18px,2.6vh,32px); }
+        @media (max-width: 600px) {
+          .pf-grid-4 { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
+          .pf-icon-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 6px !important; }
+          .pf-card-slot { height: 200px !important; }
+          .pf-icon-box { width: 40px !important; height: 40px !important; border-radius: 10px !important; }
+          .pf-icon-box svg { width: 20px !important; height: 20px !important; }
+          .pf-icon-name { font-size: 8px !important; letter-spacing: 0.1em !important; }
+          .pf-narr-wrap { display: none !important; }
+        }
       `}</style>
 
+      {/*
+        280vh section height gives ~3x the card scroll reveal room.
+        The inner sticky div pins at top:0 and stays 100vh while
+        the user scrolls through the remaining height.
+      */}
       <section
-        ref={ref}
+        ref={sectionRef}
         id="platform"
-        className="relative overflow-hidden"
-        style={{
-          background: "transparent",
-          fontFamily: "'Inter', sans-serif",
-          padding: "clamp(48px, 7vh, 96px) 0",
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-        }}
+        style={{ height: "280vh", position: "relative" }}
       >
-        <div
-          className="relative z-10 mx-auto w-full"
-          style={{ maxWidth: 1280, padding: "0 clamp(20px, 4vw, 56px)" }}
-        >
-          {/* ── Header ── */}
-          <div className="mb-8 md:mb-10">
-            <motion.p
-              {...fadeUp(0.05)}
-              style={{
-                fontSize: 11, fontWeight: 600, letterSpacing: "0.2em",
-                textTransform: "uppercase", color: "rgba(255,255,255,0.28)",
-                marginBottom: 14,
-              }}
-            >
-              The Platform
-            </motion.p>
+        {/* ── Sticky viewport — offsets below navbar ── */}
+        <div style={{
+          position: "sticky", top: navbarHeight,
+          height: `calc(100vh - ${navbarHeight}px)`, minHeight: 560,
+          overflow: "hidden",
+          display: "flex", flexDirection: "column",
+          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+          background: "transparent",
+        }}>
+          <div style={{
+            flex: 1, minHeight: 0,
+            display: "flex", flexDirection: "column",
+            maxWidth: 1020, width: "100%", margin: "0 auto",
+            padding: "clamp(20px,3vh,40px) clamp(16px,3vw,52px) clamp(14px,2vh,28px)",
+            boxSizing: "border-box",
+          }}>
 
-            <motion.div {...fadeUp(0.12)} style={{ marginBottom: 12 }}>
-              <h2 style={{
-                fontWeight: 700, color: "#fff", lineHeight: 1.08,
-                fontSize: "clamp(26px, 3.6vw, 48px)", margin: 0,
+            {/* ── Header ── */}
+            <div style={{ flexShrink: 0, marginBottom: "clamp(28px,5vh,64px)" }}>
+              <motion.div {...fadeUp(0.04)} style={{
+                fontSize: "clamp(11px,0.9vw,13px)", letterSpacing: "0.18em", textTransform: "uppercase",
+                color: "rgba(255,255,255,0.28)", marginBottom: "clamp(10px,1.4vh,18px)",
               }}>
-                Four levers.
-              </h2>
-              <h2 style={{
-                fontWeight: 700, lineHeight: 1.08, margin: 0,
-                fontSize: "clamp(26px, 3.6vw, 48px)",
-                color: "rgba(255,255,255,0.30)",
-              }}>
-                One operating layer.
-              </h2>
+                The Platform
+              </motion.div>
+
+              <motion.div {...fadeUp(0.1)} style={{ marginBottom: "clamp(10px,1.4vh,18px)" }}>
+                <span style={{
+                  fontSize: "clamp(32px,4.6vw,58px)", fontWeight: 700,
+                  color: "#fff", lineHeight: 1.06, letterSpacing: "-0.02em",
+                }}>
+                  Four levers.{" "}
+                </span>
+                <span style={{
+                  fontSize: "clamp(32px,4.6vw,58px)", fontWeight: 700,
+                  color: "rgba(255,255,255,0.22)", lineHeight: 1.06, letterSpacing: "-0.02em",
+                }}>
+                  One operating layer.
+                </span>
+              </motion.div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "clamp(10px,2vw,28px)", flexWrap: "wrap" }}>
+                <motion.p {...fadeUp(0.18)} style={{
+                  fontSize: "clamp(13.5px,1.05vw,16px)", lineHeight: 1.7,
+                  color: "rgba(255,255,255,0.42)", maxWidth: 520, fontWeight: 300,
+                }}>
+                  Every module targets a specific revenue leak. Together they run as a
+                  single system — automatically, continuously, without adding headcount.
+                </motion.p>
+
+                {/* Narrative crossfade */}
+                <motion.div {...fadeUp(0.26)} className="pf-narr-wrap" style={{ position: "relative", height: 22, minWidth: 280, overflow: "hidden" }}>
+                  <div style={{
+                    fontSize: 11.5, letterSpacing: "0.07em", position: "absolute",
+                    whiteSpace: "nowrap", pointerEvents: "none",
+                    color: "rgba(255,255,255,0.28)", opacity: narrPOp,
+                    transform: `translateY(${narrPY}px)`,
+                    transition: "opacity 0.45s ease, transform 0.45s cubic-bezier(0.22,1,0.36,1)",
+                  }}>
+                    — The problems revenue teams face —
+                  </div>
+                  <div style={{
+                    fontSize: 11.5, letterSpacing: "0.07em", position: "absolute",
+                    whiteSpace: "nowrap", pointerEvents: "none",
+                    color: "rgba(255,255,255,0.75)", opacity: narrSOp,
+                    transform: `translateY(${narrSY}px)`,
+                    transition: "opacity 0.45s ease, transform 0.45s cubic-bezier(0.22,1,0.36,1)",
+                  }}>
+                    — how OPAL gOS solves it —
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+
+            {/* ── Icon row ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.6, ease: EASE, delay: 0.32 }}
+              className="pf-icon-grid"
+            >
+              {MODULES.map((mod, i) => {
+                const isActive = revealed[i];
+                const isHero   = heroIdx === i;
+                return (
+                  <div
+                    key={mod.id}
+                    className={`pf-icon-col${isHero ? " hero" : ""}`}
+                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 7 }}
+                  >
+                    <div
+                      className="pf-icon-box"
+                      style={{
+                        width: 56, height: 56,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        borderRadius: 12,
+                        background: isActive ? "rgba(255,255,255,0.09)" : "rgba(255,255,255,0.035)",
+                        border: `1px solid ${isActive ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.06)"}`,
+                        transition: "background 0.4s, border-color 0.4s",
+                        color: isActive ? "#ffffff" : "rgba(255,255,255,0.28)",
+                      }}
+                    >
+                      <mod.Icon />
+                    </div>
+                    <span
+                      className="pf-icon-name"
+                      style={{
+                        fontSize: 9.5, fontWeight: 600, letterSpacing: "0.15em",
+                        textTransform: "uppercase",
+                        color: isActive ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.20)",
+                        transition: "color 0.4s",
+                      }}
+                    >
+                      {mod.label}
+                    </span>
+                  </div>
+                );
+              })}
             </motion.div>
 
-            <motion.p
-              {...fadeUp(0.22)}
-              style={{
-                color: "rgba(255,255,255,0.42)", lineHeight: 1.65,
-                maxWidth: 520, fontWeight: 300,
-                fontSize: "clamp(13.5px, 1vw, 15.5px)",
-              }}
-            >
-              Every module targets a specific place revenue leaks. Together they run as a
-              single system — automatically, continuously, without adding headcount.
-            </motion.p>
+            {/* ── Cards grid — FREE FLOATING, no container box ── */}
+            <div className="pf-grid-4">
+              {MODULES.map((mod, i) => {
+                const isRev  = revealed[i];
+                const isHero = heroIdx === i;
+                const prog   = progs[i] ?? 0;
 
-            {/* Hover instruction */}
-            <motion.p
-              {...fadeUp(0.3)}
+                return (
+                  <div
+                    key={mod.id}
+                    ref={el => slotRefs.current[i] = el}
+                    className={`pf-card-slot${isHero ? " hero" : ""}`}
+                    style={{ position: "relative", height: "clamp(200px, 26vh, 260px)" }}
+                  >
+                    {/* Dissolve canvas — sits above both faces */}
+                    <canvas
+                      ref={el => canvasRefs.current[i] = el}
+                      style={{
+                        position: "absolute", inset: 0,
+                        borderRadius: 16,
+                        pointerEvents: "none", zIndex: 10, display: "none",
+                      }}
+                    />
+
+                    {/* ── Problem face ── */}
+                    <div style={{
+                      position: "absolute", inset: 0,
+                      borderRadius: 16,
+                      padding: "clamp(14px,2vh,20px) clamp(14px,1.5vw,18px)",
+                      display: "flex", flexDirection: "column",
+                      background: "rgba(255,255,255,0.025)",
+                      border: `1px solid ${isRev ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.08)"}`,
+                      backdropFilter: "blur(6px)",
+                      transform: isRev
+                        ? "translateY(12px) translateZ(-28px) rotateX(12deg) scale(0.92)"
+                        : "none",
+                      opacity: isRev ? 0.4 : 1,
+                      zIndex: 2,
+                      transition: "transform 0.7s cubic-bezier(0.32,0.72,0,1), opacity 0.6s ease, border-color 0.4s",
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                        <Tag type="problem" />
+                        <span style={{ fontSize: 9.5, color: "rgba(255,255,255,0.14)", letterSpacing: "0.08em" }}>{mod.num}/04</span>
+                      </div>
+
+                      <div style={{
+                        fontSize: "clamp(11.5px,1.2vh,13.5px)", fontWeight: 600,
+                        lineHeight: 1.4, color: "rgba(255,255,255,0.88)", marginBottom: 8,
+                      }}>
+                        {mod.problem.title}
+                      </div>
+                      <div style={{
+                        fontSize: "clamp(10.5px,1.05vh,12px)", lineHeight: 1.65,
+                        color: "rgba(255,255,255,0.32)", flex: 1,
+                      }}>
+                        {mod.problem.body}
+                      </div>
+
+                      {/* Progress bar */}
+                      <div style={{ height: 1.5, background: "rgba(255,255,255,0.06)", borderRadius: 2, marginTop: 10, overflow: "hidden", flexShrink: 0 }}>
+                        <div style={{
+                          height: "100%", background: "rgba(255,255,255,0.22)",
+                          width: `${prog * 100}%`, transition: "width 0.06s linear",
+                        }} />
+                      </div>
+                      <div style={{ marginTop: 5, fontSize: 10, color: "rgba(255,255,255,0.18)", flexShrink: 0 }}>
+                        ↓ scroll to reveal
+                      </div>
+                    </div>
+
+                    {/* ── Solution face ── */}
+                    <div
+                      className="pf-sol"
+                      style={{
+                        position: "absolute", inset: 0,
+                        borderRadius: 16,
+                        padding: "clamp(14px,2vh,20px) clamp(14px,1.5vw,18px)",
+                        display: "flex", flexDirection: "column",
+                        background: "rgba(255,255,255,0.03)",
+                        border: `1px solid ${isRev ? "rgba(255,255,255,0.32)" : "transparent"}`,
+                        backdropFilter: "blur(6px)",
+                        boxShadow: isRev && isHero ? "0 0 0 1px rgba(255,255,255,0.08), 0 16px 48px rgba(255,255,255,0.06)" : "none",
+                        zIndex: 3,
+                        opacity: isRev ? 1 : 0,
+                        pointerEvents: isRev ? "all" : "none",
+                        transition: "opacity 0.1s, border-color 0.5s, box-shadow 0.5s",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                        <Tag type="solution" />
+                        <span style={{ fontSize: 9.5, color: "rgba(255,255,255,0.18)", letterSpacing: "0.08em" }}>{mod.num}/04</span>
+                      </div>
+
+                      <div style={{
+                        fontSize: "clamp(11.5px,1.2vh,13.5px)", fontWeight: 600,
+                        lineHeight: 1.4, color: "rgba(255,255,255,0.90)", marginBottom: 8,
+                      }}>
+                        {mod.solution.title}
+                      </div>
+
+                      <div style={{ height: 1, background: "rgba(255,255,255,0.08)", marginBottom: 8, flexShrink: 0 }} />
+
+                      <div style={{ flex: 1 }}>
+                        {mod.solution.features.map((feat, fi) => (
+                          <div key={fi} style={{
+                            display: "flex", alignItems: "flex-start", gap: 6,
+                            marginTop: fi === 0 ? 0 : 5,
+                            fontSize: "clamp(10.5px,1.05vh,12px)", lineHeight: 1.5,
+                            color: "rgba(255,255,255,0.48)",
+                          }}>
+                            <span style={{ color: "#ffffff", flexShrink: 0, marginTop: 1 }}>✓</span>
+                            {feat}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Full progress bar on solution */}
+                      <div style={{ height: 1.5, background: "rgba(255,255,255,0.06)", borderRadius: 2, marginTop: 10, overflow: "hidden", flexShrink: 0 }}>
+                        <div style={{ height: "100%", background: "rgba(255,255,255,0.55)", width: "100%" }} />
+                      </div>
+                      <div style={{ marginTop: 5, fontSize: 10, color: "rgba(255,255,255,0.30)", flexShrink: 0 }}>
+                        ↑ scroll up to reset
+                      </div>
+                    </div>
+
+                    {/* Greek glyph watermark */}
+                    <span style={{
+                      position: "absolute", bottom: 10, right: 12, zIndex: 4,
+                      fontSize: 9, letterSpacing: "0.28em", color: "rgba(255,255,255,0.10)",
+                      pointerEvents: "none",
+                    }}>
+                      {mod.glyph}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* ── Footer bar ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.6, ease: EASE, delay: 0.48 }}
               style={{
-                marginTop: 14, fontSize: 11.5,
-                color: "rgba(255,255,255,0.20)",
-                fontStyle: "italic",
+                flexShrink: 0,
+                marginTop: "clamp(20px,3vh,36px)",
+                display: "flex", flexWrap: "wrap",
+                alignItems: "center", justifyContent: "space-between", gap: 12,
+                paddingTop: "clamp(16px,2.2vh,24px)",
+                borderTop: "1px solid rgba(255,255,255,0.07)",
               }}
             >
-              Hover any card to see how gOS solves it.
-            </motion.p>
+              <p style={{
+                fontSize: "clamp(11px,0.85vw,13px)",
+                color: "rgba(255,255,255,0.26)", fontStyle: "italic",
+                fontWeight: 300, lineHeight: 1.4, maxWidth: 480,
+              }}>
+                Every module runs automatically. Every action logged. Every gap worked.
+              </p>
+              <button
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  padding: "9px 22px", borderRadius: 8,
+                  background: "#ffffff", color: "#0a0a0a",
+                  fontSize: 11.5, fontWeight: 700, letterSpacing: "0.06em",
+                  border: "none", cursor: "pointer",
+                  transition: "background 0.2s, transform 0.15s",
+                  fontFamily: "'Inter', sans-serif",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = "#e8e8e8"; e.currentTarget.style.transform = "scale(1.02)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "#ffffff"; e.currentTarget.style.transform = "scale(1)"; }}
+              >
+                BOOK A DEMO
+                <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                  <path d="M1 11L10 2M10 2H4.5M10 2V7.5" stroke="#0a0a0a" strokeWidth="1.8" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </motion.div>
+
           </div>
-
-          {/* ── Flip card grid ── */}
-          <div
-            className="grid gap-3 md:gap-4"
-            style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))" }}
-          >
-            {MODULES.map((mod, i) => (
-              <FlipCard key={mod.id} mod={mod} index={i} inView={inView} />
-            ))}
-          </div>
-
-          {/* ── Footer bar ── */}
-          <motion.div
-            {...fadeUp(0.55)}
-            className="mt-8 md:mt-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-6"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
-          >
-            <p
-              style={{
-                color: "rgba(255,255,255,0.28)", fontStyle: "italic",
-                fontWeight: 300, lineHeight: 1.5,
-                fontSize: "clamp(12.5px, 1vw, 14px)", maxWidth: 480,
-              }}
-            >
-              Every module runs automatically. Every action logged. Every gap worked.
-            </p>
-
-            <button
-              className="shrink-0 inline-flex items-center gap-2.5 hover:scale-[1.02] active:scale-[0.97] transition-transform duration-200"
-              style={{
-                padding: "12px 26px", borderRadius: 8,
-                background: "#ffffff",
-                color: "#08060C",
-                fontSize: 12.5, fontWeight: 700,
-                letterSpacing: "0.06em",
-                border: "none", cursor: "pointer",
-                boxShadow: "0 4px 20px rgba(255,255,255,0.08)",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = "#f0f0f0"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "#ffffff"; }}
-            >
-              BOOK A DEMO
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M1 11L10 2M10 2H4.5M10 2V7.5" stroke="#08060C" strokeWidth="1.8" strokeLinecap="round"/>
-              </svg>
-            </button>
-          </motion.div>
-
         </div>
       </section>
     </>
