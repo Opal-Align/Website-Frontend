@@ -21,8 +21,12 @@
  */
 
 import { useRef, useState, useEffect, useCallback } from "react";
-// eslint-disable-next-line no-unused-vars
 import { motion, useInView, useScroll, useMotionValueEvent } from "framer-motion";
+
+import scheduleIcon from "../../assets/schedule.svg";
+import produceIcon  from "../../assets/production.svg";
+import collectIcon  from "../../assets/collect.svg";
+import relayIcon    from "../../assets/relay.svg";
 
 /* ─── Constants ───────────────────────────────────────────────────── */
 const N              = 4;
@@ -50,17 +54,8 @@ const MODULES = [
         "One view — no calls, no spreadsheets",
       ],
     },
-    Icon: () => (
-      <svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round" }}>
-        <rect x="3" y="4" width="18" height="18" rx="2" />
-        <line x1="3" y1="9" x2="21" y2="9" />
-        <line x1="8" y1="2" x2="8" y2="6" />
-        <line x1="16" y1="2" x2="16" y2="6" />
-        <line x1="7" y1="13" x2="7" y2="13" strokeWidth="2.5" />
-        <line x1="12" y1="13" x2="12" y2="13" strokeWidth="2.5" />
-        <line x1="7" y1="17" x2="7" y2="17" strokeWidth="2.5" />
-        <line x1="12" y1="17" x2="12" y2="17" strokeWidth="2.5" />
-      </svg>
+    Icon: ({ active }) => (
+      <img src={scheduleIcon} alt="Schedule" style={{ width: 36, height: 36, objectFit: "contain", filter: active ? "brightness(0) invert(1)" : "brightness(0) invert(1) opacity(0.28)", transition: "filter 0.4s" }} />
     ),
   },
   {
@@ -78,12 +73,8 @@ const MODULES = [
         "Accepted → scheduled → completed",
       ],
     },
-    Icon: () => (
-      <svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round" }}>
-        <path d="M4 7h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z" />
-        <path d="M3 7l4-4h10l4 4" />
-        <circle cx="12" cy="13" r="2.5" />
-      </svg>
+    Icon: ({ active }) => (
+      <img src={produceIcon} alt="Produce" style={{ width: 36, height: 36, objectFit: "contain", filter: active ? "brightness(0) invert(1)" : "brightness(0) invert(1) opacity(0.28)", transition: "filter 0.4s" }} />
     ),
   },
   {
@@ -101,11 +92,8 @@ const MODULES = [
         "Denial patterns caught before write-off",
       ],
     },
-    Icon: () => (
-      <svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round" }}>
-        <circle cx="12" cy="7" r="3.5" />
-        <path d="M3 19c0-2 2.5-3.5 5-3.5h8c2.5 0 5 1.5 5 3.5" />
-      </svg>
+    Icon: ({ active }) => (
+      <img src={collectIcon} alt="Collect" style={{ width: 36, height: 36, objectFit: "contain", filter: active ? "brightness(0) invert(1)" : "brightness(0) invert(1) opacity(0.28)", transition: "filter 0.4s" }} />
     ),
   },
   {
@@ -123,10 +111,8 @@ const MODULES = [
         "Full patient history, always in context",
       ],
     },
-    Icon: () => (
-      <svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round" }}>
-        <path d="M5 3v18M5 3l9 3-9 4M19 10v11M19 10l-9 3 9 4" />
-      </svg>
+    Icon: ({ active }) => (
+      <img src={relayIcon} alt="Relay" style={{ width: 36, height: 36, objectFit: "contain", filter: active ? "brightness(0) invert(1)" : "brightness(0) invert(1) opacity(0.28)", transition: "filter 0.4s" }} />
     ),
   },
 ];
@@ -303,13 +289,13 @@ export default function PlatformSection({ navbarHeight = 64 }) {
         .pf-icon-col.hero .pf-icon-box svg { stroke: #ffffff !important; }
         .pf-icon-col.hero .pf-icon-name { color: #ffffff !important; font-weight: 700; }
         .pf-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(10px,1.4vw,18px); }
-        .pf-icon-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(6px,1vw,14px); flex-shrink: 0; margin-bottom: clamp(18px,2.6vh,32px); }
+        .pf-icon-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(6px,1vw,14px); flex-shrink: 0; margin-bottom: clamp(10px,1.5vh,18px); }
         @media (max-width: 600px) {
           .pf-grid-4 { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
           .pf-icon-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 6px !important; }
           .pf-card-slot { height: 200px !important; }
-          .pf-icon-box { width: 40px !important; height: 40px !important; border-radius: 10px !important; }
-          .pf-icon-box svg { width: 20px !important; height: 20px !important; }
+          .pf-icon-box { width: 48px !important; height: 48px !important; border-radius: 12px !important; }
+          .pf-icon-box img { width: 24px !important; height: 24px !important; }
           .pf-icon-name { font-size: 8px !important; letter-spacing: 0.1em !important; }
           .pf-narr-wrap { display: none !important; }
         }
@@ -343,24 +329,24 @@ export default function PlatformSection({ navbarHeight = 64 }) {
           }}>
 
             {/* ── Header ── */}
-            <div style={{ flexShrink: 0, marginBottom: "clamp(28px,5vh,64px)" }}>
+            <div style={{ flexShrink: 0, marginBottom: "clamp(8px,1vh,14px)" }}>
               <motion.div {...fadeUp(0.04)} style={{
-                fontSize: "clamp(11px,0.9vw,13px)", letterSpacing: "0.18em", textTransform: "uppercase",
-                color: "rgba(255,255,255,0.28)", marginBottom: "clamp(10px,1.4vh,18px)",
+                fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase",
+                color: "rgba(255,255,255,0.28)", marginBottom: "clamp(6px,0.8vh,10px)",
               }}>
                 The Platform
               </motion.div>
 
-              <motion.div {...fadeUp(0.1)} style={{ marginBottom: "clamp(10px,1.4vh,18px)" }}>
+              <motion.div {...fadeUp(0.1)} style={{ marginBottom: "clamp(6px,0.8vh,10px)" }}>
                 <span style={{
-                  fontSize: "clamp(32px,4.6vw,58px)", fontWeight: 700,
-                  color: "#fff", lineHeight: 1.06, letterSpacing: "-0.02em",
+                  fontSize: "clamp(26px,3.5vw,42px)", fontWeight: 700,
+                  color: "#fff", lineHeight: 1.08, letterSpacing: "-0.02em",
                 }}>
                   Four levers.{" "}
                 </span>
                 <span style={{
-                  fontSize: "clamp(32px,4.6vw,58px)", fontWeight: 700,
-                  color: "rgba(255,255,255,0.22)", lineHeight: 1.06, letterSpacing: "-0.02em",
+                  fontSize: "clamp(26px,3.5vw,42px)", fontWeight: 700,
+                  color: "rgba(255,255,255,0.22)", lineHeight: 1.08, letterSpacing: "-0.02em",
                 }}>
                   One operating layer.
                 </span>
@@ -368,8 +354,8 @@ export default function PlatformSection({ navbarHeight = 64 }) {
 
               <div style={{ display: "flex", alignItems: "center", gap: "clamp(10px,2vw,28px)", flexWrap: "wrap" }}>
                 <motion.p {...fadeUp(0.18)} style={{
-                  fontSize: "clamp(13.5px,1.05vw,16px)", lineHeight: 1.7,
-                  color: "rgba(255,255,255,0.42)", maxWidth: 520, fontWeight: 300,
+                  fontSize: "clamp(12.5px,0.95vw,14.5px)", lineHeight: 1.65,
+                  color: "rgba(255,255,255,0.42)", maxWidth: 480, fontWeight: 300,
                 }}>
                   Every module targets a specific revenue leak. Together they run as a
                   single system — automatically, continuously, without adding headcount.
@@ -418,16 +404,16 @@ export default function PlatformSection({ navbarHeight = 64 }) {
                     <div
                       className="pf-icon-box"
                       style={{
-                        width: 56, height: 56,
+                        width: 72, height: 72,
                         display: "flex", alignItems: "center", justifyContent: "center",
-                        borderRadius: 12,
+                        borderRadius: 16,
                         background: isActive ? "rgba(255,255,255,0.09)" : "rgba(255,255,255,0.035)",
                         border: `1px solid ${isActive ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.06)"}`,
                         transition: "background 0.4s, border-color 0.4s",
                         color: isActive ? "#ffffff" : "rgba(255,255,255,0.28)",
                       }}
                     >
-                      <mod.Icon />
+                      <mod.Icon active={isActive} />
                     </div>
                     <span
                       className="pf-icon-name"
@@ -457,7 +443,7 @@ export default function PlatformSection({ navbarHeight = 64 }) {
                     key={mod.id}
                     ref={el => slotRefs.current[i] = el}
                     className={`pf-card-slot${isHero ? " hero" : ""}`}
-                    style={{ position: "relative", height: "clamp(200px, 26vh, 260px)" }}
+                    style={{ position: "relative", height: "clamp(220px, 30vh, 300px)" }}
                   >
                     {/* Dissolve canvas — sits above both faces */}
                     <canvas

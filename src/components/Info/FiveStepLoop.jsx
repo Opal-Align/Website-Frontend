@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 
+import opalLogo from "../../assets/OPALgos GreyWhite Website.png";
 const STEP_DATA = [
   {
     num: "01", label: "Identify",
@@ -25,9 +26,9 @@ const STEP_DATA = [
   },
 ];
 
-const STEP_ANGLES = STEP_DATA.map((_, i) => -90 + i * 72); // evenly spaced on circle
-const ORBIT_DURATION = 18000; // ms for one full rotation
-const MANUAL_PAUSE   = 7000;  // ms before auto-resume after manual click
+const STEP_ANGLES = STEP_DATA.map((_, i) => -90 + i * 72);
+const ORBIT_DURATION = 18000;
+const MANUAL_PAUSE   = 7000;
 
 const BG = "#0a0a0a";
 
@@ -48,7 +49,6 @@ function useOrbitalCanvas({ canvasRef, containerRef, setActive }) {
   const rafRef         = useRef(null);
   const dimsRef        = useRef({ W: 0, H: 0, cx: 0, cy: 0, stepR: 0 });
 
-  // expose node positions for HTML elements
   const [nodeXY, setNodeXY] = useState(Array(5).fill({ left: "50%", top: "50%" }));
 
   const spawnSparkles = useCallback((x, y) => {
@@ -100,14 +100,12 @@ function useOrbitalCanvas({ canvasRef, containerRef, setActive }) {
     const stepR = minDim * 0.36;
     dimsRef.current = { W, H, cx, cy, stepR };
 
-    // recompute node positions
     const positions = STEP_ANGLES.map(deg => {
       const { x, y } = polarToXY(stepR, deg, cx, cy);
       return { left: (x / W * 100) + "%", top: (y / H * 100) + "%" };
     });
     setNodeXY(positions);
 
-    // reinit stars
     starsRef.current = Array.from({ length: 80 }, () => ({
       x: Math.random() * W, y: Math.random() * H,
       r: Math.random() * 1.2 + 0.3,
@@ -120,7 +118,6 @@ function useOrbitalCanvas({ canvasRef, containerRef, setActive }) {
 
   useEffect(() => {
     resize();
-
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -131,7 +128,6 @@ function useOrbitalCanvas({ canvasRef, containerRef, setActive }) {
 
       ctx.clearRect(0, 0, W, H);
 
-      // bg glow
       const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, stepR * 1.4);
       grad.addColorStop(0,   "rgba(255,255,255,0.04)");
       grad.addColorStop(0.5, "rgba(255,255,255,0.01)");
@@ -139,25 +135,21 @@ function useOrbitalCanvas({ canvasRef, containerRef, setActive }) {
       ctx.beginPath(); ctx.arc(cx, cy, stepR * 1.4, 0, Math.PI * 2);
       ctx.fillStyle = grad; ctx.fill();
 
-      // twinkling stars
       for (const s of starsRef.current) {
         const a = s.alpha * (0.5 + 0.5 * Math.sin(ts * s.twinkleSpeed + s.twinkleOffset));
         ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(255,255,255,${a.toFixed(2)})`; ctx.fill();
       }
 
-      // rings
       ctx.beginPath(); ctx.arc(cx, cy, stepR, 0, Math.PI * 2);
       ctx.strokeStyle = "rgba(255,255,255,0.20)"; ctx.lineWidth = 1.5; ctx.stroke();
       ctx.beginPath(); ctx.arc(cx, cy, stepR * 0.5, 0, Math.PI * 2);
       ctx.strokeStyle = "rgba(255,255,255,0.05)"; ctx.lineWidth = 1; ctx.stroke();
 
-      // rotating scanner
       if (!startTimeRef.current) startTimeRef.current = ts;
       const elapsed = (ts - startTimeRef.current) % ORBIT_DURATION;
       const scanDeg = -90 + (elapsed / ORBIT_DURATION) * 360;
 
-      // sweep arc (gradient trail)
       const TRAIL = 100;
       const startRad = degToRad(scanDeg - TRAIL);
       const endRad   = degToRad(scanDeg);
@@ -170,7 +162,6 @@ function useOrbitalCanvas({ canvasRef, containerRef, setActive }) {
         ctx.lineWidth = 3; ctx.lineCap = "round"; ctx.stroke();
       }
 
-      // scan dot
       const { x: sdx, y: sdy } = polarToXY(stepR, scanDeg, cx, cy);
       const dotGrad = ctx.createRadialGradient(sdx, sdy, 0, sdx, sdy, 18);
       dotGrad.addColorStop(0,   "rgba(255,255,255,0.45)");
@@ -183,7 +174,6 @@ function useOrbitalCanvas({ canvasRef, containerRef, setActive }) {
       ctx.shadowColor = "rgba(255,255,255,0.6)"; ctx.shadowBlur = 10;
       ctx.fill(); ctx.shadowBlur = 0;
 
-      // sparkles
       sparklesRef.current = sparklesRef.current.filter(s => s.life > 0);
       for (const s of sparklesRef.current) {
         ctx.beginPath(); ctx.arc(s.x, s.y, s.r * s.life, 0, Math.PI * 2);
@@ -191,7 +181,6 @@ function useOrbitalCanvas({ canvasRef, containerRef, setActive }) {
         s.x += s.vx; s.y += s.vy; s.vx *= 0.93; s.vy *= 0.93; s.life -= s.decay;
       }
 
-      // auto-activate when scanner crosses a step angle
       if (!manualRef.current) {
         const norm = ((scanDeg % 360) + 360) % 360;
         STEP_ANGLES.forEach((deg, i) => {
@@ -237,13 +226,11 @@ export default function FiveStepLoop() {
         .fsl-card:hover { border-color: rgba(255,255,255,0.15) !important; }
         .fsl-node-circle { transition: border-color 0.35s, background 0.35s, box-shadow 0.35s, transform 0.35s; }
 
-        /* Mobile-first layout */
         .fsl-section    { background: ${BG}; color: #fff; font-family: 'Inter',-apple-system,BlinkMacSystemFont,sans-serif; overflow-x: hidden; }
         .fsl-container  { width: 100%; max-width: 1200px; margin: 0 auto; box-sizing: border-box; display: flex; flex-direction: column; padding: clamp(28px,5vh,44px) clamp(16px,5vw,36px) clamp(24px,4vh,36px); gap: clamp(24px,4vh,32px); }
         .fsl-left       { width: 100%; display: flex; flex-direction: column; }
         .fsl-orbital    { width: 100%; height: clamp(220px,55vw,300px); position: relative; }
 
-        /* Tablet / Desktop */
         @media (min-width: 768px) {
           .fsl-section   { height: 100vh; min-height: 600px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
           .fsl-container { flex-direction: row; align-items: flex-start; gap: clamp(28px,4vw,52px); padding: clamp(24px,4vh,40px) clamp(20px,4vw,52px); }
@@ -255,10 +242,9 @@ export default function FiveStepLoop() {
       <section className="fsl-section">
         <div className="fsl-container">
 
-          {/* ══ LEFT — text + cards ══ */}
+          {/* ══ LEFT ══ */}
           <div className="fsl-left" style={{ paddingTop: 2 }}>
 
-            {/* Eyebrow */}
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: "clamp(10px,1.8vh,20px)" }}>
               <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 12 }}>+</span>
               <span style={{ fontSize: 10.5, letterSpacing: "0.2em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase" }}>
@@ -267,21 +253,19 @@ export default function FiveStepLoop() {
               <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
             </div>
 
-            {/* Headline */}
             <div style={{ marginBottom: "clamp(10px,1.6vh,16px)", lineHeight: 0.9, letterSpacing: "-0.01em" }}>
               {[
-                { text: "FIVE",    cls: "white" },
-                { text: "STEPS.",  cls: "mid"   },
-                { text: "ONE",     cls: "ghost" },
-                { text: "CON-",    cls: "white" },
-                { text: "TINUOUS", cls: "mid"   },
+                { text: "THE",    cls: "white" },
+                { text: "CON-.",  cls: "mid"   },
+                { text: "TINUOUS",     cls: "ghost" },
+                { text: "GUIDED",    cls: "white" },
+                { text: "OPERATING", cls: "mid"   },
                 { text: "LOOP.",   cls: "ghost" },
               ].map((w) => (
                 <span key={w.text} style={{
                   display: "block",
                   fontSize: "clamp(28px, min(3.8vw, 4.8vh), 42px)",
-                  fontWeight: 900,
-                  textTransform: "uppercase",
+                  fontWeight: 900, textTransform: "uppercase",
                   color: w.cls === "ghost" ? "transparent" : w.cls === "mid" ? "rgba(255,255,255,0.45)" : "#ffffff",
                   WebkitTextStroke: w.cls === "ghost" ? "1px rgba(255,255,255,0.22)" : undefined,
                 }}>
@@ -290,12 +274,10 @@ export default function FiveStepLoop() {
               ))}
             </div>
 
-            {/* Body */}
             <p style={{ fontSize: "clamp(12px,1.1vw,13px)", color: "rgba(255,255,255,0.45)", lineHeight: 1.68, maxWidth: "min(340px,100%)", marginBottom: "clamp(10px,1.8vh,22px)" }}>
               Every step runs continuously — automated where it can be, guided where it must be. The loop never stops.
             </p>
 
-            {/* Step cards */}
             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: "clamp(10px,1.8vh,22px)" }}>
               {STEP_DATA.map((step, i) => {
                 const isActive = active === i;
@@ -314,7 +296,6 @@ export default function FiveStepLoop() {
               })}
             </div>
 
-            {/* Book Demo */}
             <button className="fsl-book" style={{ display: "inline-flex", alignItems: "center", gap: 9, padding: "clamp(9px,1.3vh,12px) 22px", border: "1.5px solid rgba(255,255,255,0.35)", borderRadius: 40, fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "#ffffff", textTransform: "uppercase", cursor: "pointer", background: "transparent", width: "fit-content", transition: "border-color 0.25s, background 0.25s, color 0.25s", marginBottom: "clamp(10px,1.5vh,16px)" }}>
               BOOK A DEMO
               <svg className="fsl-arrow" viewBox="0 0 14 14" fill="none" width="12" height="12" style={{ transition: "transform 0.2s" }}>
@@ -322,7 +303,6 @@ export default function FiveStepLoop() {
               </svg>
             </button>
 
-            {/* Scroll dots */}
             <div style={{ display: "flex", gap: 5 }}>
               {STEP_DATA.map((_, i) => (
                 <button key={i} onClick={() => userActivate(i)} style={{ border: "none", cursor: "pointer", padding: 0, borderRadius: 2, height: 3, width: active === i ? 32 : 20, background: active === i ? "#ffffff" : "rgba(255,255,255,0.12)", transition: "background 0.25s, width 0.25s" }} />
@@ -330,7 +310,7 @@ export default function FiveStepLoop() {
             </div>
           </div>
 
-          {/* ══ ORBITAL — single ref, CSS controls size on mobile vs desktop ══ */}
+          {/* ══ ORBITAL ══ */}
           <div ref={containerRef} className="fsl-orbital">
             <canvas ref={canvasRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} />
             <div style={{ position: "absolute", inset: 0 }}>
@@ -338,7 +318,7 @@ export default function FiveStepLoop() {
                 const isActive = active === i;
                 return (
                   <div key={step.num} onClick={() => userActivate(i)} style={{ position: "absolute", left: nodeXY[i]?.left ?? "50%", top: nodeXY[i]?.top ?? "50%", transform: "translate(-50%,-50%)", zIndex: 20, cursor: "pointer" }}>
-                    <div className="fsl-node-circle" style={{ width: 60, height: 60, borderRadius: "50%", background: isActive ? "#ffffff" : "rgba(10,10,10,0.97)", border: `1.5px solid ${isActive ? "#ffffff" : "rgba(255,255,255,0.18)"}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, boxShadow: isActive ? `0 0 0 3px ${BG},0 0 0 4px rgba(255,255,255,0.3),0 0 20px rgba(255,255,255,0.15)` : `0 0 0 2px ${BG}`, transform: isActive ? "scale(1.18)" : "scale(1)", transition: "all 0.35s" }}>
+                    <div className="fsl-node-circle" style={{ width: 60, height: 60, borderRadius: "50%", background: isActive ? "#ffffff" : "rgba(10,10,10,0.97)", border: `1.5px solid ${isActive ? "#ffffff" : "rgba(255,255,255,0.18)"}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, boxShadow: isActive ? `0 0 0 3px ${BG},0 0 0 4px rgba(255,255,255,0.3),0 0 20px rgba(255,255,255,0.15)` : `0 0 0 2px ${BG}`, transform: isActive ? "scale(1.18)" : "scale(1)" }}>
                       <span style={{ fontSize: 12, fontWeight: 700, lineHeight: 1, letterSpacing: "0.04em", color: isActive ? BG : "rgba(255,255,255,0.35)", transition: "color 0.3s" }}>{step.num}</span>
                       <span style={{ fontSize: 9, fontWeight: 500, lineHeight: 1, color: isActive ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.28)", transition: "color 0.3s" }}>{step.label}</span>
                     </div>
@@ -346,10 +326,39 @@ export default function FiveStepLoop() {
                 );
               })}
             </div>
-            <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 82, height: 82, borderRadius: 15, background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(255,255,255,0.42)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, boxShadow: "0 0 36px rgba(255,255,255,0.06)", zIndex: 22 }}>
-              <span style={{ fontSize: 15, fontWeight: 800, color: "#ffffff", letterSpacing: "0.06em" }}>OPAL</span>
-              <span style={{ fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.4)", letterSpacing: "0.2em" }}>GOS</span>
+
+            {/* ── Centre: logo image instead of OPAL / gOS text ── */}
+            <div style={{
+              position: "absolute", top: "50%", left: "50%",
+              transform: "translate(-50%,-50%)",
+              width: 82, height: 82,
+              borderRadius: 15,
+              background: "rgba(255,255,255,0.06)",
+              border: "1.5px solid rgba(255,255,255,0.42)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 0 36px rgba(255,255,255,0.06)",
+              zIndex: 22,
+              overflow: "hidden",
+              padding: 10,
+              boxSizing: "border-box",
+            }}>
+              {/*
+                Replace /logo.png with your actual logo path.
+                Works with any image format — PNG, SVG, WebP.
+                For a white/inverted logo on dark bg use:  filter: "brightness(0) invert(1)"
+              */}
+              <img
+                src={opalLogo}
+                alt="Logo"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  filter: "brightness(0) invert(1)",   // remove this line if your logo is already white
+                }}
+              />
             </div>
+
           </div>
 
         </div>
@@ -357,4 +366,3 @@ export default function FiveStepLoop() {
     </>
   );
 }
-
