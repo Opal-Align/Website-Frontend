@@ -3,13 +3,16 @@
 // Replace the opalLogo import path to match your project.
 
 // eslint-disable-next-line no-unused-vars
-import { motion, useScroll, useSpring, useTransform } from "framer-motion";
+import { motion, useScroll, useSpring, useTransform, useMotionValueEvent } from "framer-motion";
 import { useRef, useEffect, useState, useId, useCallback } from "react";
 import opalLogo from "../../assets/OPALgos GreyWhite Website.png";
 
 const NAVY = "#08060C";
 const HERO_HEADLINE_SIZE = "clamp(2.4rem, 6.2vw, 5.2rem)";
-const SCROLL_LENGTH = "300vh";
+const SCROLL_LENGTH = "200vh";
+const HEADLINES_REVEAL_AT = 0.50;
+const PILL_DELAY_MS = 500;
+const SUBHEAD_AFTER_PILL_MS = 150;
 
 const OPAL_STOPS = [
   { offset: "0%",   color: "#FFFFFF" },
@@ -203,27 +206,65 @@ export default function ScrollHero() {
   });
 
   const [mounted, setMounted] = useState(false);
+  const [showPill, setShowPill] = useState(false);
+  const [showSubhead, setShowSubhead] = useState(false);
+  const autoTriggeredRef = useRef(false);
+  const pillDrawnRef = useRef(false);
+  const pillTimerRef = useRef(null);
+  const subheadTimerRef = useRef(null);
+
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 80);
     return () => clearTimeout(t);
   }, []);
 
-  // ── Click handler — scrolls to 70% of the section so every headline
-  //    reveals naturally. Because all animations are purely scroll-driven,
-  //    scrolling back afterward is fully reversible with no extra state.
+  useEffect(() => () => {
+    clearTimeout(pillTimerRef.current);
+    clearTimeout(subheadTimerRef.current);
+  }, []);
+
+  const resetAutoSequence = useCallback(() => {
+    clearTimeout(pillTimerRef.current);
+    clearTimeout(subheadTimerRef.current);
+    autoTriggeredRef.current = false;
+    pillDrawnRef.current = false;
+    setShowPill(false);
+    setShowSubhead(false);
+  }, []);
+
+  const triggerAutoSequence = useCallback(() => {
+    if (autoTriggeredRef.current) return;
+    autoTriggeredRef.current = true;
+    pillTimerRef.current = setTimeout(() => setShowPill(true), PILL_DELAY_MS);
+  }, []);
+
+  const handlePillDrawComplete = useCallback(() => {
+    if (!showPill || pillDrawnRef.current) return;
+    pillDrawnRef.current = true;
+    subheadTimerRef.current = setTimeout(() => setShowSubhead(true), SUBHEAD_AFTER_PILL_MS);
+  }, [showPill]);
+
+  useMotionValueEvent(progress, "change", (v) => {
+    if (v >= HEADLINES_REVEAL_AT) {
+      triggerAutoSequence();
+    } else {
+      resetAutoSequence();
+    }
+  });
+
+  // ── Click handler — scrolls to headline reveal point; pill + subhead auto-play after
   const handleLogoClick = useCallback(() => {
     const section = sectionRef.current;
     if (!section) return;
     const sectionTop = section.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo({ top: sectionTop + section.offsetHeight * 0.50, behavior: "smooth" });
+    window.scrollTo({
+      top: sectionTop + section.offsetHeight * HEADLINES_REVEAL_AT,
+      behavior: "smooth",
+    });
   }, []);
 
-  // All animated values driven solely by scroll progress
-  const allLinesOpacity = useTransform(progress, [0.30, 0.38], [0, 1]);
-  const pillLength      = useTransform(progress, [0.46, 0.54], [0, 1]);
-  const pillOpacity     = useTransform(progress, [0.44, 0.46], [0, 1]);
-  const subheadOpacity  = useTransform(progress, [0.56, 0.62], [0, 1]);
-  const subheadY        = useTransform(progress, [0.56, 0.62], [20, 0]);
+  // Scroll-driven values — logo + three headline lines only
+  const allLinesOpacity = useTransform(progress, [0.38, 0.50], [0, 1]);
 
   const logoScale = useTransform(progress, [0.12, 0.32], [2.35, 1]);
   const logoX     = useTransform(progress, [0.12, 0.32], ["0vw", "0vw"]);
@@ -332,16 +373,16 @@ export default function ScrollHero() {
                 style={{ opacity: allLinesOpacity }}
                 className="hero-h1 font-['Montserrat'] font-light leading-[1.05] tracking-tight"
               >
-                <AnimatedWord progress={progress} start={0.30} end={0.38}>Recover</AnimatedWord>
-                <AnimatedWord progress={progress} start={0.30} end={0.38} accent>Revenue.</AnimatedWord>
+                <AnimatedWord progress={progress} start={0.38} end={0.50}>Recover</AnimatedWord>
+                <AnimatedWord progress={progress} start={0.38} end={0.50} accent>Revenue.</AnimatedWord>
               </motion.h1>
 
               <motion.h1
                 style={{ opacity: allLinesOpacity }}
                 className="hero-h1 font-['Montserrat'] font-light leading-[1.05] tracking-tight mt-2 md:mt-3"
               >
-                <AnimatedWord progress={progress} start={0.30} end={0.38}>Maximize</AnimatedWord>
-                <AnimatedWord progress={progress} start={0.30} end={0.38} accent>Margins.</AnimatedWord>
+                <AnimatedWord progress={progress} start={0.38} end={0.50}>Maximize</AnimatedWord>
+                <AnimatedWord progress={progress} start={0.38} end={0.50} accent>Margins.</AnimatedWord>
               </motion.h1>
 
               <motion.div
@@ -352,7 +393,9 @@ export default function ScrollHero() {
                   aria-hidden
                   className="absolute inset-0 h-full w-full overflow-visible pointer-events-none"
                   preserveAspectRatio="none"
-                  style={{ opacity: pillOpacity }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: showPill ? 1 : 0 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
                 >
                   <defs>
                     <linearGradient id={pillGradientId} x1="0" y1="1" x2="1" y2="0">
@@ -369,19 +412,24 @@ export default function ScrollHero() {
                     fill="transparent"
                     stroke={`url(#${pillGradientId})`}
                     strokeWidth="1.5"
-                    style={{ pathLength: pillLength }}
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: showPill ? 1 : 0 }}
+                    transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: showPill ? 0.1 : 0 }}
+                    onAnimationComplete={handlePillDrawComplete}
                   />
                 </motion.svg>
 
                 <h1 className="hero-h1 relative font-['Montserrat'] font-light leading-[1.05] tracking-tight px-6 md:px-10 py-2 md:py-3">
-                  <AnimatedWord progress={progress} start={0.30} end={0.38}>Zero</AnimatedWord>
-                  <AnimatedWord progress={progress} start={0.30} end={0.38}>new</AnimatedWord>
-                  <AnimatedWord progress={progress} start={0.30} end={0.38} accent>hires.</AnimatedWord>
+                  <AnimatedWord progress={progress} start={0.38} end={0.50}>Zero</AnimatedWord>
+                  <AnimatedWord progress={progress} start={0.38} end={0.50}>new</AnimatedWord>
+                  <AnimatedWord progress={progress} start={0.38} end={0.50} accent>hires.</AnimatedWord>
                 </h1>
               </motion.div>
 
               <motion.p
-                style={{ opacity: subheadOpacity, y: subheadY }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={showSubhead ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
                 className="mt-8 md:mt-10 font-['Montserrat'] font-light text-white/55 text-[clamp(0.9rem,1.4vw,1.15rem)] tracking-[0.06em]"
               >
                 The Guided Operating System for provider practices.

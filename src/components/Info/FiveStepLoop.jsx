@@ -30,8 +30,33 @@ const STEP_ANGLES   = STEP_DATA.map((_, i) => -90 + i * 72);
 const ORBIT_DURATION = 14000;
 const MANUAL_PAUSE   = 7000;
 const BG             = "#0a0a0a";
+const NODE_SIZE      = 68;   // px — planet diameter (CSS)
+const NODE_ACTIVE_SCALE = 1.18;
+const ORBIT_PAD      = 10;   // px — breathing room between planet edge and container
+const ORBIT_DIM_MIN  = 500;  // px — fixed orbit diameter (desktop)
 
 function degToRad(d) { return d * Math.PI / 180; }
+function calcOrbitRadius(W, H) {
+  const nodeOuter = (NODE_SIZE * NODE_ACTIVE_SCALE) / 2 + 3 + ORBIT_PAD;
+  const target = (Math.min(W, H) - nodeOuter * 2) / 2;
+  return Math.max(90, target);
+}
+
+/** Stable left-column height: all headers + one expanded body + gaps — never shifts per step. */
+function measureStableLeftHeight(el) {
+  const cards = el.querySelectorAll(".fsl-card");
+  if (!cards.length) return ORBIT_DIM_MIN;
+  const gap = 7;
+  let headerTotal = 0;
+  cards.forEach((card) => {
+    const hdr = card.querySelector(".fsl-card-header");
+    if (hdr) headerTotal += hdr.getBoundingClientRect().height;
+  });
+  const bodyMax = 110 + 15;
+  const dotsEl = el.querySelector(".fsl-dots");
+  const dotsH = dotsEl ? dotsEl.getBoundingClientRect().height + 14 : 28;
+  return Math.round(headerTotal + bodyMax + gap * (cards.length - 1) + dotsH);
+}
 function polarToXY(r, deg, cx, cy) {
   const rad = degToRad(deg);
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
@@ -97,7 +122,7 @@ function useOrbitalCanvas({ canvasRef, containerRef, setActive }) {
     const ctx = canvas.getContext("2d");
     ctx.scale(dpr, dpr);
     const cx = W / 2, cy = H / 2;
-    const stepR = Math.min(W, H) * 0.36;
+    const stepR = calcOrbitRadius(W, H);
     dimsRef.current = { W, H, cx, cy, stepR };
 
     const positions = STEP_ANGLES.map(deg => {
@@ -138,11 +163,12 @@ function useOrbitalCanvas({ canvasRef, containerRef, setActive }) {
       /* active node glow */
       const ai = activeIdxRef.current;
       const gp = polarToXY(stepR, STEP_ANGLES[ai], cx, cy);
-      const ag = ctx.createRadialGradient(gp.x, gp.y, 0, gp.x, gp.y, 70);
+      const glowR = stepR * 0.38 + 18;
+      const ag = ctx.createRadialGradient(gp.x, gp.y, 0, gp.x, gp.y, glowR);
       ag.addColorStop(0,    "rgba(255,255,255,0.13)");
       ag.addColorStop(0.35, "rgba(255,255,255,0.05)");
       ag.addColorStop(1,    "rgba(255,255,255,0)");
-      ctx.beginPath(); ctx.arc(gp.x, gp.y, 70, 0, Math.PI * 2);
+      ctx.beginPath(); ctx.arc(gp.x, gp.y, glowR, 0, Math.PI * 2);
       ctx.fillStyle = ag; ctx.fill();
 
       /* dashed spokes from center to each node */
@@ -224,10 +250,14 @@ function useOrbitalCanvas({ canvasRef, containerRef, setActive }) {
     }
 
     rafRef.current = requestAnimationFrame(frame);
+    const container = containerRef.current;
+    const ro = container ? new ResizeObserver(resize) : null;
+    if (container) ro.observe(container);
     window.addEventListener("resize", resize);
     return () => {
       cancelAnimationFrame(rafRef.current);
       clearTimeout(manualTimerRef.current);
+      ro?.disconnect();
       window.removeEventListener("resize", resize);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -239,12 +269,29 @@ function useOrbitalCanvas({ canvasRef, containerRef, setActive }) {
 /* ─── Main component ──────────────────────────────────────────────── */
 export default function FiveStepLoop() {
   const [active, setActive] = useState(0);
+  const [orbitDim, setOrbitDim] = useState(480);
   const canvasRef    = useRef(null);
   const containerRef = useRef(null);
+  const leftRef      = useRef(null);
 
   const { nodeXY, userActivate } = useOrbitalCanvas({
     canvasRef, containerRef, setActive,
   });
+
+  useEffect(() => {
+    const measure = () => {
+      const el = leftRef.current;
+      if (!el) return;
+      if (window.innerWidth < 768) {
+        setOrbitDim(Math.min(340, Math.round(window.innerWidth - 32)));
+        return;
+      }
+      setOrbitDim(Math.max(ORBIT_DIM_MIN, measureStableLeftHeight(el)));
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
 
   return (
     <>
@@ -392,25 +439,26 @@ export default function FiveStepLoop() {
         }
         .fsl-dot.active { background: #fff; width: 28px; }
 
-        /* orbital */
+        /* orbital — square, height synced to left column */
         .fsl-orbital {
-          flex: 0 0 460px; height: 480px; position: relative;
+          flex: 0 0 auto;
+          position: relative;
         }
 
         /* node circles */
         .fsl-node-circle {
-          width: 52px; height: 52px; border-radius: 50%;
+          width: ${NODE_SIZE}px; height: ${NODE_SIZE}px; border-radius: 50%;
           background: rgba(10,10,10,0.97);
           border: 1.5px solid rgba(255,255,255,0.18);
           display: flex; flex-direction: column;
-          align-items: center; justify-content: center; gap: 2px;
+          align-items: center; justify-content: center; gap: 3px;
           transition: border-color 0.35s, background 0.35s, box-shadow 0.4s, transform 0.35s;
           box-shadow: 0 0 0 3px ${BG};
         }
         .fsl-node.active .fsl-node-circle {
           border-color: rgba(255,255,255,0.9);
           background: #fff;
-          transform: scale(1.2);
+          transform: scale(${NODE_ACTIVE_SCALE});
           box-shadow:
             0 0 0 3px ${BG},
             0 0 0 5px rgba(255,255,255,0.18),
@@ -419,23 +467,23 @@ export default function FiveStepLoop() {
             0 0 75px rgba(255,255,255,0.06);
         }
         .fsl-sn-num {
-          font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+          font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
           line-height: 1; color: rgba(255,255,255,0.35);
           transition: color 0.3s, font-size 0.3s;
         }
-        .fsl-node.active .fsl-sn-num { color: ${BG}; font-size: 11px; }
+        .fsl-node.active .fsl-sn-num { color: ${BG}; font-size: 12px; }
         .fsl-sn-name {
-          font-size: 7.5px; font-weight: 400; line-height: 1;
+          font-size: 8.5px; font-weight: 400; line-height: 1;
           color: rgba(255,255,255,0.28);
           transition: color 0.3s, font-size 0.3s;
         }
-        .fsl-node.active .fsl-sn-name { color: rgba(0,0,0,0.55); font-size: 8px; }
+        .fsl-node.active .fsl-sn-name { color: rgba(0,0,0,0.55); font-size: 9px; }
 
         /* center badge */
         .fsl-center-badge {
           position: absolute; top: 50%; left: 50%;
           transform: translate(-50%,-50%);
-          width: 72px; height: 72px; border-radius: 13px;
+          width: 84px; height: 84px; border-radius: 15px;
           background: rgba(14,14,14,0.98);
           border: 1.5px solid rgba(255,255,255,0.38);
           display: flex; flex-direction: column;
@@ -444,11 +492,11 @@ export default function FiveStepLoop() {
         }
         .fsl-cb-opal {
           border: 1.5px solid rgba(255,255,255,0.65);
-          border-radius: 2px; padding: 1px 4px;
-          font-size: 9px; font-weight: 800; color: #fff; letter-spacing: 0.06em;
+          border-radius: 2px; padding: 1px 5px;
+          font-size: 10px; font-weight: 800; color: #fff; letter-spacing: 0.06em;
         }
         .fsl-cb-gos {
-          font-size: 8px; font-weight: 500;
+          font-size: 9px; font-weight: 500;
           color: rgba(255,255,255,0.45); letter-spacing: 0.16em;
         }
 
@@ -456,7 +504,7 @@ export default function FiveStepLoop() {
           .fsl-section { padding: 24px 16px 20px; }
           .fsl-bottom { flex-direction: column; gap: 24px; }
           .fsl-left { flex: unset; width: 100%; }
-          .fsl-orbital { flex: unset; width: 100%; height: clamp(240px,60vw,320px); }
+          .fsl-orbital { flex: unset; width: 100% !important; max-width: 340px; margin: 0 auto; }
           .fsl-hl-hero { font-size: clamp(32px,9vw,48px); }
         }
       `}</style>
@@ -483,7 +531,7 @@ export default function FiveStepLoop() {
         <div className="fsl-bottom">
 
           {/* LEFT */}
-          <div className="fsl-left">
+          <div ref={leftRef} className="fsl-left">
             <div className="fsl-steps">
               {STEP_DATA.map((step, i) => (
                 <div
@@ -521,7 +569,11 @@ export default function FiveStepLoop() {
           </div>
 
           {/* ORBITAL */}
-          <div ref={containerRef} className="fsl-orbital">
+          <div
+            ref={containerRef}
+            className="fsl-orbital"
+            style={{ width: orbitDim, height: orbitDim }}
+          >
             <canvas ref={canvasRef} style={{ position:"absolute", inset:0, width:"100%", height:"100%" }} />
 
             <div style={{ position:"absolute", inset:0 }}>

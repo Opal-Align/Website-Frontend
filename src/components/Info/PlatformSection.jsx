@@ -31,60 +31,45 @@
  */
 
 import { useRef, useState, useEffect, useCallback } from "react";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, AnimatePresence } from "framer-motion";
+import scheduleIcon from "../../assets/schedule.svg";
+import productionIcon from "../../assets/production.svg";
+import collectIcon from "../../assets/collect.svg";
+import envelopeIcon from "../../assets/relay.svg";
 
 /* ─── Constants ───────────────────────────────────────────────────── */
 const N            = 4;
 const BURST_DUR    = 700;    // ms — dissolve burst duration (each direction)
 const PS           = 3;      // burst particle pixel size
 const EASE         = [0.22, 1, 0.36, 1];
-const RING_R        = 37;
-const RING_CIRC     = 2 * Math.PI * RING_R;
+const OPAL_LIGHT_GRADIENT =
+  "linear-gradient(120deg, #FFFFFF 0%, #F8FAFC 30%, #F3F4F6 65%, #FFFFFF 100%)";
+const OPAL_SOFT_GLOW = "rgba(255,255,255,0.28)";
+const TAB_H = 52;   // px — uniform height
 
-/* ─── Inline icons (swap for <img src=... /> if you have real assets) ── */
-const IconSchedule = ({ active }) => (
-  <svg viewBox="0 0 24 24" width="30" height="30" fill="none"
-    stroke={active ? "#0a0a0a" : "rgba(255,255,255,0.45)"} strokeWidth="1.6"
-    strokeLinecap="round" strokeLinejoin="round" style={{ transition: "stroke 0.4s" }}>
-    <rect x="3" y="4" width="18" height="18" rx="2" />
-    <line x1="3" y1="9" x2="21" y2="9" />
-    <line x1="8" y1="2" x2="8" y2="6" />
-    <line x1="16" y1="2" x2="16" y2="6" />
-  </svg>
-);
-const IconProduce = ({ active }) => (
-  <svg viewBox="0 0 24 24" width="30" height="30" fill="none"
-    stroke={active ? "#0a0a0a" : "rgba(255,255,255,0.45)"} strokeWidth="1.6"
-    strokeLinecap="round" strokeLinejoin="round" style={{ transition: "stroke 0.4s" }}>
-    <path d="M4 7h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z" />
-    <path d="M3 7l4-4h10l4 4" />
-    <circle cx="12" cy="13" r="2.5" />
-  </svg>
-);
-const IconCollect = ({ active }) => (
-  <svg viewBox="0 0 24 24" width="30" height="30" fill="none"
-    stroke={active ? "#0a0a0a" : "rgba(255,255,255,0.45)"} strokeWidth="1.6"
-    strokeLinecap="round" strokeLinejoin="round" style={{ transition: "stroke 0.4s" }}>
-    <circle cx="12" cy="7" r="3.5" />
-    <line x1="12" y1="5.5" x2="12" y2="8.5" />
-    <path d="M3 19c0-2 2.5-3.5 5-3.5h8c2.5 0 5 1.5 5 3.5" />
-  </svg>
-);
-const IconRelay = ({ active }) => (
-  <svg viewBox="0 0 24 24" width="30" height="30" fill="none"
-    stroke={active ? "#0a0a0a" : "rgba(255,255,255,0.45)"} strokeWidth="1.6"
-    strokeLinecap="round" strokeLinejoin="round" style={{ transition: "stroke 0.4s" }}>
-    <path d="M5 3L5 21" />
-    <path d="M5 3L14 6L5 10" />
-    <path d="M19 10L19 21" />
-    <path d="M19 10L10 13L19 17" />
-  </svg>
-);
+/* ─── Module icon ─────────────────────────────────────────────────── */
+function ModuleIcon({ src, active, size = 30 }) {
+  return (
+    <img
+      src={src}
+      alt=""
+      draggable={false}
+      style={{
+        width: size,
+        height: size,
+        objectFit: "contain",
+        transition: "opacity 0.4s, filter 0.4s",
+        filter: active ? "brightness(0)" : "brightness(0) invert(1)",
+        opacity: active ? 0.9 : 0.45,
+      }}
+    />
+  );
+}
 
 /* ─── Data ─────────────────────────────────────────────────────────── */
 const MODULES = [
   {
-    id: "schedule", label: "Schedule", num: "01", glyph: "α · 001", Icon: IconSchedule,
+    id: "schedule", label: "Schedule", num: "01", glyph: "α · 001", icon: scheduleIcon,
     title: "Identified, verified, and filled — automatically.",
     features: [
       "Fills from prioritized waitlist in real time",
@@ -93,7 +78,7 @@ const MODULES = [
     ],
   },
   {
-    id: "produce", label: "Produce", num: "02", glyph: "β · 002", Icon: IconProduce,
+    id: "produce", label: "Produce", num: "02", glyph: "β · 002", icon: productionIcon,
     title: "Reengaged, reactivated, recovered — automatically.",
     features: [
       "Treatment plans auto-queued into workflow",
@@ -102,7 +87,7 @@ const MODULES = [
     ],
   },
   {
-    id: "collect", label: "Collect", num: "03", glyph: "γ · 003", Icon: IconCollect,
+    id: "collect", label: "Collect", num: "03", glyph: "γ · 003", icon: collectIcon,
     title: "Surfaced, pursued, collected, documented — automatically.",
     features: [
       "Highest-recovery balances surfaced first",
@@ -111,7 +96,7 @@ const MODULES = [
     ],
   },
   {
-    id: "relay", label: "Relay", num: "04", glyph: "δ · 004", Icon: IconRelay,
+    id: "relay", label: "Relay", num: "04", glyph: "δ · 004", icon: envelopeIcon,
     title: "Centralized, real-time, prioritized, and interactive.",
     features: [
       "SMS, email, and portal unified in one view",
@@ -134,57 +119,21 @@ function buildBurst(W, H) {
       });
   return pts;
 }
-function buildTwinkle(w, h) {
-  const count = Math.round((w * h) / 1600);
-  const pts = [];
-  for (let i = 0; i < count; i++) {
-    pts.push({
-      x: Math.random() * w,
-      y: Math.random() * h,
-      r: Math.random() * 1.2 + 0.3,
-      baseAlpha: Math.random() * 0.5 + 0.15,
-      speed: Math.random() * 0.05 + 0.02,
-      offset: Math.random() * Math.PI * 2,
-    });
-  }
-  return pts;
-}
 function easeOut3(t) { return 1 - Math.pow(1 - t, 3); }
-
-/* ─── Tag badge ───────────────────────────────────────────────────── */
-function Tag() {
-  return (
-    <div style={{
-      display: "inline-flex", alignItems: "center", gap: 5,
-      fontSize: 10, fontWeight: 700, letterSpacing: "0.05em",
-      textTransform: "uppercase", padding: "3px 9px 3px 7px", borderRadius: 99,
-      background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.88)",
-      width: "fit-content", flexShrink: 0,
-    }}>
-      <span style={{
-        width: 5, height: 5, borderRadius: "50%", flexShrink: 0,
-        background: "#ffffff", boxShadow: "0 0 6px 2px rgba(255,255,255,0.35)",
-      }} />
-      gOS
-    </div>
-  );
-}
 
 /* ─── Main component ──────────────────────────────────────────────── */
 export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }) {
   const sectionRef = useRef(null);
   const tileRef     = useRef(null);
   const canvasRef   = useRef(null);
-  const ringRef     = useRef(null);   // <circle> of the currently-active icon's timer ring
-  const barRef      = useRef(null);   // linear progress sliver under the tile
+  const ringRef     = useRef(null);   // fill-bar div inside the active tab pill
+  const barRef      = useRef(null);   // progress sliver under the content card
 
   /* animation-loop bookkeeping — lives in refs so RAF callbacks never see
      stale values and so there is exactly one owner for each loop. */
   const burstRafRef      = useRef(null);
-  const idleRafRef       = useRef(null);
   const autoplayRafRef   = useRef(null);
-  const twinkleRef       = useRef([]);
-  const hoverRef         = useRef(false);   // true while hovering tile or icon row — pauses autoplay + boosts twinkle
+  const hoverRef         = useRef(false);
   const phaseRef         = useRef("idle");  // mirrors `phase` state for the rAF loop's closure
   const displayIndexRef  = useRef(0);       // which module is currently painted on the tile
   const revealedOnceRef  = useRef(false);   // has the initial reveal burst run?
@@ -196,13 +145,9 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
   const [activeIndex,  setActiveIndex]  = useState(0);   // target module
   const [displayIndex, setDisplayIndex] = useState(0);   // module currently shown on the tile
   const [phase,        setPhase]        = useState("idle"); // "idle" | "out" | "in"
+  const [tileHovered,  setTileHovered]  = useState(false);
 
   const inView = useInView(sectionRef, { once: true, margin: "-8% 0px" });
-
-  /* ── canvas helpers ──────────────────────────────────────────────── */
-  const stopIdle = useCallback(() => {
-    if (idleRafRef.current) { cancelAnimationFrame(idleRafRef.current); idleRafRef.current = null; }
-  }, []);
 
   const stopBurst = useCallback(() => {
     if (burstRafRef.current) { cancelAnimationFrame(burstRafRef.current); burstRafRef.current = null; }
@@ -217,34 +162,9 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
     return { W, H };
   }, []);
 
-  /* Ambient twinkle loop — only runs while the tile is settled (phase === "idle"). */
-  const startIdle = useCallback(() => {
-    stopIdle();
-    const cv = canvasRef.current;
-    const { W, H } = sizeCanvas();
-    if (!cv || W === 0 || H === 0) return;
-    const ctx = cv.getContext("2d");
-    twinkleRef.current = buildTwinkle(W, H);
-
-    const tick = (ts) => {
-      ctx.clearRect(0, 0, W, H);
-      const boost = hoverRef.current ? 1.8 : 1;
-      for (const p of twinkleRef.current) {
-        const a = Math.min(1, p.baseAlpha * boost * (0.5 + 0.5 * Math.sin(ts * p.speed + p.offset)));
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,255,255,${a.toFixed(2)})`;
-        ctx.fill();
-      }
-      idleRafRef.current = requestAnimationFrame(tick);
-    };
-    idleRafRef.current = requestAnimationFrame(tick);
-  }, [sizeCanvas, stopIdle]);
-
   /* Burst dissolve. dir "out" fades the current tile content away;
      dir "in" dissolves the new content in. Always calls onDone exactly once. */
   const runBurst = useCallback((dir, onDone) => {
-    stopIdle();
     stopBurst();
     const cv = canvasRef.current;
     const { W, H } = sizeCanvas();
@@ -278,7 +198,7 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
       }
     };
     burstRafRef.current = requestAnimationFrame(tick);
-  }, [sizeCanvas, stopBurst, stopIdle]);
+  }, [sizeCanvas, stopBurst]);
 
   /* ── the one state machine that owns transitions ─────────────────── */
   useEffect(() => {
@@ -288,7 +208,7 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
     if (!revealedOnceRef.current) {
       revealedOnceRef.current = true;
       setPhase("in");
-      runBurst("in", () => { setPhase("idle"); startIdle(); });
+      runBurst("in", () => { setPhase("idle"); });
       return;
     }
 
@@ -299,22 +219,14 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
       displayIndexRef.current = activeIndex;
       setDisplayIndex(activeIndex);
       setPhase("in");
-      runBurst("in", () => { setPhase("idle"); startIdle(); });
+      runBurst("in", () => { setPhase("idle"); });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeIndex, inView]);
 
-  useEffect(() => () => { stopBurst(); stopIdle(); }, [stopBurst, stopIdle]);
+  useEffect(() => () => { stopBurst(); }, [stopBurst]);
 
   useEffect(() => { phaseRef.current = phase; }, [phase]);
-
-  /* Keep the canvas correctly sized if the tile is resized while idle. */
-  useEffect(() => {
-    if (phase !== "idle") return;
-    const onResize = () => startIdle();
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [phase, startIdle]);
 
   /* ── autoplay engine ──────────────────────────────────────────────
      Runs continuously on rAF the whole time the section is in view.
@@ -332,7 +244,7 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
   }, []);
 
   const applyProgress = useCallback((p) => {
-    if (ringRef.current) ringRef.current.style.strokeDashoffset = String(RING_CIRC * (1 - p));
+    if (ringRef.current) ringRef.current.style.width = `${p * 100}%`;
     if (barRef.current) barRef.current.style.width = `${p * 100}%`;
   }, []);
 
@@ -386,24 +298,70 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        .pf-icon-col { position: relative; transition: transform 0.5s cubic-bezier(0.22,1,0.36,1); cursor: pointer; background: none; border: none; padding: 0; font: inherit; }
-        .pf-icon-col.hero .pf-icon-box { transform: scale(1.14) translateY(-3px); background: #ffffff !important; border-color: #ffffff !important; box-shadow: 0 0 0 1px rgba(255,255,255,0.2), 0 0 32px rgba(255,255,255,0.28); }
-        .pf-icon-col.hero .pf-icon-name { color: #ffffff !important; font-weight: 700; }
-        .pf-icon-col:hover .pf-icon-box { border-color: rgba(255,255,255,0.28); }
-        .pf-icon-col:focus-visible .pf-icon-box { outline: 2px solid rgba(255,255,255,0.6); outline-offset: 3px; }
-        .pf-icon-ring circle { transition: stroke-dashoffset 0.05s linear; }
-        .pf-icon-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(8px,1.2vw,16px); flex-shrink: 0; margin-bottom: clamp(14px,2vh,22px); }
-        .pf-tile { position:relative; border-radius:18px; padding: clamp(22px,3.4vh,34px) clamp(20px,2.6vw,34px); display:flex; flex-direction:column; background: rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.14); backdrop-filter: blur(6px); flex: 1; min-height: 0; }
-        .pf-tile:hover .pf-static-canvas { opacity: 1; }
+
+        /* ── Tab row ── */
+        .pf-tabs { display: flex; gap: 8px; align-items: stretch; flex-shrink: 0; width: 100%; margin-bottom: clamp(6px,1vh,12px); }
+        .pf-tab {
+          position: relative; overflow: hidden; cursor: pointer;
+          background: none; border: none; padding: 0; font: inherit;
+          display: flex; align-items: center; justify-content: center;
+          height: ${TAB_H}px; border-radius: 14px;
+          flex: 1; min-width: 0;
+          border: 1px solid rgba(255,255,255,0.07);
+          background: rgba(255,255,255,0.028);
+          transition: flex-grow 0.52s cubic-bezier(0.22,1,0.36,1), border-color 0.4s, background 0.4s;
+        }
+        .pf-tab:hover { border-color: rgba(255,255,255,0.18); }
+        .pf-tab.hero { flex: 3; border-color: rgba(255,255,255,0.16); background: rgba(255,255,255,0.06); }
+        .pf-tab:focus-visible { outline: 2px solid rgba(255,255,255,0.5); outline-offset: 2px; }
+
+        /* Fill sweep — imperatively driven left→right */
+        .pf-tab-fill {
+          position: absolute; left: 0; top: 0; height: 100%; width: 0%;
+          background: linear-gradient(90deg, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.07) 100%);
+          pointer-events: none; z-index: 0;
+        }
+
+        /* Inner content row */
+        .pf-tab-inner { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; padding: 0 14px 0 10px; width: 100%; }
+        .pf-tab:not(.hero) .pf-tab-inner { padding: 0; justify-content: center; }
+
+        /* Icon box */
+        .pf-icon-box {
+          position: relative; flex-shrink: 0;
+          width: 34px; height: 34px; border-radius: 9px;
+          display: flex; align-items: center; justify-content: center;
+          background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.12);
+          transition: background 0.4s, border-color 0.4s;
+        }
+        .pf-tab:not(.hero) .pf-icon-box { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.07); }
+
+        /* Label */
+        .pf-tab-label {
+          font-size: 10.5px; font-weight: 700; letter-spacing: 0.14em;
+          text-transform: uppercase; color: rgba(255,255,255,0.82);
+          white-space: nowrap; overflow: hidden;
+        }
+
+        /* Pulse rings on active icon */
+        .pf-wave-ring {
+          position: absolute; inset: -5px; border-radius: 13px;
+          pointer-events: none; border: 1.5px solid rgba(255,255,255,0.30);
+        }
+
+        /* ── Content tile ── */
+        .pf-tile { position:relative; border-radius:28px; overflow:hidden; cursor:default; display:flex; flex-direction:column; border:1px solid rgba(255,255,255,0.1); background:linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018)); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); flex: 1; min-height: 0; }
+        .pf-tile-glass-shine { position:absolute; inset:0; opacity:0.7; pointer-events:none; z-index:0; background:radial-gradient(circle at 20% 10%, rgba(255,255,255,0.10), transparent 36%), radial-gradient(circle at 85% 90%, rgba(255,255,255,0.08), transparent 42%); }
+        .pf-tile-glass-edge { position:absolute; left:0; right:0; top:0; height:1px; z-index:1; pointer-events:none; background-image: ${OPAL_LIGHT_GRADIENT}; }
+
         @media (max-width: 600px) {
-          .pf-icon-grid { gap: 6px !important; }
-          .pf-icon-box { width: 48px !important; height: 48px !important; border-radius: 12px !important; }
-          .pf-icon-box svg { width: 22px !important; height: 22px !important; }
-          .pf-icon-name { font-size: 8px !important; letter-spacing: 0.1em !important; }
-          .pf-tile { padding: 20px 18px !important; }
+          .pf-tabs { gap: 5px !important; }
+          .pf-tab { height: 44px !important; border-radius: 11px !important; }
+          .pf-icon-box { width: 28px !important; height: 28px !important; border-radius: 7px !important; }
         }
         @media (prefers-reduced-motion: reduce) {
-          .pf-icon-ring circle { transition: none; }
+          .pf-wave-ring { animation: none !important; }
+          .pf-tab { transition: none !important; }
         }
       `}</style>
 
@@ -463,14 +421,12 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
               </div>
             </div>
 
-            {/* ── Icon row — clickable, drives which module is on the tile.
-                 The active icon carries a ring that fills up as its autoplay
-                 window elapses; hovering the row pauses the countdown. ──── */}
+            {/* ── Tab row — active tab expands with a left→right fill loader ── */}
             <motion.div
               initial={{ opacity: 0, y: 14 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, ease: EASE, delay: 0.32 }}
-              className="pf-icon-grid"
+              className="pf-tabs"
               onMouseEnter={() => { hoverRef.current = true; }}
               onMouseLeave={() => { hoverRef.current = false; }}
             >
@@ -480,136 +436,176 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
                   <button
                     key={m.id}
                     type="button"
-                    className={`pf-icon-col${isHero ? " hero" : ""}`}
+                    className={`pf-tab${isHero ? " hero" : ""}`}
                     onClick={() => goToIndex(i)}
                     aria-pressed={isHero}
                     aria-label={`Show ${m.label} module`}
-                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 7 }}
                   >
-                    <div style={{ position: "relative", width: 72, height: 72 }}>
-                      {isHero && (
-                        <svg
-                          className="pf-icon-ring"
-                          width={(RING_R + 4) * 2} height={(RING_R + 4) * 2}
-                          viewBox={`0 0 ${(RING_R + 4) * 2} ${(RING_R + 4) * 2}`}
-                          style={{ position: "absolute", top: -4, left: -4, pointerEvents: "none" }}
-                        >
-                          <circle
-                            cx={RING_R + 4} cy={RING_R + 4} r={RING_R}
-                            fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="2"
+                    {/* Left-to-right progress fill — updated imperatively every RAF frame */}
+                    {isHero && <div ref={ringRef} className="pf-tab-fill" />}
+
+                    <div className="pf-tab-inner">
+                      {/* Icon with pulse rings */}
+                      <div className="pf-icon-box">
+                        {isHero && [0, 0.7, 1.4].map((delay) => (
+                          <motion.span
+                            key={delay}
+                            className="pf-wave-ring"
+                            animate={{ scale: [1, 1.7], opacity: [0.45, 0] }}
+                            transition={{
+                              duration: 2.4, repeat: Infinity,
+                              ease: [0.22, 1, 0.36, 1], delay,
+                            }}
                           />
-                          <circle
-                            ref={ringRef}
-                            cx={RING_R + 4} cy={RING_R + 4} r={RING_R}
-                            fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round"
-                            transform={`rotate(-90 ${RING_R + 4} ${RING_R + 4})`}
-                            style={{ strokeDasharray: `${RING_CIRC}`, strokeDashoffset: `${RING_CIRC}` }}
-                          />
-                        </svg>
-                      )}
-                      <div className="pf-icon-box" style={{
-                        width: 72, height: 72, display: "flex", alignItems: "center", justifyContent: "center",
-                        borderRadius: 16,
-                        background: isHero ? "rgba(255,255,255,0.09)" : "rgba(255,255,255,0.035)",
-                        border: `1px solid ${isHero ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.06)"}`,
-                        transition: "background 0.4s, border-color 0.4s, transform 0.45s cubic-bezier(0.22,1,0.36,1), box-shadow 0.4s",
-                      }}>
-                        <m.Icon active={isHero} />
+                        ))}
+                        <ModuleIcon src={m.icon} active={isHero} size={18} />
                       </div>
+
+                      {/* Label fades in when tab is active */}
+                      <AnimatePresence>
+                        {isHero && (
+                          <motion.span
+                            className="pf-tab-label"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3, delay: 0.18 }}
+                          >
+                            {m.label}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
                     </div>
-                    <span className="pf-icon-name" style={{
-                      fontSize: 9.5, fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase",
-                      color: isHero ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.20)",
-                      transition: "color 0.4s",
-                    }}>
-                      {m.label}
-                    </span>
                   </button>
                 );
               })}
             </motion.div>
 
             {/* ── Single tile — content swaps as activeIndex changes ── */}
-            <div
+            <motion.div
               ref={tileRef}
               className="pf-tile"
-              onMouseEnter={() => { hoverRef.current = true; }}
-              onMouseLeave={() => { hoverRef.current = false; }}
+              whileHover={{
+                scale: 1.035,
+                borderColor: "rgba(255,255,255,0.42)",
+                boxShadow: "0 18px 70px rgba(255,255,255,0.12)",
+              }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              onMouseEnter={() => { hoverRef.current = true; setTileHovered(true); }}
+              onMouseLeave={() => { hoverRef.current = false; setTileHovered(false); }}
             >
-              {/* Static/noise canvas — ambient while settled, boosted on hover */}
+              <div className="pf-tile-glass-shine" aria-hidden />
+              <div className="pf-tile-glass-edge" aria-hidden />
+
               <canvas
                 ref={canvasRef}
-                className="pf-static-canvas"
                 style={{
-                  position: "absolute", inset: 0, borderRadius: 18,
+                  position: "absolute", inset: 0, borderRadius: 28,
                   pointerEvents: "none", zIndex: 1, mixBlendMode: "screen",
-                  opacity: isSettled ? 0.9 : 1, transition: "opacity 0.3s ease",
+                  opacity: phase === "idle" ? 0 : 1,
+                  transition: "opacity 0.2s ease",
                 }}
               />
 
+              <div className="absolute top-4 right-4 z-10">
+                <div
+                  style={{
+                    width: 6, height: 6, borderRadius: "50%",
+                    backgroundImage: OPAL_LIGHT_GRADIENT,
+                    boxShadow: `0 0 12px 4px ${OPAL_SOFT_GLOW}`,
+                  }}
+                />
+                {tileHovered && (
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0.6 }}
+                    animate={{ scale: 5, opacity: 0 }}
+                    transition={{ duration: 1.8, repeat: Infinity }}
+                    style={{
+                      position: "absolute", inset: 0, borderRadius: "50%",
+                      border: "1px solid rgba(255,255,255,0.35)",
+                    }}
+                  />
+                )}
+              </div>
+
               <div style={{
-                position: "relative", zIndex: 2, display: "flex", flexDirection: "column", height: "100%",
+                position: "relative", zIndex: 10, display: "flex", flexDirection: "column",
+                alignItems: "center", textAlign: "center", height: "100%",
+                padding: "clamp(28px,3.8vh,40px) clamp(24px,3vw,40px)",
+                gap: 16, minHeight: 245,
                 opacity: isSettled ? 1 : 0,
                 transition: `opacity ${phase === "out" ? BURST_DUR : 260}ms ease`,
               }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{
-                      width: 42, height: 42, borderRadius: 10, display: "flex",
-                      alignItems: "center", justifyContent: "center",
-                      background: "rgba(255,255,255,0.10)",
-                    }}>
-                      <mod.Icon active={false} />
-                    </div>
-                    <Tag />
+                <div style={{
+                  display: "flex", flexDirection: "column", alignItems: "center",
+                  gap: 10, width: "100%",
+                }}>
+                  <div style={{
+                    width: 46, height: 46, borderRadius: 12, display: "flex",
+                    alignItems: "center", justifyContent: "center",
+                    background: "rgba(255,255,255,0.10)",
+                    border: "1px solid rgba(255,255,255,0.14)",
+                  }}>
+                    <ModuleIcon src={mod.icon} active size={28} />
                   </div>
-                  <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.20)", letterSpacing: "0.08em" }}>{mod.num}/0{N}</span>
+                  <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.22)", letterSpacing: "0.08em" }}>
+                    {mod.num}/0{N}
+                  </span>
                 </div>
 
                 <div style={{
-                  fontSize: "clamp(17px,2.1vh,23px)", fontWeight: 700, lineHeight: 1.32,
-                  color: "rgba(255,255,255,0.94)", marginBottom: 16, maxWidth: 560,
+                  fontSize: "clamp(17px,2.1vh,23px)", fontWeight: 700, lineHeight: 1.38,
+                  color: "rgba(255,255,255,0.94)", maxWidth: 520,
                 }}>
                   {mod.title}
                 </div>
 
-                <div style={{ height: 1, background: "rgba(255,255,255,0.08)", marginBottom: 16, flexShrink: 0 }} />
+                <div style={{
+                  width: "min(200px, 40%)", height: 1,
+                  background: "rgba(255,255,255,0.10)", flexShrink: 0,
+                }} />
 
-                <div style={{ flex: 1 }}>
+                <div style={{
+                  flex: 1, width: "100%", maxWidth: 480,
+                  display: "flex", flexDirection: "column", alignItems: "center",
+                }}>
                   {mod.features.map((feat, fi) => (
                     <div key={fi} style={{
-                      display: "flex", alignItems: "flex-start", gap: 9,
-                      marginTop: fi === 0 ? 0 : 11,
+                      display: "inline-flex", alignItems: "flex-start",
+                      gap: 9, marginTop: fi === 0 ? 0 : 11,
                       fontSize: "clamp(13px,1.4vh,15px)", lineHeight: 1.5,
-                      color: "rgba(255,255,255,0.62)",
+                      color: "rgba(255,255,255,0.55)", textAlign: "left",
                     }}>
                       <span style={{ color: "#ffffff", flexShrink: 0, marginTop: 1 }}>✓</span>
-                      {feat}
+                      <span>{feat}</span>
                     </div>
                   ))}
                 </div>
 
-                {/* Linear echo of the ring's progress — fills across the current module's autoplay window */}
-                <div style={{ height: 1.5, background: "rgba(255,255,255,0.06)", borderRadius: 2, marginTop: 18, overflow: "hidden", flexShrink: 0 }}>
+                <div style={{
+                  width: "min(280px, 70%)", height: 1.5,
+                  background: "rgba(255,255,255,0.06)", borderRadius: 2,
+                  overflow: "hidden", flexShrink: 0,
+                }}>
                   <div ref={barRef} style={{
                     height: "100%", background: "rgba(255,255,255,0.55)", width: "0%",
                   }} />
                 </div>
-                <div style={{ marginTop: 6, fontSize: 10.5, color: "rgba(255,255,255,0.24)", flexShrink: 0 }}>
+                <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.24)", flexShrink: 0 }}>
                   auto-advancing — click an icon to jump, hover to pause
                 </div>
               </div>
 
               <span style={{
-                position: "absolute", bottom: 12, right: 16, zIndex: 2,
-                fontSize: 9.5, letterSpacing: "0.28em", color: "rgba(255,255,255,0.10)",
-                pointerEvents: "none",
+                position: "absolute", bottom: 12, right: 16, zIndex: 10,
+                fontSize: 10, letterSpacing: "0.3em",
+                color: "rgba(255,255,255,0.18)", pointerEvents: "none",
                 opacity: isSettled ? 1 : 0,
                 transition: `opacity ${phase === "out" ? BURST_DUR : 260}ms ease`,
               }}>
                 {mod.glyph}
               </span>
-            </div>
+            </motion.div>
 
             {/* ── Footer bar ── */}
             <motion.div
