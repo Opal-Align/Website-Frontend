@@ -22,7 +22,9 @@ const stats = [
     glyph: "α · 001",
   },
   {
-    target: 1, prefix: "", suffix: "K+",
+    // Counts 0 -> 1000 internally (divisor: 1000) then displays as "1K+",
+    // so the small number gets a count-up just as long as the bigger ones.
+    target: 1, rawTarget: 1000, divisor: 1000, prefix: "", suffix: "K+",
     label: "Communications Triggered",
     desc: "Outreach attempts per session vastly outnumber what is humanely achievable.",
     glyph: "β · 002",
@@ -273,36 +275,78 @@ function InvisibleInk({ children, hideDelay = 2000 }) {
   );
 }
 
-function Counter({ target, prefix, suffix, inView }) {
+function Counter({
+  target,
+  rawTarget,
+  divisor = 1,
+  prefix,
+  suffix,
+  inView,
+  startDelay = 0,
+  duration = 1.8,
+}) {
   const [val, setVal] = useState(0);
+  const [landed, setLanded] = useState(false);
+  const countTarget = rawTarget ?? target;
 
   useEffect(() => {
-    if (!inView) return;
-    const ctrl = animate(0, target, {
-      duration: 2.2,
-      ease: [0, 0.55, 0.45, 1],
-      onUpdate: (v) => setVal(Math.round(v)),
-    });
-    return ctrl.stop;
-  }, [inView, target]);
+    if (!inView) {
+      setVal(0);
+      setLanded(false);
+      return;
+    }
+
+    setLanded(false);
+    let ctrl;
+    const timer = setTimeout(() => {
+      ctrl = animate(0, countTarget, {
+        duration,
+        ease: [0.25, 1, 0.5, 1], // smooth, slightly longer cubic ease-out
+        onUpdate: (v) => setVal(Math.round(v)),
+        onComplete: () => setLanded(true),
+      });
+    }, startDelay * 1000);
+
+    return () => {
+      clearTimeout(timer);
+      ctrl?.stop();
+    };
+  }, [inView, countTarget, startDelay, duration, target]);
+
+  const displayVal = divisor > 1 ? Math.round(val / divisor) : val;
 
   return (
-    <span
-      className="font-semibold tracking-tight"
+    <motion.span
+      className="font-semibold tracking-tight inline-block"
+      animate={landed ? { scale: [1, 1.12, 1] } : { scale: 1 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
       style={{
         ...gradientText,
         fontSize: "clamp(2.8rem, 5vw, 4.2rem)",
         lineHeight: 1,
-        filter: `drop-shadow(0 0 24px ${OPAL_SOFT_GLOW})`,
+        filter: landed
+          ? `drop-shadow(0 0 36px rgba(255,255,255,0.55)) drop-shadow(0 0 60px ${OPAL_SOFT_GLOW})`
+          : `drop-shadow(0 0 24px ${OPAL_SOFT_GLOW})`,
+        transition: "filter 0.5s ease-out",
       }}
     >
-      {prefix}{val}{suffix}
-    </span>
+      {prefix}{displayVal}{suffix}
+    </motion.span>
   );
 }
 
+// Timing for the stat counters: a longer pause after the section loads
+// before anything starts counting, a small stagger so cards kick off one
+// after another, and a shared count duration so — regardless of stagger —
+// every counter finishes at the exact same moment.
+const COUNTER_LOAD_DELAY = 0.6; // pause before the first counter starts
+const COUNTER_STAGGER = 0.15; // gap between each card's start time
+const COUNTER_END_TIME = COUNTER_LOAD_DELAY + COUNTER_STAGGER * (stats.length - 1) + 1.6;
+
 function Card({ stat, index, inView }) {
   const [hovered, setHovered] = useState(false);
+  const startDelay = COUNTER_LOAD_DELAY + index * COUNTER_STAGGER;
+  const duration = COUNTER_END_TIME - startDelay;
 
   return (
     <motion.div
@@ -362,7 +406,7 @@ function Card({ stat, index, inView }) {
         </div>
 
         {/* Animated number */}
-        <Counter {...stat} inView={inView} />
+        <Counter {...stat} inView={inView} startDelay={startDelay} duration={duration} />
 
         {/* Label */}
         <h4 className="text-white/90 font-semibold tracking-tight text-lg leading-tight">
@@ -401,13 +445,7 @@ function ClientBadge() {
         transform: hovered ? "translateY(-1px)" : "translateY(0)",
       }}
     >
-      <span
-        className="text-[11px] md:text-xs tracking-[0.22em] uppercase transition-colors duration-300"
-        style={{ color: hovered ? "rgba(34,211,238,0.9)" : "rgba(255,255,255,0.4)" }}
-      >
-        Client
-      </span>
-      
+
       <img
         src={clientLogo}
         alt="Advanced Dental Arts"
