@@ -14,32 +14,26 @@ const gradientText = {
   color: "transparent",
 };
 
+// Counting cards only — the "New Hires" card is rendered separately below
+// since it never counts and behaves differently (stays at 0, pulses itself).
 const stats = [
   {
-    target: 18, prefix: "$", suffix: "K+",
+    target: 100, unit: "K",
     label: "Recovered Revenue",
     desc: "Automation drove A/R recovery in a single pilot, across two practices.",
     glyph: "α · 001",
   },
   {
-    // Counts 0 -> 1000 internally (divisor: 1000) then displays as "1K+",
-    // so the small number gets a count-up just as long as the bigger ones.
-    target: 1, rawTarget: 1000, divisor: 1000, prefix: "", suffix: "K+",
+    target: 75, unit: "K",
     label: "Communications Triggered",
     desc: "Outreach attempts per session vastly outnumber what is humanely achievable.",
     glyph: "β · 002",
   },
   {
-    target: 625, prefix: "", suffix: "",
+    target: 10, unit: "K",
     label: "Hours Saved",
     desc: "Manual labor dependence is eliminated instantly.",
     glyph: "γ · 003",
-  },
-  {
-    target: 16, prefix: "", suffix: "×",
-    label: "Productivity Multiplier",
-    desc: "Existing teams became exponentially more effective.",
-    glyph: "δ · 004",
   },
 ];
 
@@ -275,19 +269,108 @@ function InvisibleInk({ children, hideDelay = 2000 }) {
   );
 }
 
+/* ─── Synced pulse hook ───
+   Drives the grow-arrow on counting cards and the New Hires
+   pulse, all from a single shared heartbeat. */
+function usePulse(period = 3600, holdDuration = 2100) {
+  const [active, setActive] = useState(false);
+
+  useEffect(() => {
+    let holdTimer;
+    const fire = () => {
+      setActive(true);
+      holdTimer = setTimeout(() => setActive(false), holdDuration);
+    };
+
+    const initialTimer = setTimeout(fire, 800);
+    const interval = setInterval(fire, period);
+
+    return () => {
+      clearTimeout(initialTimer);
+      clearTimeout(holdTimer);
+      clearInterval(interval);
+    };
+  }, [period, holdDuration]);
+
+  return active;
+}
+
+/* Upward arrow — enters from bottom, exits through top, resets hidden below */
+function GrowArrow({ active }) {
+  return (
+    <span
+      aria-hidden
+      className="inline-flex overflow-hidden shrink-0"
+      style={{
+        width: "0.48em",
+        height: "0.58em",
+        marginLeft: "0.12em",
+        alignSelf: "center",
+        position: "relative",
+      }}
+    >
+      <motion.span
+        initial={{ y: "100%", opacity: 0 }}
+        animate={
+          active
+            ? {
+                y: ["100%", "0%", "-100%"],
+                opacity: [0, 1, 0],
+              }
+            : { y: "100%", opacity: 0 }
+        }
+        transition={
+          active
+            ? {
+                duration: 1.6,
+                delay: 0.2,
+                ease: [0.16, 1, 0.3, 1],
+                times: [0, 0.42, 1],
+              }
+            : { duration: 0, delay: 0 }
+        }
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "rgba(255,255,255,0.85)",
+          willChange: "transform, opacity",
+        }}
+      >
+        <svg
+          width="88%"
+          height="88%"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 19V5" />
+          <path d="M6 11l6-6 6 6" />
+        </svg>
+      </motion.span>
+    </span>
+  );
+}
+
 function Counter({
   target,
-  rawTarget,
-  divisor = 1,
-  prefix,
-  suffix,
+  unit = "",
   inView,
   startDelay = 0,
-  duration = 1.8,
+  duration = 6,
+  pulse = false,
+  countsComplete = false,
 }) {
   const [val, setVal] = useState(0);
   const [landed, setLanded] = useState(false);
-  const countTarget = rawTarget ?? target;
+  // Pulse only after this card lands — synced with the shared heartbeat
+  // and the New Hires "0" once every counter has finished.
+  const showPulse = pulse && (landed || countsComplete);
 
   useEffect(() => {
     if (!inView) {
@@ -299,9 +382,9 @@ function Counter({
     setLanded(false);
     let ctrl;
     const timer = setTimeout(() => {
-      ctrl = animate(0, countTarget, {
+      ctrl = animate(0, target, {
         duration,
-        ease: [0.25, 1, 0.5, 1], // smooth, slightly longer cubic ease-out
+        ease: [0.16, 1, 0.3, 1],
         onUpdate: (v) => setVal(Math.round(v)),
         onComplete: () => setLanded(true),
       });
@@ -311,27 +394,30 @@ function Counter({
       clearTimeout(timer);
       ctrl?.stop();
     };
-  }, [inView, countTarget, startDelay, duration, target]);
-
-  const displayVal = divisor > 1 ? Math.round(val / divisor) : val;
+  }, [inView, target, startDelay, duration]);
 
   return (
-    <motion.span
-      className="font-semibold tracking-tight inline-block"
-      animate={landed ? { scale: [1, 1.12, 1] } : { scale: 1 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-      style={{
-        ...gradientText,
-        fontSize: "clamp(2.8rem, 5vw, 4.2rem)",
-        lineHeight: 1,
-        filter: landed
-          ? `drop-shadow(0 0 36px rgba(255,255,255,0.55)) drop-shadow(0 0 60px ${OPAL_SOFT_GLOW})`
-          : `drop-shadow(0 0 24px ${OPAL_SOFT_GLOW})`,
-        transition: "filter 0.5s ease-out",
-      }}
-    >
-      {prefix}{displayVal}{suffix}
-    </motion.span>
+    <div className="min-w-0 w-full">
+      <motion.span
+        className="font-semibold tracking-tight inline-flex items-center max-w-full"
+        animate={landed ? { scale: [1, 1.05, 1] } : { scale: 1 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        style={{
+          ...gradientText,
+          fontSize: "clamp(2rem, 3.6vw, 3.25rem)",
+          lineHeight: 1.05,
+          whiteSpace: "nowrap",
+          transformOrigin: "left center",
+          filter: landed
+            ? `drop-shadow(0 0 36px rgba(255,255,255,0.55)) drop-shadow(0 0 60px ${OPAL_SOFT_GLOW})`
+            : `drop-shadow(0 0 24px ${OPAL_SOFT_GLOW})`,
+          transition: "filter 0.5s ease-out",
+        }}
+      >
+        <span>{val}{unit}</span>
+        <GrowArrow active={showPulse} />
+      </motion.span>
+    </div>
   );
 }
 
@@ -341,9 +427,10 @@ function Counter({
 // every counter finishes at the exact same moment.
 const COUNTER_LOAD_DELAY = 0.6; // pause before the first counter starts
 const COUNTER_STAGGER = 0.15; // gap between each card's start time
-const COUNTER_END_TIME = COUNTER_LOAD_DELAY + COUNTER_STAGGER * (stats.length - 1) + 1.6;
+const COUNT_DURATION = 6; // slow + noticeable — was 1.6, now 6s of visible ticking
+const COUNTER_END_TIME = COUNTER_LOAD_DELAY + COUNTER_STAGGER * (stats.length - 1) + COUNT_DURATION;
 
-function Card({ stat, index, inView }) {
+function Card({ stat, index, inView, pulse, countsComplete }) {
   const [hovered, setHovered] = useState(false);
   const startDelay = COUNTER_LOAD_DELAY + index * COUNTER_STAGGER;
   const duration = COUNTER_END_TIME - startDelay;
@@ -383,7 +470,7 @@ function Card({ stat, index, inView }) {
         style={{ backgroundImage: OPAL_LIGHT_GRADIENT }}
       />
 
-      <div className="relative z-10 p-6 md:p-8 flex flex-col gap-4 min-h-[245px]">
+      <div className="relative z-10 p-4 md:p-6 flex flex-col gap-2 min-h-0 overflow-hidden">
 
         {/* Star dot */}
         <div className="absolute top-4 right-4">
@@ -406,7 +493,14 @@ function Card({ stat, index, inView }) {
         </div>
 
         {/* Animated number */}
-        <Counter {...stat} inView={inView} startDelay={startDelay} duration={duration} />
+        <Counter
+          {...stat}
+          inView={inView}
+          startDelay={startDelay}
+          duration={duration}
+          pulse={pulse}
+          countsComplete={countsComplete}
+        />
 
         {/* Label */}
         <h4 className="text-white/90 font-semibold tracking-tight text-lg leading-tight">
@@ -421,6 +515,113 @@ function Card({ stat, index, inView }) {
         {/* Greek index */}
         <span className="absolute bottom-3 right-4 text-[10px] tracking-widest text-white/18 hidden md:block">
           {stat.glyph}
+        </span>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ─── New Hires card ─── stays at 0, pulses in sync with the "+" cards */
+function NewHiresCard({ inView, pulse, countsComplete }) {
+  const [hovered, setHovered] = useState(false);
+  const showPulse = pulse && countsComplete;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 40, scale: 1 }}
+      animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
+      whileHover={{
+        scale: 1.035,
+        borderColor: "rgba(255,255,255,0.42)",
+        boxShadow: "0 18px 70px rgba(255,255,255,0.12)",
+      }}
+      transition={{ duration: 0.6, delay: 3 * 0.12, ease: "easeOut" }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="relative overflow-hidden rounded-[28px] border cursor-default"
+      style={{
+        borderColor: "rgba(255,255,255,0.1)",
+        background:
+          "linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018))",
+        backdropFilter: "blur(10px)",
+        zIndex: hovered ? 10 : 1,
+      }}
+    >
+      <div
+        aria-hidden
+        className="absolute inset-0 opacity-70"
+        style={{
+          background:
+            "radial-gradient(circle at 20% 10%, rgba(255,255,255,0.10), transparent 36%), radial-gradient(circle at 85% 90%, rgba(255,255,255,0.08), transparent 42%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="absolute inset-x-0 top-0 h-px"
+        style={{ backgroundImage: OPAL_LIGHT_GRADIENT }}
+      />
+
+      <div className="relative z-10 p-4 md:p-6 flex flex-col gap-2 min-h-0 overflow-hidden">
+
+        <div className="absolute top-4 right-4">
+          <div
+            className="w-[6px] h-[6px] rounded-full"
+            style={{
+              backgroundImage: OPAL_LIGHT_GRADIENT,
+              boxShadow: `0 0 12px 4px ${OPAL_SOFT_GLOW}`,
+            }}
+          />
+          {hovered && (
+            <motion.div
+              initial={{ scale: 0, opacity: 0.6 }}
+              animate={{ scale: 5, opacity: 0 }}
+              transition={{ duration: 1.8, repeat: Infinity }}
+              className="absolute inset-0 rounded-full border"
+              style={{ borderColor: "rgba(255,255,255,0.35)" }}
+            />
+          )}
+        </div>
+
+        <motion.span
+          className="font-semibold tracking-tight inline-flex items-baseline min-w-0 max-w-full overflow-hidden"
+          animate={
+            showPulse
+              ? {
+                  scale: 1.08,
+                  filter:
+                    "drop-shadow(0 0 36px rgba(255,255,255,0.7)) drop-shadow(0 0 60px rgba(255,255,255,0.45))",
+                }
+              : {
+                  scale: 1,
+                  filter: countsComplete
+                    ? `drop-shadow(0 0 28px rgba(255,255,255,0.45)) drop-shadow(0 0 48px ${OPAL_SOFT_GLOW})`
+                    : `drop-shadow(0 0 24px ${OPAL_SOFT_GLOW})`,
+                }
+          }
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          style={{
+            ...gradientText,
+            fontSize: "clamp(2rem, 3.6vw, 3.25rem)",
+            lineHeight: 1.05,
+            whiteSpace: "nowrap",
+            transformOrigin: "left center",
+          }}
+        >
+          0
+        </motion.span>
+
+        <h4 className="text-white/90 font-semibold tracking-tight text-lg leading-tight">
+          New Hires
+        </h4>
+
+        <div className="h-px bg-white/10" />
+
+        <p className="text-sm text-white/55 leading-relaxed">
+          Existing teams became exponentially more effective without adding headcount.
+        </p>
+
+        <span className="absolute bottom-3 right-4 text-[10px] tracking-widest text-white/18 hidden md:block">
+          δ · 004
         </span>
       </div>
     </motion.div>
@@ -464,25 +665,49 @@ function ClientBadge() {
 export default function Processes() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: false, margin: "-80px" });
+  const pulse = usePulse();
+  const [countsComplete, setCountsComplete] = useState(false);
+
+  useEffect(() => {
+    if (!inView) {
+      setCountsComplete(false);
+      return;
+    }
+
+    const timer = setTimeout(
+      () => setCountsComplete(true),
+      COUNTER_END_TIME * 1000,
+    );
+
+    return () => clearTimeout(timer);
+  }, [inView]);
 
   return (
     <div
       id="impact"
-      className="relative overflow-hidden py-16 md:py-24"
-      style={{ backgroundColor: "transparent" }}
+      className="relative"
+      style={{
+        backgroundColor: "transparent",
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        padding: "clamp(32px, 5vh, 64px) 0",
+        boxSizing: "border-box",
+      }}
     >
       <Process />
 
-      <div ref={ref} className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div ref={ref} className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
 
         {/* Heading */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="text-left mb-14 md:mb-16"
+          className="text-left mb-8 md:mb-10"
         >
-          <h2 className="text-3xl md:text-5xl lg:text-6xl font-semibold text-white/45 leading-tight">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white/45 leading-tight">
             They sell{" "}
             <AnimatedStrike inView={inView}>ROI</AnimatedStrike>.<br />{" "}
             We deliver <InvisibleInk>Realtime Operational Impact</InvisibleInk>.
@@ -494,7 +719,7 @@ export default function Processes() {
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.7, delay: 0.3 }}
-          className="text-center text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-semibold tracking-tight font-['Montserrat'] mb-8 md:mb-10 mt-10 md:mt-24"
+          className="text-center text-xl md:text-2xl lg:text-3xl font-semibold tracking-tight font-['Montserrat'] mb-5 md:mb-6 mt-6 md:mt-8"
           style={{
             color: "#ffffff",
             letterSpacing: "-0.02em",
@@ -510,7 +735,7 @@ export default function Processes() {
           initial={{ opacity: 0, y: 10 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.45 }}
-          className="flex items-center gap-4 mb-10 md:mb-12"
+          className="flex items-center gap-4 mb-6 md:mb-7"
         >
           <div
             className="flex-1 h-px"
@@ -525,10 +750,11 @@ export default function Processes() {
         {/* ─── End client attribution bridge ─── */}
 
         {/* Stats grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {stats.map((stat, i) => (
-            <Card key={i} stat={stat} index={i} inView={inView} />
+            <Card key={i} stat={stat} index={i} inView={inView} pulse={pulse} countsComplete={countsComplete} />
           ))}
+          <NewHiresCard inView={inView} pulse={pulse} countsComplete={countsComplete} />
         </div>
 
         {/* Footer */}
@@ -536,7 +762,7 @@ export default function Processes() {
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
           transition={{ delay: 0.9, duration: 0.8 }}
-          className="flex items-center gap-4 mt-10 border-t border-white/10 pt-6"
+          className="flex items-center gap-4 mt-6 border-t border-white/10 pt-4"
         >
           <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(255,255,255,0.28), transparent)` }} />
           <span className="text-[10px] tracking-[0.3em] uppercase text-white/28">

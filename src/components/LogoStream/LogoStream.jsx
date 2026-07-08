@@ -132,6 +132,11 @@ export default function LogoStream() {
       <div className="pointer-events-none absolute bottom-0 left-0 w-full h-16 md:h-24 z-10" style={{ background: "linear-gradient(to top, #07080D, transparent)" }} />
 
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
+        <header className="ls-header">
+          <span className="ls-eyebrow">Who we work with</span>
+          <span className="ls-hl-hero">Our partners.</span>
+        </header>
+
         <div className="flex gap-4 md:gap-5 h-[420px] md:h-[520px]">
           {COLUMNS.map((col, i) => (
             <Column
@@ -145,6 +150,39 @@ export default function LogoStream() {
       </div>
 
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+        .ls-header {
+          text-align: center;
+          margin-bottom: clamp(28px, 4.2vh, 52px);
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+          font-weight: 300;
+        }
+
+        .ls-eyebrow {
+          display: block;
+          font-size: clamp(8px, 0.9vw, 10px);
+          letter-spacing: 0.38em;
+          color: rgba(255,255,255,0.32);
+          text-transform: uppercase;
+          margin-bottom: clamp(6px, 1vh, 10px);
+        }
+
+        .ls-hl-hero {
+          display: block;
+          font-size: clamp(20px, 3.2vw, 36px);
+          font-weight: 800;
+          color: #fff;
+          letter-spacing: -0.03em;
+          line-height: 1;
+          max-width: 720px;
+          margin: 0 auto;
+        }
+
+        @media (max-width: 600px) {
+          .ls-hl-hero { font-size: clamp(22px, 7vw, 32px); }
+        }
+
         @keyframes scroll-up {
           from { transform: translate3d(0, 0, 0); }
           to   { transform: translate3d(0, -50%, 0); }

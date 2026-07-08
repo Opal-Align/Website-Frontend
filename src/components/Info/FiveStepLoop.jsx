@@ -1,9 +1,20 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import opalLogo from "../../assets/OPALgos GreyWhite Website.png";
 
 const STEP_DATA = [
+  {
+    num: "04", label: "Calibrate",
+    body: `gOS learns from every response. Timing adjusts. Pattern sharpens. <strong>Month six performs better than month one</strong> — automatically.`,
+  },
+  {
+    num: "05", label: "Guide",
+    body: `What automation can't resolve gets handed to your team — queued, prioritized, and ready to act on. <strong>Guides you forward. Starts the loop again.</strong>`,
+  },
+  {
+    num: "06", label: "Resolve",
+    body: `Every outcome logged, every edge case closed. <strong>Issues resolved, loops completed, revenue recovered.</strong> The system resets — and begins again.`,
+  },
   {
     num: "01", label: "Identify",
     body: `Every revenue lever — aged A/R, unscheduled treatment, dormant patients, missed collections — is scanned continuously. <strong>The moment a gap opens, gOS surfaces it.</strong>`,
@@ -16,24 +27,20 @@ const STEP_DATA = [
     num: "03", label: "Engage",
     body: `Multi-channel, multi-touch outreach — sequenced and dispatched automatically. <strong>The right message, to the right person, at the right time.</strong>`,
   },
-  {
-    num: "04", label: "Calibrate",
-    body: `gOS learns from every response. Timing adjusts. Pattern sharpens. <strong>Month six performs better than month one</strong> — automatically.`,
-  },
-  {
-    num: "05", label: "Guide",
-    body: `What automation can't resolve gets handed to your team — queued, prioritized, and ready to act on. <strong>Guides you forward. Starts the loop again.</strong>`,
-  },
 ];
 
-const STEP_ANGLES   = STEP_DATA.map((_, i) => -90 + i * 72);
+const N = STEP_DATA.length;
+const STEP_ANGLES = [-60, 0, 60, 120, 180, 240];
+// Column layout: left 01–03 bottom→top, right 04–06 top→bottom (STEP_DATA order unchanged)
+const LEFT_COLUMN  = [5, 4, 3]; // render 03, 02, 01 top-down → 01 sits at bottom
+const RIGHT_COLUMN = [0, 1, 2]; // render 04, 05, 06 top-down
 const ORBIT_DURATION = 14000;
 const MANUAL_PAUSE   = 7000;
 const BG             = "#0a0a0a";
-const NODE_SIZE      = 68;   // px — planet diameter (CSS)
-const NODE_ACTIVE_SCALE = 1.18;
-const ORBIT_PAD      = 10;   // px — breathing room between planet edge and container
-const ORBIT_DIM_MIN  = 500;  // px — fixed orbit diameter (desktop)
+const NODE_SIZE      = 74;
+const NODE_ACTIVE_SCALE = 1.14;
+const ORBIT_PAD      = 8;
+const INNER_RING_RATIO = 0.58; // inner orbit ring — higher = closer to outer ring
 
 function degToRad(d) { return d * Math.PI / 180; }
 function calcOrbitRadius(W, H) {
@@ -42,21 +49,6 @@ function calcOrbitRadius(W, H) {
   return Math.max(90, target);
 }
 
-/** Stable left-column height: all headers + one expanded body + gaps — never shifts per step. */
-function measureStableLeftHeight(el) {
-  const cards = el.querySelectorAll(".fsl-card");
-  if (!cards.length) return ORBIT_DIM_MIN;
-  const gap = 7;
-  let headerTotal = 0;
-  cards.forEach((card) => {
-    const hdr = card.querySelector(".fsl-card-header");
-    if (hdr) headerTotal += hdr.getBoundingClientRect().height;
-  });
-  const bodyMax = 110 + 15;
-  const dotsEl = el.querySelector(".fsl-dots");
-  const dotsH = dotsEl ? dotsEl.getBoundingClientRect().height + 14 : 28;
-  return Math.round(headerTotal + bodyMax + gap * (cards.length - 1) + dotsH);
-}
 function polarToXY(r, deg, cx, cy) {
   const rad = degToRad(deg);
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
@@ -74,7 +66,7 @@ function useOrbitalCanvas({ canvasRef, containerRef, setActive }) {
   const rafRef         = useRef(null);
   const dimsRef        = useRef({ W: 0, H: 0, cx: 0, cy: 0, stepR: 0 });
 
-  const [nodeXY, setNodeXY] = useState(Array(5).fill({ left: "50%", top: "50%" }));
+  const [nodeXY, setNodeXY] = useState(Array(N).fill({ left: "50%", top: "50%" }));
 
   const spawnSparkles = useCallback((x, y) => {
     for (let i = 0; i < 18; i++) {
@@ -199,7 +191,7 @@ function useOrbitalCanvas({ canvasRef, containerRef, setActive }) {
       ctx.strokeStyle = "rgba(255,255,255,0.16)"; ctx.lineWidth = 1.5; ctx.stroke();
 
       /* inner ring */
-      ctx.beginPath(); ctx.arc(cx, cy, stepR * 0.44, 0, Math.PI * 2);
+      ctx.beginPath(); ctx.arc(cx, cy, stepR * INNER_RING_RATIO, 0, Math.PI * 2);
       ctx.strokeStyle = "rgba(255,255,255,0.05)"; ctx.lineWidth = 1; ctx.stroke();
 
       /* glowing sweep edge */
@@ -272,7 +264,10 @@ export default function FiveStepLoop() {
   const [orbitDim, setOrbitDim] = useState(480);
   const canvasRef    = useRef(null);
   const containerRef = useRef(null);
-  const leftRef      = useRef(null);
+  const headingRef   = useRef(null);
+  const bottomRef    = useRef(null);
+  const leftColRef   = useRef(null);
+  const rightColRef  = useRef(null);
 
   const { nodeXY, userActivate } = useOrbitalCanvas({
     canvasRef, containerRef, setActive,
@@ -280,18 +275,49 @@ export default function FiveStepLoop() {
 
   useEffect(() => {
     const measure = () => {
-      const el = leftRef.current;
-      if (!el) return;
       if (window.innerWidth < 768) {
-        setOrbitDim(Math.min(340, Math.round(window.innerWidth - 32)));
+        setOrbitDim(Math.min(320, Math.round(window.innerWidth - 32)));
         return;
       }
-      setOrbitDim(Math.max(ORBIT_DIM_MIN, measureStableLeftHeight(el)));
+      const bottomEl = bottomRef.current;
+      if (!bottomEl) return;
+
+      const bottomH = bottomEl.clientHeight;
+      const bottomW = bottomEl.clientWidth;
+      const colW = leftColRef.current?.offsetWidth ?? 272;
+      const gap = 24;
+      const centerW = bottomW - colW * 2 - gap * 2;
+
+      // Largest square that fills the center slot and bottom-row height
+      const dim = Math.min(bottomH * 0.90, centerW * 0.90);
+      setOrbitDim(Math.round(Math.max(300, dim)));
     };
     measure();
+    requestAnimationFrame(measure);
     window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    const bottomEl = bottomRef.current;
+    const ro = bottomEl ? new ResizeObserver(measure) : null;
+    if (bottomEl) ro.observe(bottomEl);
+    return () => {
+      window.removeEventListener("resize", measure);
+      ro?.disconnect();
+    };
   }, []);
+
+  const renderStepCard = (step, globalIdx) => (
+    <div
+      key={step.num}
+      className={`fsl-card${active === globalIdx ? " active" : ""}`}
+      onClick={() => userActivate(globalIdx)}
+    >
+      <div className="fsl-card-header">
+        <span className="fsl-sc-title">{step.label}</span>
+      </div>
+      <div className="fsl-card-body">
+        <p dangerouslySetInnerHTML={{ __html: step.body }} />
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -303,47 +329,76 @@ export default function FiveStepLoop() {
           color: #fff;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
           font-weight: 300;
-          min-height: 100vh;
+          height: 100vh;
+          max-height: 100vh;
           display: flex;
           flex-direction: column;
-          padding: 32px 52px 28px;
+          padding: clamp(14px, 2vh, 24px) clamp(20px, 3vw, 40px) clamp(12px, 1.5vh, 20px);
           box-sizing: border-box;
-          overflow-x: hidden;
+          overflow: hidden;
         }
 
-        /* heading */
+        /* heading — OPAL presents (Marvel-style) */
         .fsl-heading {
           text-align: center;
-          margin-bottom: 32px;
+          margin-bottom: clamp(6px, 1vh, 12px);
           flex-shrink: 0;
         }
 
-        .fsl-presents {
-          display: flex; align-items: center; justify-content: center;
-          gap: 9px; margin-bottom: 22px;
+        .fsl-brand-opal {
+          display: inline-block;
+          font-size: clamp(28px, 3.8vw, 44px);
+          font-weight: 900;
+          letter-spacing: 0.1em;
+          color: #fff;
+          border: 2px solid rgba(255,255,255,0.72);
+          border-radius: 3px;
+          padding: 2px 14px 4px;
+          line-height: 1;
+          margin-bottom: 6px;
         }
-        .fsl-logo-opal {
-          border: 1.5px solid rgba(255,255,255,0.65);
-          border-radius: 2px; padding: 1px 4px;
-          font-size: 10px; font-weight: 800; color: #fff; letter-spacing: 0.06em;
+
+        .fsl-presents-text {
+          display: block;
+          font-size: clamp(8px, 0.9vw, 10px);
+          letter-spacing: 0.38em;
+          color: rgba(255,255,255,0.32);
+          text-transform: uppercase;
+          margin-bottom: clamp(6px, 1vh, 10px);
         }
-        .fsl-logo-gos { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.7); }
-        .fsl-presents-text { font-size: 9.5px; letter-spacing: 0.26em; color: rgba(255,255,255,0.25); text-transform: uppercase; }
 
         .fsl-hl-hero {
-          display: block; font-size: clamp(38px,6.4vw,64px); font-weight: 800;
-          color: #fff; text-transform: uppercase; letter-spacing: -0.03em; line-height: 0.98;
-          max-width: 780px; margin: 0 auto;
+          display: block;
+          font-size: clamp(20px, 3.2vw, 36px);
+          font-weight: 800;
+          color: #fff;
+          text-transform: uppercase;
+          letter-spacing: -0.03em;
+          line-height: 1;
+          max-width: 720px;
+          margin: 0 auto;
         }
 
         .fsl-loop-row {
-          display: flex; align-items: center; justify-content: center;
-          gap: 8px; margin-top: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          margin-top: clamp(5px, 0.8vh, 8px);
         }
         .fsl-loop-text {
-          font-size: 12px; font-weight: 400;
-          color: rgba(255,255,255,0.25); text-transform: uppercase;
+          font-size: clamp(11px, 1.2vw, 14px);
+          font-weight: 400;
+          color: rgba(255,255,255,0.28);
+          text-transform: uppercase;
           letter-spacing: 0.16em;
+        }
+        .fsl-logo-gos {
+          font-size: clamp(18px, 2.4vw, 28px);
+          font-weight: 800;
+          color: #fff;
+          letter-spacing: -0.02em;
+          line-height: 1;
         }
 
         .fsl-section-body {
@@ -351,21 +406,38 @@ export default function FiveStepLoop() {
           line-height: 1.68; max-width: 600px; margin: 9px auto 0;
         }
 
-        /* bottom row */
+        /* bottom row — fills width, orbit takes center space */
         .fsl-bottom {
-          display: flex; gap: 48px;
-          align-items: center; justify-content: center;
+          display: flex;
+          gap: clamp(10px, 1.5vw, 24px);
+          align-items: stretch;
+          justify-content: center;
           flex: 1;
+          min-height: 0;
+          width: 100%;
+          max-width: min(1280px, 96vw);
+          margin: 0 auto;
         }
-        .fsl-left { flex: 0 0 400px; display: flex; flex-direction: column; }
+        .fsl-col {
+          flex: 0 0 clamp(220px, 19vw, 272px);
+          display: flex;
+          flex-direction: column;
+          min-height: 0;
+          padding: clamp(8px, 1.2vh, 16px) 0;
+          border-top: 1px solid rgba(255,255,255,0.07);
+          border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+        .fsl-col-right { order: 3; }
+        .fsl-col-left  { order: 1; }
+        .fsl-orbital   { order: 2; align-self: center; }
 
-        /* step cards */
-        .fsl-steps { display: flex; flex-direction: column; gap: 7px; margin-bottom: 20px; }
+        /* step cards — compact */
+        .fsl-steps { display: flex; flex-direction: column; gap: 5px; flex: 1; justify-content: space-evenly; margin-bottom: 0; }
 
         .fsl-card {
           position: relative;
           border: 1px solid rgba(255,255,255,0.07);
-          border-radius: 14px; cursor: pointer; overflow: hidden;
+          border-radius: 12px; cursor: pointer; overflow: hidden;
           background: rgba(255,255,255,0.03);
           transition: border-color 0.3s, background 0.3s, box-shadow 0.4s;
         }
@@ -387,17 +459,11 @@ export default function FiveStepLoop() {
         }
 
         .fsl-card-header {
-          display: flex; align-items: center; gap: 12px;
-          padding: 14px 18px 11px;
+          display: flex; align-items: center;
+          padding: 10px 14px 8px;
         }
-        .fsl-sc-num {
-          font-size: 26px; font-weight: 800; letter-spacing: -0.03em;
-          line-height: 1; color: rgba(255,255,255,0.13);
-          transition: color 0.3s;
-        }
-        .fsl-card.active .fsl-sc-num { color: #fff; }
         .fsl-sc-title {
-          font-size: 14px; font-weight: 700; flex: 1;
+          font-size: 12.5px; font-weight: 700; flex: 1;
           color: rgba(255,255,255,0.38);
           transition: color 0.3s;
         }
@@ -406,13 +472,13 @@ export default function FiveStepLoop() {
         .fsl-card-body {
           overflow: hidden; max-height: 0;
           transition: max-height 0.38s ease, padding 0.3s;
-          padding: 0 18px;
+          padding: 0 14px;
         }
-        .fsl-card.active .fsl-card-body { max-height: 110px; padding: 0 18px 15px; }
+        .fsl-card.active .fsl-card-body { max-height: 88px; padding: 0 14px 12px; }
         .fsl-card-body p {
-          font-size: 11.5px; font-weight: 300;
-          color: rgba(255,255,255,0.42); line-height: 1.65;
-          border-top: 1px solid rgba(255,255,255,0.07); padding-top: 10px; margin: 0;
+          font-size: 10.5px; font-weight: 300;
+          color: rgba(255,255,255,0.42); line-height: 1.55;
+          border-top: 1px solid rgba(255,255,255,0.07); padding-top: 8px; margin: 0;
         }
         .fsl-card-body p strong { color: rgba(255,255,255,0.82); font-weight: 600; }
 
@@ -430,19 +496,11 @@ export default function FiveStepLoop() {
         .fsl-book svg { width: 10px; height: 10px; transition: transform 0.2s; }
         .fsl-book:hover svg { transform: translate(2px,-2px); }
 
-        /* dots */
-        .fsl-dots { display: flex; gap: 5px; margin-top: 14px; }
-        .fsl-dot {
-          width: 18px; height: 2.5px; border-radius: 2px;
-          background: rgba(255,255,255,0.1); cursor: pointer;
-          transition: background 0.25s, width 0.25s; border: none;
-        }
-        .fsl-dot.active { background: #fff; width: 28px; }
-
-        /* orbital — square, height synced to left column */
+        /* orbital — flex-grow center, square via inline dim */
         .fsl-orbital {
-          flex: 0 0 auto;
+          flex: 1 1 auto;
           position: relative;
+          min-width: 0;
         }
 
         /* node circles */
@@ -451,7 +509,7 @@ export default function FiveStepLoop() {
           background: rgba(10,10,10,0.97);
           border: 1.5px solid rgba(255,255,255,0.18);
           display: flex; flex-direction: column;
-          align-items: center; justify-content: center; gap: 3px;
+          align-items: center; justify-content: center;
           transition: border-color 0.35s, background 0.35s, box-shadow 0.4s, transform 0.35s;
           box-shadow: 0 0 0 3px ${BG};
         }
@@ -466,60 +524,52 @@ export default function FiveStepLoop() {
             0 0 45px rgba(255,255,255,0.15),
             0 0 75px rgba(255,255,255,0.06);
         }
-        .fsl-sn-num {
-          font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
-          line-height: 1; color: rgba(255,255,255,0.35);
-          transition: color 0.3s, font-size 0.3s;
-        }
-        .fsl-node.active .fsl-sn-num { color: ${BG}; font-size: 12px; }
         .fsl-sn-name {
-          font-size: 8.5px; font-weight: 400; line-height: 1;
-          color: rgba(255,255,255,0.28);
+          font-size: 10px; font-weight: 500; line-height: 1.12;
+          letter-spacing: 0.01em; text-align: center;
+          padding: 0 8px; max-width: 92%;
+          color: rgba(255,255,255,0.42);
           transition: color 0.3s, font-size 0.3s;
         }
-        .fsl-node.active .fsl-sn-name { color: rgba(0,0,0,0.55); font-size: 9px; }
+        .fsl-node.active .fsl-sn-name { color: rgba(0,0,0,0.72); font-size: 10.5px; font-weight: 600; }
 
         /* center badge */
         .fsl-center-badge {
           position: absolute; top: 50%; left: 50%;
           transform: translate(-50%,-50%);
-          width: 84px; height: 84px; border-radius: 15px;
+          width: clamp(64px, 14%, 84px);
+          height: clamp(64px, 14%, 84px);
+          border-radius: 14px;
           background: rgba(14,14,14,0.98);
           border: 1.5px solid rgba(255,255,255,0.38);
-          display: flex; flex-direction: column;
-          align-items: center; justify-content: center; gap: 3px;
+          display: flex; align-items: center; justify-content: center;
           z-index: 22; pointer-events: none;
+          box-sizing: border-box;
         }
         .fsl-cb-opal {
-          border: 1.5px solid rgba(255,255,255,0.65);
-          border-radius: 2px; padding: 1px 5px;
-          font-size: 10px; font-weight: 800; color: #fff; letter-spacing: 0.06em;
-        }
-        .fsl-cb-gos {
-          font-size: 9px; font-weight: 500;
-          color: rgba(255,255,255,0.45); letter-spacing: 0.16em;
+          font-size: clamp(11px, 2.2vw, 14px); font-weight: 900; letter-spacing: 0.12em;
+          color: #fff; line-height: 1;
         }
 
         @media (max-width: 767px) {
-          .fsl-section { padding: 24px 16px 20px; }
-          .fsl-bottom { flex-direction: column; gap: 24px; }
-          .fsl-left { flex: unset; width: 100%; }
-          .fsl-orbital { flex: unset; width: 100% !important; max-width: 340px; margin: 0 auto; }
-          .fsl-hl-hero { font-size: clamp(32px,9vw,48px); }
+          .fsl-section { height: auto; max-height: none; overflow: visible; padding: 20px 16px; }
+          .fsl-bottom { flex-direction: column; gap: 20px; align-items: center; }
+          .fsl-col { flex: unset; width: 100%; }
+          .fsl-col-left  { order: 2 !important; }
+          .fsl-col-right { order: 3 !important; }
+          .fsl-orbital   { order: 1 !important; flex: unset; align-self: auto; width: 100% !important; max-width: 280px; }
+          .fsl-hl-hero { font-size: clamp(22px, 7vw, 32px); }
+          .fsl-brand-opal { font-size: clamp(28px, 9vw, 40px); }
         }
       `}</style>
 
       <section className="fsl-section">
 
         {/* ══ HEADING ══ */}
-        <div className="fsl-heading">
-          <div className="fsl-presents">
-            <span className="fsl-logo-opal">OPAL</span>
-            <span className="fsl-presents-text">presents</span>
-          </div>
-
+        <div ref={headingRef} className="fsl-heading">
+          <div className="fsl-brand-opal">OPAL</div>
+          <span className="fsl-presents-text">presents</span>
           <span className="fsl-hl-hero">The Guided Operating System</span>
-
           <div className="fsl-loop-row">
             <span className="fsl-loop-text">The</span>
             <span className="fsl-logo-gos">gOS</span>
@@ -527,52 +577,21 @@ export default function FiveStepLoop() {
           </div>
         </div>
 
-        {/* ══ BOTTOM ROW ══ */}
-        <div className="fsl-bottom">
+        {/* ══ BOTTOM ROW — left steps | orbit | right steps ══ */}
+        <div ref={bottomRef} className="fsl-bottom">
 
-          {/* LEFT */}
-          <div ref={leftRef} className="fsl-left">
+          {/* LEFT — 01, 02, 03 (bottom → top) */}
+          <div ref={leftColRef} className="fsl-col fsl-col-left">
             <div className="fsl-steps">
-              {STEP_DATA.map((step, i) => (
-                <div
-                  key={step.num}
-                  className={`fsl-card${active === i ? " active" : ""}`}
-                  onClick={() => userActivate(i)}
-                >
-                  <div className="fsl-card-header">
-                    <span className="fsl-sc-num">{step.num}</span>
-                    <span className="fsl-sc-title">{step.label}</span>
-                  </div>
-                  <div className="fsl-card-body">
-                    <p dangerouslySetInnerHTML={{ __html: step.body }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* <button className="fsl-book">
-              Book a Demo
-              <svg viewBox="0 0 14 14" fill="none">
-                <path d="M2 12L12 2M12 2H5M12 2V9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button> */}
-
-            <div className="fsl-dots">
-              {STEP_DATA.map((_, i) => (
-                <button
-                  key={i}
-                  className={`fsl-dot${active === i ? " active" : ""}`}
-                  onClick={() => userActivate(i)}
-                />
-              ))}
+              {LEFT_COLUMN.map((idx) => renderStepCard(STEP_DATA[idx], idx))}
             </div>
           </div>
 
-          {/* ORBITAL */}
+          {/* ORBITAL — center */}
           <div
             ref={containerRef}
             className="fsl-orbital"
-            style={{ width: orbitDim, height: orbitDim }}
+            style={{ width: orbitDim, height: orbitDim, flexShrink: 0 }}
           >
             <canvas ref={canvasRef} style={{ position:"absolute", inset:0, width:"100%", height:"100%" }} />
 
@@ -591,17 +610,21 @@ export default function FiveStepLoop() {
                   }}
                 >
                   <div className="fsl-node-circle">
-                    <span className="fsl-sn-num">{step.num}</span>
                     <span className="fsl-sn-name">{step.label}</span>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Center badge — OPAL gOS text, matching HTML design */}
             <div className="fsl-center-badge">
               <span className="fsl-cb-opal">OPAL</span>
-              <span className="fsl-cb-gos">gOS</span>
+            </div>
+          </div>
+
+          {/* RIGHT — 04, 05, 06 (top → bottom) */}
+          <div ref={rightColRef} className="fsl-col fsl-col-right">
+            <div className="fsl-steps">
+              {RIGHT_COLUMN.map((idx) => renderStepCard(STEP_DATA[idx], idx))}
             </div>
           </div>
 

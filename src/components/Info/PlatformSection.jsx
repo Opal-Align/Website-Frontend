@@ -31,11 +31,11 @@
  */
 
 import { useRef, useState, useEffect, useCallback } from "react";
-import { motion, useInView, AnimatePresence } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import scheduleIcon from "../../assets/schedule.svg";
 import productionIcon from "../../assets/production.svg";
 import collectIcon from "../../assets/collect.svg";
-import envelopeIcon from "../../assets/relay.svg";
+import relayIcon from "../../assets/relay.svg";
 
 /* ─── Constants ───────────────────────────────────────────────────── */
 const N            = 4;
@@ -45,7 +45,11 @@ const EASE         = [0.22, 1, 0.36, 1];
 const OPAL_LIGHT_GRADIENT =
   "linear-gradient(120deg, #FFFFFF 0%, #F8FAFC 30%, #F3F4F6 65%, #FFFFFF 100%)";
 const OPAL_SOFT_GLOW = "rgba(255,255,255,0.28)";
-const TAB_H = 52;   // px — uniform height
+const BG = "#0a0a0a";
+const ICON_BOX = 96; // px — square icon tile
+const ICON_INNER = 46; // px — icon asset size
+const CARD_ICON_BOX = 64; // px — icon on content card
+const CARD_ICON_INNER = 32;
 
 /* ─── Module icon ─────────────────────────────────────────────────── */
 function ModuleIcon({ src, active, size = 30 }) {
@@ -58,9 +62,11 @@ function ModuleIcon({ src, active, size = 30 }) {
         width: size,
         height: size,
         objectFit: "contain",
-        transition: "opacity 0.4s, filter 0.4s",
-        filter: active ? "brightness(0)" : "brightness(0) invert(1)",
-        opacity: active ? 0.9 : 0.45,
+        position: "relative",
+        zIndex: 2,
+        transition: "opacity 0.4s",
+        filter: "brightness(0) invert(1)",
+        opacity: active ? 0.95 : 0.38,
       }}
     />
   );
@@ -96,7 +102,7 @@ const MODULES = [
     ],
   },
   {
-    id: "relay", label: "Relay", num: "04", glyph: "δ · 004", icon: envelopeIcon,
+    id: "relay", label: "Relay", num: "04", glyph: "δ · 004", icon: relayIcon,
     title: "Centralized, real-time, prioritized, and interactive.",
     features: [
       "SMS, email, and portal unified in one view",
@@ -126,7 +132,8 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
   const sectionRef = useRef(null);
   const tileRef     = useRef(null);
   const canvasRef   = useRef(null);
-  const ringRef     = useRef(null);   // fill-bar div inside the active tab pill
+  const ringRef     = useRef(null);   // bottom-up fill inside active square
+  const edgeRef     = useRef(null);   // left page-mark strip
   const barRef      = useRef(null);   // progress sliver under the content card
 
   /* animation-loop bookkeeping — lives in refs so RAF callbacks never see
@@ -244,8 +251,10 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
   }, []);
 
   const applyProgress = useCallback((p) => {
-    if (ringRef.current) ringRef.current.style.width = `${p * 100}%`;
-    if (barRef.current) barRef.current.style.width = `${p * 100}%`;
+    const pct = `${p * 100}%`;
+    if (ringRef.current) ringRef.current.style.height = pct;
+    if (edgeRef.current) edgeRef.current.style.height = pct;
+    if (barRef.current) barRef.current.style.width = pct;
   }, []);
 
   useEffect(() => {
@@ -297,131 +306,180 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-        /* ── Tab row ── */
-        .pf-tabs { display: flex; gap: 8px; align-items: stretch; flex-shrink: 0; width: 100%; margin-bottom: clamp(6px,1vh,12px); }
+        .pf-section-inner {
+          background: ${BG};
+          color: #fff;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+          font-weight: 300;
+        }
+
+        .pf-header {
+          text-align: center;
+          flex-shrink: 0;
+          margin-bottom: clamp(28px, 4.2vh, 52px);
+          width: 100%;
+        }
+
+        .pf-eyebrow {
+          display: block;
+          font-size: clamp(8px, 0.9vw, 10px);
+          letter-spacing: 0.38em;
+          color: rgba(255,255,255,0.32);
+          text-transform: uppercase;
+          margin-bottom: clamp(6px, 1vh, 10px);
+        }
+
+        .pf-hl-hero {
+          display: block;
+          font-size: clamp(20px, 3.2vw, 36px);
+          font-weight: 800;
+          color: #fff;
+          letter-spacing: -0.03em;
+          line-height: 1;
+          max-width: 720px;
+          margin: 0 auto;
+        }
+
+        .pf-body {
+          flex: 1;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+          max-width: 1020px;
+          width: 100%;
+          margin: 0 auto;
+          padding: 0 clamp(16px, 3vw, 52px) clamp(14px, 2vh, 28px);
+          box-sizing: border-box;
+        }
+
+        /* ── Service-style icon row ── */
+        .pf-tabs {
+          display: flex; gap: clamp(12px, 2vw, 24px);
+          align-items: flex-start; flex-shrink: 0;
+          width: 100%; margin-bottom: clamp(16px, 2.4vh, 24px);
+          margin-top: clamp(4px, 0.6vh, 8px);
+        }
         .pf-tab {
-          position: relative; overflow: hidden; cursor: pointer;
+          position: relative; cursor: pointer;
           background: none; border: none; padding: 0; font: inherit;
-          display: flex; align-items: center; justify-content: center;
-          height: ${TAB_H}px; border-radius: 14px;
           flex: 1; min-width: 0;
-          border: 1px solid rgba(255,255,255,0.07);
-          background: rgba(255,255,255,0.028);
-          transition: flex-grow 0.52s cubic-bezier(0.22,1,0.36,1), border-color 0.4s, background 0.4s;
+          display: flex; flex-direction: column; align-items: center; gap: 10px;
         }
-        .pf-tab:hover { border-color: rgba(255,255,255,0.18); }
-        .pf-tab.hero { flex: 3; border-color: rgba(255,255,255,0.16); background: rgba(255,255,255,0.06); }
-        .pf-tab:focus-visible { outline: 2px solid rgba(255,255,255,0.5); outline-offset: 2px; }
+        .pf-tab:focus-visible .pf-icon-box { outline: 2px solid rgba(255,255,255,0.55); outline-offset: 3px; }
 
-        /* Fill sweep — imperatively driven left→right */
-        .pf-tab-fill {
-          position: absolute; left: 0; top: 0; height: 100%; width: 0%;
-          background: linear-gradient(90deg, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.07) 100%);
-          pointer-events: none; z-index: 0;
+        /* Square icon tile */
+        .pf-icon-wrap {
+          position: relative; width: 100%;
+          display: flex; justify-content: center;
         }
-
-        /* Inner content row */
-        .pf-tab-inner { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; padding: 0 14px 0 10px; width: 100%; }
-        .pf-tab:not(.hero) .pf-tab-inner { padding: 0; justify-content: center; }
-
-        /* Icon box */
         .pf-icon-box {
           position: relative; flex-shrink: 0;
-          width: 34px; height: 34px; border-radius: 9px;
+          width: clamp(80px, 11vw, ${ICON_BOX}px);
+          height: clamp(80px, 11vw, ${ICON_BOX}px);
+          border-radius: 0;
           display: flex; align-items: center; justify-content: center;
-          background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.12);
-          transition: background 0.4s, border-color 0.4s;
+          background: #0a0a0a;
+          border: 1px solid rgba(255,255,255,0.28);
+          box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+          transition: border-color 0.45s, box-shadow 0.45s, transform 0.45s;
+          overflow: hidden;
         }
-        .pf-tab:not(.hero) .pf-icon-box { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.07); }
+        .pf-tab:not(.hero) .pf-icon-box {
+          opacity: 0.55;
+          border-color: rgba(255,255,255,0.14);
+        }
+        .pf-tab.hero .pf-icon-box {
+          opacity: 1;
+          border-color: rgba(255,255,255,0.72);
+          transform: translateY(-4px);
+          box-shadow:
+            0 0 0 1px rgba(255,255,255,0.35),
+            0 0 28px rgba(255,255,255,0.22),
+            0 8px 24px rgba(0,0,0,0.35);
+        }
+        .pf-tab:hover .pf-icon-box { opacity: 0.85; border-color: rgba(255,255,255,0.4); }
 
-        /* Label */
+        /* Page-mark loader — fills bottom→top inside square */
+        .pf-tab-fill {
+          position: absolute; left: 0; bottom: 0; width: 100%; height: 0%;
+          background: linear-gradient(to top, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.06) 100%);
+          pointer-events: none; z-index: 0;
+        }
+        .pf-tab-fill-edge {
+          position: absolute; left: 0; top: 0; width: 3px; height: 0%;
+          background: linear-gradient(180deg, #ffffff, rgba(255,255,255,0.45));
+          box-shadow: 0 0 10px rgba(255,255,255,0.5);
+          pointer-events: none; z-index: 1;
+        }
+
+        /* Label below square */
         .pf-tab-label {
-          font-size: 10.5px; font-weight: 700; letter-spacing: 0.14em;
-          text-transform: uppercase; color: rgba(255,255,255,0.82);
-          white-space: nowrap; overflow: hidden;
+          font-size: 10px; font-weight: 600; letter-spacing: 0.22em;
+          text-transform: uppercase;
+          color: rgba(255,255,255,0.28);
+          transition: color 0.35s;
+          text-align: center;
         }
+        .pf-tab.hero .pf-tab-label { color: rgba(255,255,255,0.88); }
 
-        /* Pulse rings on active icon */
         .pf-wave-ring {
-          position: absolute; inset: -5px; border-radius: 13px;
-          pointer-events: none; border: 1.5px solid rgba(255,255,255,0.30);
+          position: absolute; inset: -4px;
+          pointer-events: none; border: 1px solid rgba(255,255,255,0.35);
         }
 
         /* ── Content tile ── */
-        .pf-tile { position:relative; border-radius:28px; overflow:hidden; cursor:default; display:flex; flex-direction:column; border:1px solid rgba(255,255,255,0.1); background:linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018)); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); flex: 1; min-height: 0; }
+        .pf-tile {
+          position: relative; border-radius: 22px; overflow: hidden; cursor: default;
+          display: flex; flex-direction: column;
+          border: 1px solid rgba(255,255,255,0.1);
+          background: linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018));
+          backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+          flex: 1 1 auto; max-height: 46vh; min-height: 0;
+          align-self: stretch;
+        }
         .pf-tile-glass-shine { position:absolute; inset:0; opacity:0.7; pointer-events:none; z-index:0; background:radial-gradient(circle at 20% 10%, rgba(255,255,255,0.10), transparent 36%), radial-gradient(circle at 85% 90%, rgba(255,255,255,0.08), transparent 42%); }
         .pf-tile-glass-edge { position:absolute; left:0; right:0; top:0; height:1px; z-index:1; pointer-events:none; background-image: ${OPAL_LIGHT_GRADIENT}; }
 
         @media (max-width: 600px) {
-          .pf-tabs { gap: 5px !important; }
-          .pf-tab { height: 44px !important; border-radius: 11px !important; }
-          .pf-icon-box { width: 28px !important; height: 28px !important; border-radius: 7px !important; }
+          .pf-tabs { gap: 8px !important; }
+          .pf-icon-box { width: 72px !important; height: 72px !important; }
+          .pf-tab-label { font-size: 8px !important; letter-spacing: 0.16em !important; }
+          .pf-hl-hero { font-size: clamp(22px, 7vw, 32px); }
         }
         @media (prefers-reduced-motion: reduce) {
           .pf-wave-ring { animation: none !important; }
-          .pf-tab { transition: none !important; }
         }
       `}</style>
 
       <section
         ref={sectionRef}
         id="platform"
-        style={{ position: "relative", paddingTop: navbarHeight }}
+        style={{ position: "relative"}}
       >
-        <div style={{
-          height: `calc(100vh - ${navbarHeight}px)`, minHeight: 560,
-          overflow: "hidden",
-          display: "flex", flexDirection: "column",
-          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-          background: "transparent",
-        }}>
-          <div style={{
-            flex: 1, minHeight: 0,
+        <div
+          className="pf-section-inner"
+          style={{
+            height: `calc(100vh - ${navbarHeight}px)`, minHeight: 560,
+            overflow: "hidden",
             display: "flex", flexDirection: "column",
-            maxWidth: 1020, width: "100%", margin: "0 auto",
-            padding: "clamp(20px,3vh,40px) clamp(16px,3vw,52px) clamp(14px,2vh,28px)",
+            padding: "clamp(20px,3vh,40px) 0 0",
             boxSizing: "border-box",
-          }}>
+          }}
+        >
+          {/* ── Centered header ── */}
+          <div className="pf-header">
+            <motion.span {...fadeUp(0.04)} className="pf-eyebrow">
+              Where the revenue comes back
+            </motion.span>
+            <motion.span {...fadeUp(0.1)} className="pf-hl-hero">
+              Four services.
+            </motion.span>
+          </div>
 
-            {/* ── Header ── */}
-            <div style={{ flexShrink: 0, marginBottom: "clamp(8px,1vh,14px)" }}>
-              <motion.div {...fadeUp(0.04)} style={{
-                fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase",
-                color: "rgba(255,255,255,0.28)", marginBottom: "clamp(6px,0.8vh,10px)",
-              }}>
-                The Platform
-              </motion.div>
-
-              <motion.div {...fadeUp(0.1)} style={{ marginBottom: "clamp(6px,0.8vh,10px)" }}>
-                <span style={{ fontSize: "clamp(26px,3.5vw,42px)", fontWeight: 800, color: "#fff", lineHeight: 1.08, letterSpacing: "-0.02em" }}>
-                  Four levers.{" "}
-                </span>
-                <span style={{ fontSize: "clamp(26px,3.5vw,42px)", fontWeight: 800, color: "rgba(255,255,255,0.22)", lineHeight: 1.08, letterSpacing: "-0.02em" }}>
-                  One operating layer.
-                </span>
-              </motion.div>
-
-              <div style={{ display: "flex", alignItems: "center", gap: "clamp(10px,2vw,28px)", flexWrap: "wrap" }}>
-                <motion.p {...fadeUp(0.18)} style={{
-                  fontSize: "clamp(12.5px,0.95vw,14.5px)", lineHeight: 1.65,
-                  color: "rgba(255,255,255,0.42)", maxWidth: 480, fontWeight: 300,
-                }}>
-                  Every module targets a specific revenue leak. Together they run as a
-                  single system — automatically, continuously, without adding headcount.
-                </motion.p>
-
-                <motion.div {...fadeUp(0.26)} style={{
-                  fontSize: 11.5, letterSpacing: "0.07em", fontWeight: 600,
-                  color: "rgba(255,255,255,0.55)", whiteSpace: "nowrap",
-                }}>
-                  — how OPAL gOS solves it —
-                </motion.div>
-              </div>
-            </div>
-
-            {/* ── Tab row — active tab expands with a left→right fill loader ── */}
+          <div className="pf-body">
+            {/* ── Service-style icon row ── */}
             <motion.div
               initial={{ opacity: 0, y: 14 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -441,41 +499,30 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
                     aria-pressed={isHero}
                     aria-label={`Show ${m.label} module`}
                   >
-                    {/* Left-to-right progress fill — updated imperatively every RAF frame */}
-                    {isHero && <div ref={ringRef} className="pf-tab-fill" />}
-
-                    <div className="pf-tab-inner">
-                      {/* Icon with pulse rings */}
+                    <div className="pf-icon-wrap">
                       <div className="pf-icon-box">
+                        {isHero && (
+                          <>
+                            <div ref={ringRef} className="pf-tab-fill" />
+                            <div ref={edgeRef} className="pf-tab-fill-edge" />
+                          </>
+                        )}
                         {isHero && [0, 0.7, 1.4].map((delay) => (
                           <motion.span
                             key={delay}
                             className="pf-wave-ring"
-                            animate={{ scale: [1, 1.7], opacity: [0.45, 0] }}
+                            animate={{ scale: [1, 1.12], opacity: [0.35, 0] }}
                             transition={{
                               duration: 2.4, repeat: Infinity,
                               ease: [0.22, 1, 0.36, 1], delay,
                             }}
                           />
                         ))}
-                        <ModuleIcon src={m.icon} active={isHero} size={18} />
+                        <ModuleIcon src={m.icon} active={isHero} size={ICON_INNER} />
                       </div>
-
-                      {/* Label fades in when tab is active */}
-                      <AnimatePresence>
-                        {isHero && (
-                          <motion.span
-                            className="pf-tab-label"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.3, delay: 0.18 }}
-                          >
-                            {m.label}
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
                     </div>
+
+                    <span className="pf-tab-label">{m.label}</span>
                   </button>
                 );
               })}
@@ -486,9 +533,9 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
               ref={tileRef}
               className="pf-tile"
               whileHover={{
-                scale: 1.035,
-                borderColor: "rgba(255,255,255,0.42)",
-                boxShadow: "0 18px 70px rgba(255,255,255,0.12)",
+                scale: 1.02,
+                borderColor: "rgba(255,255,255,0.35)",
+                boxShadow: "0 12px 48px rgba(255,255,255,0.08)",
               }}
               transition={{ duration: 0.3, ease: "easeOut" }}
               onMouseEnter={() => { hoverRef.current = true; setTileHovered(true); }}
@@ -500,7 +547,7 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
               <canvas
                 ref={canvasRef}
                 style={{
-                  position: "absolute", inset: 0, borderRadius: 28,
+                  position: "absolute", inset: 0, borderRadius: 22,
                   pointerEvents: "none", zIndex: 1, mixBlendMode: "screen",
                   opacity: phase === "idle" ? 0 : 1,
                   transition: "opacity 0.2s ease",
@@ -531,49 +578,59 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
               <div style={{
                 position: "relative", zIndex: 10, display: "flex", flexDirection: "column",
                 alignItems: "center", textAlign: "center", height: "100%",
-                padding: "clamp(28px,3.8vh,40px) clamp(24px,3vw,40px)",
-                gap: 16, minHeight: 245,
+                padding: "clamp(20px, 2.6vh, 30px) clamp(22px, 2.8vw, 36px)",
+                gap: 14, minHeight: 0, flex: 1,
                 opacity: isSettled ? 1 : 0,
                 transition: `opacity ${phase === "out" ? BURST_DUR : 260}ms ease`,
               }}>
-                <div style={{
-                  display: "flex", flexDirection: "column", alignItems: "center",
-                  gap: 10, width: "100%",
-                }}>
-                  <div style={{
-                    width: 46, height: 46, borderRadius: 12, display: "flex",
-                    alignItems: "center", justifyContent: "center",
-                    background: "rgba(255,255,255,0.10)",
-                    border: "1px solid rgba(255,255,255,0.14)",
-                  }}>
-                    <ModuleIcon src={mod.icon} active size={28} />
-                  </div>
-                  <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.22)", letterSpacing: "0.08em" }}>
-                    {mod.num}/0{N}
-                  </span>
-                </div>
+                <motion.div
+                  key={mod.id}
+                  className="pf-card-icon"
+                  aria-hidden
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.35, ease: EASE }}
+                  style={{
+                    width: CARD_ICON_BOX,
+                    height: CARD_ICON_BOX,
+                    flexShrink: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "#0a0a0a",
+                    border: "1px solid rgba(255,255,255,0.55)",
+                    boxShadow:
+                      "0 0 0 1px rgba(255,255,255,0.2), 0 0 20px rgba(255,255,255,0.12)",
+                  }}
+                >
+                  <ModuleIcon src={mod.icon} active size={CARD_ICON_INNER} />
+                </motion.div>
+
+                <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.24)", letterSpacing: "0.1em" }}>
+                  {mod.num}/0{N} · {mod.label}
+                </span>
 
                 <div style={{
-                  fontSize: "clamp(17px,2.1vh,23px)", fontWeight: 700, lineHeight: 1.38,
-                  color: "rgba(255,255,255,0.94)", maxWidth: 520,
+                  fontSize: "clamp(16px, 1.9vh, 20px)", fontWeight: 700, lineHeight: 1.36,
+                  color: "rgba(255,255,255,0.94)", maxWidth: 500,
                 }}>
                   {mod.title}
                 </div>
 
                 <div style={{
-                  width: "min(200px, 40%)", height: 1,
+                  width: "min(200px, 38%)", height: 1,
                   background: "rgba(255,255,255,0.10)", flexShrink: 0,
                 }} />
 
                 <div style={{
-                  flex: 1, width: "100%", maxWidth: 480,
-                  display: "flex", flexDirection: "column", alignItems: "center",
+                  flex: 1, width: "100%", maxWidth: 460,
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
                 }}>
                   {mod.features.map((feat, fi) => (
                     <div key={fi} style={{
                       display: "inline-flex", alignItems: "flex-start",
-                      gap: 9, marginTop: fi === 0 ? 0 : 11,
-                      fontSize: "clamp(13px,1.4vh,15px)", lineHeight: 1.5,
+                      gap: 9, marginTop: fi === 0 ? 0 : 9,
+                      fontSize: "clamp(12.5px, 1.25vh, 14.5px)", lineHeight: 1.48,
                       color: "rgba(255,255,255,0.55)", textAlign: "left",
                     }}>
                       <span style={{ color: "#ffffff", flexShrink: 0, marginTop: 1 }}>✓</span>
@@ -583,9 +640,9 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
                 </div>
 
                 <div style={{
-                  width: "min(280px, 70%)", height: 1.5,
+                  width: "min(260px, 68%)", height: 1.5,
                   background: "rgba(255,255,255,0.06)", borderRadius: 2,
-                  overflow: "hidden", flexShrink: 0,
+                  overflow: "hidden", flexShrink: 0, marginTop: 4,
                 }}>
                   <div ref={barRef} style={{
                     height: "100%", background: "rgba(255,255,255,0.55)", width: "0%",
@@ -605,45 +662,6 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
               }}>
                 {mod.glyph}
               </span>
-            </motion.div>
-
-            {/* ── Footer bar ── */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, ease: EASE, delay: 0.48 }}
-              style={{
-                flexShrink: 0, marginTop: "clamp(18px,2.6vh,28px)",
-                display: "flex", flexWrap: "wrap",
-                alignItems: "center", justifyContent: "space-between", gap: 12,
-                paddingTop: "clamp(16px,2.2vh,24px)",
-                borderTop: "1px solid rgba(255,255,255,0.07)",
-              }}
-            >
-              <p style={{
-                fontSize: "clamp(11px,0.85vw,13px)", color: "rgba(255,255,255,0.26)",
-                fontStyle: "italic", fontWeight: 300, lineHeight: 1.4, maxWidth: 480,
-              }}>
-                Every module runs automatically. Every action logged. Every gap worked.
-              </p>
-              <button
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 8,
-                  padding: "9px 22px", borderRadius: 8,
-                  background: "#ffffff", color: "#0a0a0a",
-                  fontSize: 11.5, fontWeight: 700, letterSpacing: "0.06em",
-                  border: "none", cursor: "pointer",
-                  transition: "background 0.2s, transform 0.15s",
-                  fontFamily: "'Inter', sans-serif",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = "#e8e8e8"; e.currentTarget.style.transform = "scale(1.02)"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "#ffffff"; e.currentTarget.style.transform = "scale(1)"; }}
-              >
-                BOOK A DEMO
-                <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-                  <path d="M1 11L10 2M10 2H4.5M10 2V7.5" stroke="#0a0a0a" strokeWidth="1.8" strokeLinecap="round" />
-                </svg>
-              </button>
             </motion.div>
 
           </div>

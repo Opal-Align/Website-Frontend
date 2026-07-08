@@ -53,10 +53,11 @@ export default function HomePageLayout() {
         {/* Section content rides above the backdrop */}
         <div style={{ position: "relative", zIndex: 1 }}>
         <ProblemWordMap/>
-        <FiveStepLoop/>
+        
         
           
           <PlatformSection/>
+          <FiveStepLoop/>
           
           <Processes />
           <LogoStream />

@@ -23,7 +23,7 @@ const OPAL_TEXT_GRADIENT =
   "linear-gradient(120deg, #FFFFFF 0%, #C4CAD4 50%, #FFFFFF 100%)";
 
 // ─── Animated word ──────────────────────────────────────────────────────────
-function AnimatedWord({ children, start, end, progress, accent = false }) {
+function AnimatedWord({ children, start, end, progress, accent = false, last = false }) {
   const opacity = useTransform(progress, [start, end], [0, 1]);
   const y = useTransform(progress, [start, end], [40, 0]);
   const accentStyle = accent
@@ -49,7 +49,8 @@ function AnimatedWord({ children, start, end, progress, accent = false }) {
       >
         {children}
       </motion.span>
-      {"\u00A0"}
+      {/* No trailing space on the last word — keeps the pill symmetric */}
+      {!last && "\u00A0"}
     </span>
   );
 }
@@ -391,11 +392,11 @@ export default function ScrollHero() {
               >
                 <motion.svg
                   aria-hidden
-                  className="absolute inset-0 h-full w-full overflow-visible pointer-events-none"
-                  preserveAspectRatio="none"
+                  className="absolute pointer-events-none"
+                  style={{ inset: -2, width: "calc(100% + 4px)", height: "calc(100% + 4px)", overflow: "visible" }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: showPill ? 1 : 0 }}
-                  transition={{ duration: 0.35, ease: "easeOut" }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
                 >
                   <defs>
                     <linearGradient id={pillGradientId} x1="0" y1="1" x2="1" y2="0">
@@ -405,24 +406,23 @@ export default function ScrollHero() {
                     </linearGradient>
                   </defs>
                   <motion.rect
-                    x="2" y="2"
-                    width="calc(100% - 4px)"
-                    height="calc(100% - 4px)"
+                    x="3" y="3"
+                    style={{ width: "calc(100% - 6px)", height: "calc(100% - 6px)" }}
                     rx="9999" ry="9999"
                     fill="transparent"
                     stroke={`url(#${pillGradientId})`}
                     strokeWidth="1.5"
                     initial={{ pathLength: 0 }}
                     animate={{ pathLength: showPill ? 1 : 0 }}
-                    transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: showPill ? 0.1 : 0 }}
+                    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: showPill ? 0.05 : 0 }}
                     onAnimationComplete={handlePillDrawComplete}
                   />
                 </motion.svg>
 
-                <h1 className="hero-h1 relative font-['Montserrat'] font-light leading-[1.05] tracking-tight px-6 md:px-10 py-2 md:py-3">
+                <h1 className="hero-h1 relative font-['Montserrat'] font-light leading-[1.05] tracking-tight px-8 md:px-12 py-2 md:py-3">
                   <AnimatedWord progress={progress} start={0.38} end={0.50}>Zero</AnimatedWord>
                   <AnimatedWord progress={progress} start={0.38} end={0.50}>new</AnimatedWord>
-                  <AnimatedWord progress={progress} start={0.38} end={0.50} accent>hires.</AnimatedWord>
+                  <AnimatedWord progress={progress} start={0.38} end={0.50} accent last>hires.</AnimatedWord>
                 </h1>
               </motion.div>
 
