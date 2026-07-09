@@ -49,8 +49,9 @@ const TIER_STYLE = {
   3: { fontSize: "clamp(10px,1.1vw,13px)", fontWeight: 400, color: "rgba(255,255,255,0.14)", letterSpacing: "0.01em",   charW: 0.55 },
 };
 
-// Center font sizes when a word flies in
-const TIER_CENTER_PX = { 1: 58, 2: 50, 3: 42 };
+// Center scale when a word flies in (fontSize stays fixed — scale avoids clipping)
+const TIER_CENTER_SCALE = { 1: 2.15, 2: 2.45, 3: 2.85 };
+const TIER_CENTER_SCALE_MOBILE = { 1: 1.55, 2: 1.75, 3: 2.05 };
 
 const TIER_PX = { 1: 27, 2: 17, 3: 11.5 };
 
@@ -68,14 +69,56 @@ const easeInOutCubic = (t) => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
 const easeInCubic    = (t) => t * t * t;
 const lerpN          = (a, b, t) => a + (b - a) * t;
 
+function pushOutsideCenter(x, y, cx, cy, minDist, W, H, halfW, halfH) {
+  let dx = x - cx;
+  let dy = y - cy;
+  let d = Math.hypot(dx, dy);
+  if (d < minDist) {
+    if (d < 1) {
+      const angle = Math.atan2(dy || 0.01, dx || 0.01);
+      dx = Math.cos(angle);
+      dy = Math.sin(angle);
+    } else {
+      dx /= d;
+      dy /= d;
+    }
+    x = cx + dx * minDist;
+    y = cy + dy * minDist;
+  }
+  const mx = halfW + 12;
+  const my = halfH + 12;
+  return {
+    x: Math.max(mx, Math.min(W - mx, x)),
+    y: Math.max(my, Math.min(H - my, y)),
+  };
+}
+
 /* ─── Build word positions ──────────────────────────────────────────────── */
 function buildLayout(W, H) {
   if (!W || !H) return [];
 
-  const cx = W / 2, cy = H / 2;
-  const safeRx = Math.min(Math.max(W * 0.24, 260), W * 0.46);
-  const safeRy = Math.min(Math.max(H * 0.20, 100), H * 0.4);
-  const insets = { 1: 0.14, 2: 0.06, 3: 0.015 };
+  const isMobile = W < 600;
+  const cx = W / 2;
+  const cy = H / 2;
+  // Center clearance: tight on desktop (words fill in), larger on mobile (featured word needs room)
+  const safeRx = isMobile ? W * 0.36 : W * 0.14;
+  const safeRy = isMobile ? H * 0.30 : H * 0.13;
+  const minDist = isMobile
+    ? Math.max(W * 0.34, H * 0.28, 88)
+    : Math.max(W * 0.06, H * 0.08, 48);
+  const minDistForTier = (tier) => {
+    if (isMobile) return minDist;
+    if (tier === 1) return minDist;
+    if (tier === 2) return minDist * 0.55;
+    return minDist * 0.2;
+  };
+
+  const safeZoneForTier = (tier, px_, py_) => {
+    const tierRx = isMobile ? safeRx : safeRx * (tier === 1 ? 1 : tier === 2 ? 0.65 : 0.35);
+    const tierRy = isMobile ? safeRy : safeRy * (tier === 1 ? 1 : tier === 2 ? 0.65 : 0.35);
+    return Math.pow((px_ - cx) / tierRx, 2) + Math.pow((py_ - cy) / tierRy, 2) < 1;
+  };
+  const insets = isMobile ? { 1: 0.08, 2: 0.04, 3: 0.02 } : { 1: 0.14, 2: 0.06, 3: 0.015 };
   const placed = [];
 
   const wordExtent = (word) => {
@@ -96,24 +139,47 @@ function buildLayout(W, H) {
     while (tries < 100 && !found) {
       const px_ = xMin + seed(i * 17 + tries * 3) * (xMax - xMin);
       const py_ = yMin + seed(i * 7  + tries * 5) * (yMax - yMin);
-      const inSafeZone = Math.pow((px_ - cx) / safeRx, 2) + Math.pow((py_ - cy) / safeRy, 2) < 1;
-      const pad = 10;
+      const inSafeZone = safeZoneForTier(word.tier, px_, py_);
+      const pad = word.tier === 1 ? 18 : word.tier === 2 ? 14 : 10;
       const collides = placed.some((p) =>
         Math.abs(p.x - px_) < p.halfW + halfW + pad &&
         Math.abs(p.y - py_) < p.halfH + halfH + pad
       );
       tries++;
       if (!inSafeZone && !collides) { x = px_; y = py_; found = true; }
-      else if (tries === 100) { x = px_; y = py_; }
     }
 
-    const mx = halfW + 12, my = halfH + 12;
-    x = Math.max(mx, Math.min(W - mx, x));
-    y = Math.max(my, Math.min(H - my, y));
+    if (!found) {
+      // Spiral outward from safe-zone edge — never fall back into the center
+      for (let ring = 0; ring < 32 && !found; ring++) {
+        const angle = seed(i * 19 + ring * 7) * Math.PI * 2;
+        const rx = safeRx + (isMobile ? 24 : 16) + ring * (isMobile ? 10 : 14);
+        const ry = safeRy + (isMobile ? 18 : 12) + ring * (isMobile ? 8 : 12);
+        const px_ = cx + Math.cos(angle) * rx;
+        const py_ = cy + Math.sin(angle) * ry;
+        const pad = word.tier === 1 ? 18 : word.tier === 2 ? 14 : 10;
+        const collides = placed.some((p) =>
+          Math.abs(p.x - px_) < p.halfW + halfW + pad &&
+          Math.abs(p.y - py_) < p.halfH + halfH + pad
+        );
+        if (!collides && px_ > xMin && px_ < xMax && py_ > yMin && py_ < yMax) {
+          x = px_; y = py_; found = true;
+        }
+      }
+    }
+
+    if (!found) {
+      const angle = seed(i * 23) * Math.PI * 2;
+      const dist = minDistForTier(word.tier);
+      x = cx + Math.cos(angle) * dist;
+      y = cy + Math.sin(angle) * dist;
+    }
+
+    ({ x, y } = pushOutsideCenter(x, y, cx, cy, minDistForTier(word.tier), W, H, halfW, halfH));
 
     placed.push({
-      ...word, x, y, halfW, halfH,
-      floatAmp:   seed(i * 3)  * 5 + 2,
+      ...word, x, y, halfW, halfH, isMobile,
+      floatAmp:   (isMobile ? 2 : 1) * (seed(i * 3)  * 5 + 2),
       floatFreq:  seed(i * 5)  * 0.0004 + 0.0003,
       floatPhase: seed(i * 11) * Math.PI * 2,
       delay:      seed(i * 13) * 0.8,
@@ -137,6 +203,7 @@ export default function ProblemWordMap() {
   const queueRef      = useRef(0);
   const layoutRef     = useRef([]);
   const animatingRef  = useRef(false);
+  const busyRef       = useRef(false);
 
   const inView = useInView(sectionRef, { once: false, margin: "-80px" });
   const [words, setWords] = useState([]);
@@ -162,32 +229,64 @@ export default function ProblemWordMap() {
     stateRef.current = words.map((w) => ({
       x: w.x, y: w.y,
       opacity: 0,
-      fontSize: w.restPx,
+      scale: 1,
     }));
     phaseRef.current = words.map(() => ({ phase: "rest", startTime: 0 }));
+    queueRef.current = 0;
+    busyRef.current = false;
+    activeRef.current = -1;
+    clearTimeout(timerRef.current);
   }, [words]);
 
   /* ── Sequence: one word at a time flies to center ───────────────────────── */
+  const snapWordToRest = useCallback((layout, states, i, now) => {
+    const word = layout[i];
+    if (!word || !states[i]) return;
+    const restStyle = TIER_STYLE[word.tier];
+    const restOpacity = parseFloat(restStyle.color.match(/[\d.]+\)$/)?.[0] ?? "0.5");
+    const floatX = word.x + Math.sin(now * word.floatFreq + word.floatPhase) * word.floatAmp;
+    const floatY = word.y + Math.cos(now * word.floatFreq * 0.7 + word.floatPhase) * word.floatAmp;
+    states[i].x = floatX;
+    states[i].y = floatY;
+    states[i].opacity = restOpacity;
+    states[i].scale = 1;
+    phaseRef.current[i] = { phase: "rest", startTime: now };
+  }, []);
+
   const scheduleNext = useCallback(() => {
     const layout = layoutRef.current;
-    if (!layout.length) return;
+    if (!layout.length || busyRef.current) return;
 
+    const now = performance.now();
     const idx = queueRef.current % layout.length;
     queueRef.current++;
 
-    phaseRef.current[idx] = { phase: "flyIn", startTime: performance.now() };
+    // Force any straggler back to rest before the next word takes center
+    layout.forEach((_, i) => {
+      if (i !== idx && phaseRef.current[i]?.phase !== "rest") {
+        snapWordToRest(layout, stateRef.current, i, now);
+      }
+    });
+
+    busyRef.current = true;
+    phaseRef.current[idx] = { phase: "flyIn", startTime: now };
     activeRef.current = idx;
 
     timerRef.current = setTimeout(() => {
-      phaseRef.current[idx] = { phase: "flyOut", startTime: performance.now() };
+      phaseRef.current[idx] = { phase: "hold", startTime: performance.now() };
 
       timerRef.current = setTimeout(() => {
-        phaseRef.current[idx] = { phase: "rest", startTime: performance.now() };
-        activeRef.current = -1;
-        timerRef.current = setTimeout(scheduleNext, GAP_DUR);
-      }, FLY_OUT_DUR);
-    }, FLY_IN_DUR + HOLD_DUR);
-  }, []);
+        phaseRef.current[idx] = { phase: "flyOut", startTime: performance.now() };
+
+        timerRef.current = setTimeout(() => {
+          snapWordToRest(layout, stateRef.current, idx, performance.now());
+          activeRef.current = -1;
+          busyRef.current = false;
+          timerRef.current = setTimeout(scheduleNext, GAP_DUR);
+        }, FLY_OUT_DUR);
+      }, HOLD_DUR);
+    }, FLY_IN_DUR);
+  }, [snapWordToRest]);
 
   /* ── rAF loop ───────────────────────────────────────────────────────────── */
   const animate = useCallback((now) => {
@@ -205,6 +304,14 @@ export default function ProblemWordMap() {
     const H  = container.clientHeight;
     const cx = W / 2;
     const cy = H / 2;
+    const isMobile = W < 600;
+    const centerScales = isMobile ? TIER_CENTER_SCALE_MOBILE : TIER_CENTER_SCALE;
+    const activeIdx = activeRef.current;
+    const centerBusy = activeIdx >= 0 && (
+      phaseRef.current[activeIdx]?.phase === "flyIn" ||
+      phaseRef.current[activeIdx]?.phase === "hold" ||
+      phaseRef.current[activeIdx]?.phase === "flyOut"
+    );
 
     layout.forEach((word, i) => {
       const el = els[i];
@@ -212,14 +319,13 @@ export default function ProblemWordMap() {
 
       const restStyle  = TIER_STYLE[word.tier];
       const restOpacity = parseFloat(restStyle.color.match(/[\d.]+\)$/)?.[0] ?? "0.5");
-      const restFontSz  = word.restPx;
-      const centerFontSz = TIER_CENTER_PX[word.tier];
+      const centerScale = centerScales[word.tier];
       const ph          = phases[i];
 
       const floatX = word.x + Math.sin(now * word.floatFreq + word.floatPhase) * word.floatAmp;
       const floatY = word.y + Math.cos(now * word.floatFreq * 0.7 + word.floatPhase) * word.floatAmp;
 
-      let tx, ty, top, tfs;
+      let tx, ty, top, ts;
 
       if (ph.phase === "flyIn") {
         const t = Math.min(1, (now - ph.startTime) / FLY_IN_DUR);
@@ -227,33 +333,41 @@ export default function ProblemWordMap() {
         tx  = lerpN(word.x, cx, e);
         ty  = lerpN(word.y, cy, e);
         top = lerpN(restOpacity, 1, e);
-        tfs = lerpN(restFontSz, centerFontSz, e);
+        ts  = lerpN(1, centerScale, e);
       } else if (ph.phase === "hold") {
-        tx = cx; ty = cy; top = 1; tfs = centerFontSz;
+        tx = cx; ty = cy; top = 1; ts = centerScale;
       } else if (ph.phase === "flyOut") {
         const t = Math.min(1, (now - ph.startTime) / FLY_OUT_DUR);
         const e = easeInOutCubic(t);
         tx  = lerpN(cx, floatX, e);
         ty  = lerpN(cy, floatY, e);
         top = lerpN(1, restOpacity, easeInCubic(t));
-        tfs = lerpN(centerFontSz, restFontSz, e);
+        ts  = lerpN(centerScale, 1, e);
       } else {
-        tx = floatX; ty = floatY; top = restOpacity; tfs = restFontSz;
+        tx = floatX; ty = floatY; top = restOpacity; ts = 1;
+        if (centerBusy && i !== activeIdx) {
+          top = restOpacity * (isMobile ? 0.22 : 0.38);
+        }
       }
 
-      const spd = ph.phase === "rest" ? 0.1 : 0.2;
-      const s   = states[i];
-      s.x       = lerpN(s.x, tx, spd);
-      s.y       = lerpN(s.y, ty, spd);
-      s.opacity = lerpN(s.opacity, top, 0.1);
-      s.fontSize= lerpN(s.fontSize, tfs, 0.15);
+      const s = states[i];
+      const isActive = ph.phase === "flyIn" || ph.phase === "hold" || ph.phase === "flyOut";
+      const moveSpd = isActive ? 0.38 : 0.12;
+      const fadeSpd = isActive ? 0.22 : 0.1;
+      const scaleSpd = isActive ? 0.28 : 0.12;
 
-      el.style.left      = `${s.x}px`;
-      el.style.top       = `${s.y}px`;
-      el.style.opacity   = `${s.opacity}`;
-      el.style.fontSize  = `${s.fontSize}px`;
+      s.x = lerpN(s.x, tx, moveSpd);
+      s.y = lerpN(s.y, ty, moveSpd);
+      s.opacity = lerpN(s.opacity, top, fadeSpd);
+      s.scale = lerpN(s.scale, ts, scaleSpd);
+
+      el.style.left = `${s.x}px`;
+      el.style.top = `${s.y}px`;
+      el.style.opacity = `${s.opacity}`;
+      el.style.fontSize = `${word.restPx}px`;
+      el.style.transform = `translate(-50%, -50%) scale(${s.scale})`;
       el.style.fontWeight = i === activeRef.current ? "800" : `${restStyle.fontWeight}`;
-      el.style.zIndex    = i === activeRef.current ? "10" : word.tier === 1 ? "2" : "1";
+      el.style.zIndex = i === activeRef.current ? "10" : word.tier === 1 ? "2" : "1";
     });
 
     rafRef.current = requestAnimationFrame(animate);
@@ -265,6 +379,8 @@ export default function ProblemWordMap() {
       cancelAnimationFrame(rafRef.current);
       clearTimeout(timerRef.current);
       animatingRef.current = false;
+      busyRef.current = false;
+      activeRef.current = -1;
       return;
     }
 
@@ -283,8 +399,19 @@ export default function ProblemWordMap() {
       layout.forEach((word, i) => {
         const restOpacity = parseFloat(TIER_STYLE[word.tier].color.match(/[\d.]+\)$/)?.[0] ?? "0.5");
         const op = restOpacity * t;
-        if (states[i]) { states[i].opacity = op; states[i].x = word.x; states[i].y = word.y; }
-        if (els[i]) { els[i].style.opacity = `${op}`; els[i].style.left = `${word.x}px`; els[i].style.top = `${word.y}px`; }
+        if (states[i]) {
+          states[i].opacity = op;
+          states[i].x = word.x;
+          states[i].y = word.y;
+          states[i].scale = 1;
+        }
+        if (els[i]) {
+          els[i].style.opacity = `${op}`;
+          els[i].style.left = `${word.x}px`;
+          els[i].style.top = `${word.y}px`;
+          els[i].style.fontSize = `${word.restPx}px`;
+          els[i].style.transform = "translate(-50%, -50%) scale(1)";
+        }
       });
 
       if (t < 1) {
@@ -301,6 +428,8 @@ export default function ProblemWordMap() {
       cancelAnimationFrame(rafRef.current);
       clearTimeout(timerRef.current);
       animatingRef.current = false;
+      busyRef.current = false;
+      activeRef.current = -1;
     };
   }, [inView, words, animate, scheduleNext]);
 
@@ -348,24 +477,28 @@ export default function ProblemWordMap() {
         .pwm-map-wrap {
           position: relative; width: 100%;
           flex: 1 1 auto; min-height: 320px;
-          margin: 1.5rem 0 0; overflow: hidden;
+          margin: 1.5rem 0 0;
+          overflow: visible;
         }
         .pwm-word {
           position: absolute;
           white-space: nowrap;
           pointer-events: none;
           user-select: none;
-          line-height: 1;
+          line-height: 1.1;
           color: #ffffff;
-          transform: translate(-50%, -50%);
-          will-change: left, top, opacity, font-size;
+          transform: translate(-50%, -50%) scale(1);
+          transform-origin: center center;
+          will-change: transform, left, top, opacity;
           letter-spacing: -0.02em;
+          -webkit-font-smoothing: antialiased;
+          backface-visibility: hidden;
         }
 
         @media (max-width: 600px) {
-          .pwm-section { --pwm-nav-h: 64px; min-height: 620px; }
+          .pwm-section { --pwm-nav-h: 64px; min-height: 620px; overflow-x: clip; }
           .pwm-inner { padding: 1.25rem 1rem 1rem; }
-          .pwm-map-wrap { min-height: 300px; }
+          .pwm-map-wrap { min-height: 300px; overflow: visible; }
         }
         @media (prefers-reduced-motion: reduce) {
           .pwm-word { transition: none !important; }
@@ -409,7 +542,7 @@ export default function ProblemWordMap() {
                 style={{
                   left: word.x,
                   top: word.y,
-                  fontSize: TIER_STYLE[word.tier].fontSize,
+                  fontSize: `${word.restPx}px`,
                   fontWeight: TIER_STYLE[word.tier].fontWeight,
                   opacity: 0,
                 }}

@@ -1,6 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import opalLogo from "../../assets/OPAL.svg";
+import opalGosLogo from "../../assets/opal-gos.svg";
+
+const OPAL_LOGO_RATIO = 3520 / 1214;
+const OPAL_GOS_LOGO_RATIO = 1;
 
 const STEP_DATA = [
   {
@@ -34,6 +39,7 @@ const STEP_ANGLES = [-60, 0, 60, 120, 180, 240];
 // Column layout: left 01–03 bottom→top, right 04–06 top→bottom (STEP_DATA order unchanged)
 const LEFT_COLUMN  = [5, 4, 3]; // render 03, 02, 01 top-down → 01 sits at bottom
 const RIGHT_COLUMN = [0, 1, 2]; // render 04, 05, 06 top-down
+const MOBILE_SEQUENCE = [3, 4, 5, 0, 1, 2]; // 01 Identify → 06 Resolve, top to bottom
 const ORBIT_DURATION = 14000;
 const MANUAL_PAUSE   = 7000;
 const BG             = "#0a0a0a";
@@ -347,15 +353,15 @@ export default function FiveStepLoop() {
 
         .fsl-brand-opal {
           display: inline-block;
-          font-size: clamp(28px, 3.8vw, 44px);
-          font-weight: 900;
-          letter-spacing: 0.1em;
-          color: #fff;
-          border: 2px solid rgba(255,255,255,0.72);
-          border-radius: 3px;
-          padding: 2px 14px 4px;
-          line-height: 1;
           margin-bottom: 6px;
+          line-height: 0;
+        }
+        .fsl-brand-opal img {
+          display: block;
+          height: clamp(28px, 3.8vw, 44px);
+          width: auto;
+          aspect-ratio: ${OPAL_LOGO_RATIO};
+          object-fit: contain;
         }
 
         .fsl-presents-text {
@@ -395,7 +401,7 @@ export default function FiveStepLoop() {
         }
         .fsl-logo-gos {
           font-size: clamp(18px, 2.4vw, 28px);
-          font-weight: 800;
+          font-weight: 600;
           color: #fff;
           letter-spacing: -0.02em;
           line-height: 1;
@@ -419,25 +425,26 @@ export default function FiveStepLoop() {
           margin: 0 auto;
         }
         .fsl-col {
-          flex: 0 0 clamp(220px, 19vw, 272px);
+          flex: 0 0 clamp(260px, 24vw, 340px);
           display: flex;
           flex-direction: column;
           min-height: 0;
-          padding: clamp(8px, 1.2vh, 16px) 0;
+          padding: clamp(10px, 1.4vh, 18px) 0;
           border-top: 1px solid rgba(255,255,255,0.07);
           border-bottom: 1px solid rgba(255,255,255,0.07);
         }
         .fsl-col-right { order: 3; }
         .fsl-col-left  { order: 1; }
+        .fsl-col-mobile { display: none; }
         .fsl-orbital   { order: 2; align-self: center; }
 
-        /* step cards — compact */
-        .fsl-steps { display: flex; flex-direction: column; gap: 5px; flex: 1; justify-content: space-evenly; margin-bottom: 0; }
+        /* step cards */
+        .fsl-steps { display: flex; flex-direction: column; gap: 8px; flex: 1; justify-content: space-evenly; margin-bottom: 0; }
 
         .fsl-card {
           position: relative;
           border: 1px solid rgba(255,255,255,0.07);
-          border-radius: 12px; cursor: pointer; overflow: hidden;
+          border-radius: 14px; cursor: pointer; overflow: hidden;
           background: rgba(255,255,255,0.03);
           transition: border-color 0.3s, background 0.3s, box-shadow 0.4s;
         }
@@ -459,11 +466,12 @@ export default function FiveStepLoop() {
         }
 
         .fsl-card-header {
-          display: flex; align-items: center;
-          padding: 10px 14px 8px;
+          display: flex; align-items: center; justify-content: center;
+          padding: 14px 18px 12px;
         }
         .fsl-sc-title {
-          font-size: 12.5px; font-weight: 700; flex: 1;
+          font-size: clamp(15px, 1.5vh, 17px); font-weight: 700;
+          text-align: center; width: 100%;
           color: rgba(255,255,255,0.38);
           transition: color 0.3s;
         }
@@ -472,13 +480,13 @@ export default function FiveStepLoop() {
         .fsl-card-body {
           overflow: hidden; max-height: 0;
           transition: max-height 0.38s ease, padding 0.3s;
-          padding: 0 14px;
+          padding: 0 18px;
         }
-        .fsl-card.active .fsl-card-body { max-height: 88px; padding: 0 14px 12px; }
+        .fsl-card.active .fsl-card-body { max-height: 120px; padding: 0 18px 16px; }
         .fsl-card-body p {
-          font-size: 10.5px; font-weight: 300;
-          color: rgba(255,255,255,0.42); line-height: 1.55;
-          border-top: 1px solid rgba(255,255,255,0.07); padding-top: 8px; margin: 0;
+          font-size: clamp(12.5px, 1.35vh, 14px); font-weight: 300;
+          color: rgba(255,255,255,0.42); line-height: 1.62;
+          border-top: 1px solid rgba(255,255,255,0.07); padding-top: 10px; margin: 0;
         }
         .fsl-card-body p strong { color: rgba(255,255,255,0.82); font-weight: 600; }
 
@@ -533,33 +541,60 @@ export default function FiveStepLoop() {
         }
         .fsl-node.active .fsl-sn-name { color: rgba(0,0,0,0.72); font-size: 10.5px; font-weight: 600; }
 
-        /* center badge */
+        /* center badge — logo only, no border */
         .fsl-center-badge {
           position: absolute; top: 50%; left: 50%;
           transform: translate(-50%,-50%);
-          width: clamp(64px, 14%, 84px);
-          height: clamp(64px, 14%, 84px);
-          border-radius: 14px;
-          background: rgba(14,14,14,0.98);
-          border: 1.5px solid rgba(255,255,255,0.38);
           display: flex; align-items: center; justify-content: center;
           z-index: 22; pointer-events: none;
-          box-sizing: border-box;
+          line-height: 0;
         }
-        .fsl-cb-opal {
-          font-size: clamp(11px, 2.2vw, 14px); font-weight: 900; letter-spacing: 0.12em;
-          color: #fff; line-height: 1;
+        .fsl-cb-logo {
+          display: block;
+          width: clamp(56px, 14%, 84px);
+          height: clamp(56px, 14%, 84px);
+          aspect-ratio: ${OPAL_GOS_LOGO_RATIO};
+          object-fit: contain;
+          filter: brightness(0) invert(1);
+          opacity: 1;
         }
 
         @media (max-width: 767px) {
           .fsl-section { height: auto; max-height: none; overflow: visible; padding: 20px 16px; }
           .fsl-bottom { flex-direction: column; gap: 20px; align-items: center; }
           .fsl-col { flex: unset; width: 100%; }
-          .fsl-col-left  { order: 2 !important; }
-          .fsl-col-right { order: 3 !important; }
+          .fsl-col-left,
+          .fsl-col-right { display: none !important; }
+          .fsl-col-mobile {
+            display: flex !important;
+            flex-direction: column;
+            align-items: center;
+            order: 2 !important;
+            width: 100%;
+            max-width: 360px;
+            margin: 0 auto;
+            border-top: 1px solid rgba(255,255,255,0.07);
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            padding: 8px 0;
+          }
+          .fsl-col-mobile .fsl-steps {
+            width: 100%;
+            max-width: 320px;
+            gap: 8px;
+            justify-content: flex-start;
+            align-items: center;
+          }
+          .fsl-col-mobile .fsl-card {
+            width: 100%;
+            max-width: 340px;
+          }
           .fsl-orbital   { order: 1 !important; flex: unset; align-self: auto; width: 100% !important; max-width: 280px; }
           .fsl-hl-hero { font-size: clamp(22px, 7vw, 32px); }
-          .fsl-brand-opal { font-size: clamp(28px, 9vw, 40px); }
+          .fsl-brand-opal img {
+            height: clamp(24px, 8vw, 38px);
+            width: auto;
+            aspect-ratio: ${OPAL_LOGO_RATIO};
+          }
         }
       `}</style>
 
@@ -567,7 +602,9 @@ export default function FiveStepLoop() {
 
         {/* ══ HEADING ══ */}
         <div ref={headingRef} className="fsl-heading">
-          <div className="fsl-brand-opal">OPAL</div>
+          <div className="fsl-brand-opal">
+            <img src={opalLogo} alt="OPAL" />
+          </div>
           <span className="fsl-presents-text">presents</span>
           <span className="fsl-hl-hero">The Guided Operating System</span>
           <div className="fsl-loop-row">
@@ -617,7 +654,7 @@ export default function FiveStepLoop() {
             </div>
 
             <div className="fsl-center-badge">
-              <span className="fsl-cb-opal">OPAL</span>
+              <img src={opalGosLogo} alt="OPAL gOS" className="fsl-cb-logo" />
             </div>
           </div>
 
@@ -625,6 +662,13 @@ export default function FiveStepLoop() {
           <div ref={rightColRef} className="fsl-col fsl-col-right">
             <div className="fsl-steps">
               {RIGHT_COLUMN.map((idx) => renderStepCard(STEP_DATA[idx], idx))}
+            </div>
+          </div>
+
+          {/* MOBILE — 01 → 06 sequential */}
+          <div className="fsl-col fsl-col-mobile">
+            <div className="fsl-steps">
+              {MOBILE_SEQUENCE.map((idx) => renderStepCard(STEP_DATA[idx], idx))}
             </div>
           </div>
 

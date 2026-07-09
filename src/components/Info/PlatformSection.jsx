@@ -46,10 +46,9 @@ const OPAL_LIGHT_GRADIENT =
   "linear-gradient(120deg, #FFFFFF 0%, #F8FAFC 30%, #F3F4F6 65%, #FFFFFF 100%)";
 const OPAL_SOFT_GLOW = "rgba(255,255,255,0.28)";
 const BG = "#0a0a0a";
-const ICON_BOX = 96; // px — square icon tile
-const ICON_INNER = 46; // px — icon asset size
-const CARD_ICON_BOX = 64; // px — icon on content card
-const CARD_ICON_INNER = 32;
+const ICON_BOX = 140; // px — square icon tile
+const ICON_INNER = 70; // px — icon asset size
+const CARD_ICON_INNER = 60;
 
 /* ─── Module icon ─────────────────────────────────────────────────── */
 function ModuleIcon({ src, active, size = 30 }) {
@@ -318,22 +317,22 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
         .pf-header {
           text-align: center;
           flex-shrink: 0;
-          margin-bottom: clamp(28px, 4.2vh, 52px);
+          margin-bottom: clamp(24px, 3.4vh, 40px);
           width: 100%;
         }
 
         .pf-eyebrow {
           display: block;
-          font-size: clamp(8px, 0.9vw, 10px);
+          font-size: clamp(10px, 1.1vw, 12px);
           letter-spacing: 0.38em;
           color: rgba(255,255,255,0.32);
           text-transform: uppercase;
-          margin-bottom: clamp(6px, 1vh, 10px);
+          margin-bottom: clamp(6px, 0.8vh, 10px);
         }
 
         .pf-hl-hero {
           display: block;
-          font-size: clamp(20px, 3.2vw, 36px);
+          font-size: clamp(24px, 3.8vw, 42px);
           font-weight: 800;
           color: #fff;
           letter-spacing: -0.03em;
@@ -350,34 +349,35 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
           max-width: 1020px;
           width: 100%;
           margin: 0 auto;
-          padding: 0 clamp(16px, 3vw, 52px) clamp(14px, 2vh, 28px);
+          padding: 0 clamp(16px, 3vw, 52px) clamp(8px, 1.2vh, 16px);
           box-sizing: border-box;
         }
 
         /* ── Service-style icon row ── */
         .pf-tabs {
-          display: flex; gap: clamp(12px, 2vw, 24px);
+          display: flex; gap: clamp(4px, 0.5vw, 8px);
           align-items: flex-start; flex-shrink: 0;
-          width: 100%; margin-bottom: clamp(16px, 2.4vh, 24px);
-          margin-top: clamp(4px, 0.6vh, 8px);
+          width: 100%; margin-bottom: clamp(20px, 2.8vh, 32px);
+          margin-top: 0;
         }
         .pf-tab {
           position: relative; cursor: pointer;
           background: none; border: none; padding: 0; font: inherit;
           flex: 1; min-width: 0;
-          display: flex; flex-direction: column; align-items: center; gap: 10px;
+          display: flex; flex-direction: column; align-items: center; gap: 8px;
         }
         .pf-tab:focus-visible .pf-icon-box { outline: 2px solid rgba(255,255,255,0.55); outline-offset: 3px; }
 
-        /* Square icon tile */
+        /* Square icon tile — width fills its flex column, aspect-ratio keeps it square */
         .pf-icon-wrap {
           position: relative; width: 100%;
           display: flex; justify-content: center;
         }
         .pf-icon-box {
-          position: relative; flex-shrink: 0;
-          width: clamp(80px, 11vw, ${ICON_BOX}px);
-          height: clamp(80px, 11vw, ${ICON_BOX}px);
+          position: relative;
+          width: 100%;
+          aspect-ratio: 1 / 1;
+          max-width: min(${ICON_BOX}px, 18vh);
           border-radius: 0;
           display: flex; align-items: center; justify-content: center;
           background: #0a0a0a;
@@ -416,7 +416,7 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
 
         /* Label below square */
         .pf-tab-label {
-          font-size: 10px; font-weight: 600; letter-spacing: 0.22em;
+          font-size: 10.5px; font-weight: 600; letter-spacing: 0.2em;
           text-transform: uppercase;
           color: rgba(255,255,255,0.28);
           transition: color 0.35s;
@@ -431,22 +431,25 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
 
         /* ── Content tile ── */
         .pf-tile {
-          position: relative; border-radius: 22px; overflow: hidden; cursor: default;
+          position: relative; border-radius: 20px; overflow: hidden; cursor: default;
           display: flex; flex-direction: column;
           border: 1px solid rgba(255,255,255,0.1);
           background: linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018));
           backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-          flex: 1 1 auto; max-height: 46vh; min-height: 0;
+          flex: 0 1 auto;
+          min-height: min(34vh, 320px);
+          max-height: min(38vh, 360px);
           align-self: stretch;
         }
         .pf-tile-glass-shine { position:absolute; inset:0; opacity:0.7; pointer-events:none; z-index:0; background:radial-gradient(circle at 20% 10%, rgba(255,255,255,0.10), transparent 36%), radial-gradient(circle at 85% 90%, rgba(255,255,255,0.08), transparent 42%); }
         .pf-tile-glass-edge { position:absolute; left:0; right:0; top:0; height:1px; z-index:1; pointer-events:none; background-image: ${OPAL_LIGHT_GRADIENT}; }
 
         @media (max-width: 600px) {
-          .pf-tabs { gap: 8px !important; }
-          .pf-icon-box { width: 72px !important; height: 72px !important; }
-          .pf-tab-label { font-size: 8px !important; letter-spacing: 0.16em !important; }
-          .pf-hl-hero { font-size: clamp(22px, 7vw, 32px); }
+          .pf-tabs { gap: 6px !important; }
+          .pf-icon-box { max-width: min(96px, 18vh) !important; }
+          .pf-tab-label { font-size: 8.5px !important; letter-spacing: 0.16em !important; }
+          .pf-hl-hero { font-size: clamp(24px, 7vw, 34px); }
+          .pf-tile { min-height: min(32vh, 280px); max-height: min(36vh, 300px); }
         }
         @media (prefers-reduced-motion: reduce) {
           .pf-wave-ring { animation: none !important; }
@@ -464,7 +467,7 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
             height: `calc(100vh - ${navbarHeight}px)`, minHeight: 560,
             overflow: "hidden",
             display: "flex", flexDirection: "column",
-            padding: "clamp(20px,3vh,40px) 0 0",
+            padding: "clamp(14px, 2vh, 24px) 0 0",
             boxSizing: "border-box",
           }}
         >
@@ -578,8 +581,9 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
               <div style={{
                 position: "relative", zIndex: 10, display: "flex", flexDirection: "column",
                 alignItems: "center", textAlign: "center", height: "100%",
-                padding: "clamp(20px, 2.6vh, 30px) clamp(22px, 2.8vw, 36px)",
-                gap: 14, minHeight: 0, flex: 1,
+                padding: "clamp(22px, 3vh, 36px) clamp(24px, 3vw, 40px)",
+                gap: "clamp(14px, 2vh, 22px)", minHeight: 0, flex: 1,
+                justifyContent: "space-evenly",
                 opacity: isSettled ? 1 : 0,
                 transition: `opacity ${phase === "out" ? BURST_DUR : 260}ms ease`,
               }}>
@@ -591,28 +595,18 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.35, ease: EASE }}
                   style={{
-                    width: CARD_ICON_BOX,
-                    height: CARD_ICON_BOX,
                     flexShrink: 0,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    background: "#0a0a0a",
-                    border: "1px solid rgba(255,255,255,0.55)",
-                    boxShadow:
-                      "0 0 0 1px rgba(255,255,255,0.2), 0 0 20px rgba(255,255,255,0.12)",
                   }}
                 >
                   <ModuleIcon src={mod.icon} active size={CARD_ICON_INNER} />
                 </motion.div>
 
-                <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.24)", letterSpacing: "0.1em" }}>
-                  {mod.num}/0{N} · {mod.label}
-                </span>
-
                 <div style={{
-                  fontSize: "clamp(16px, 1.9vh, 20px)", fontWeight: 700, lineHeight: 1.36,
-                  color: "rgba(255,255,255,0.94)", maxWidth: 500,
+                  fontSize: "clamp(20px, 2.5vh, 26px)", fontWeight: 700, lineHeight: 1.34,
+                  color: "rgba(255,255,255,0.94)", maxWidth: 540,
                 }}>
                   {mod.title}
                 </div>
@@ -623,14 +617,15 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
                 }} />
 
                 <div style={{
-                  flex: 1, width: "100%", maxWidth: 460,
+                  width: "100%", maxWidth: 500,
                   display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                  gap: "clamp(10px, 1.4vh, 14px)",
                 }}>
                   {mod.features.map((feat, fi) => (
                     <div key={fi} style={{
                       display: "inline-flex", alignItems: "flex-start",
-                      gap: 9, marginTop: fi === 0 ? 0 : 9,
-                      fontSize: "clamp(12.5px, 1.25vh, 14.5px)", lineHeight: 1.48,
+                      gap: 9,
+                      fontSize: "clamp(15px, 1.65vh, 18px)", lineHeight: 1.46,
                       color: "rgba(255,255,255,0.55)", textAlign: "left",
                     }}>
                       <span style={{ color: "#ffffff", flexShrink: 0, marginTop: 1 }}>✓</span>
@@ -640,15 +635,15 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
                 </div>
 
                 <div style={{
-                  width: "min(260px, 68%)", height: 1.5,
+                  width: "min(240px, 64%)", height: 1.5,
                   background: "rgba(255,255,255,0.06)", borderRadius: 2,
-                  overflow: "hidden", flexShrink: 0, marginTop: 4,
+                  overflow: "hidden", flexShrink: 0, marginTop: 2,
                 }}>
                   <div ref={barRef} style={{
                     height: "100%", background: "rgba(255,255,255,0.55)", width: "0%",
                   }} />
                 </div>
-                <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.24)", flexShrink: 0 }}>
+                <div style={{ fontSize: "clamp(10.5px, 1.15vh, 12px)", color: "rgba(255,255,255,0.24)", flexShrink: 0 }}>
                   auto-advancing — click an icon to jump, hover to pause
                 </div>
               </div>

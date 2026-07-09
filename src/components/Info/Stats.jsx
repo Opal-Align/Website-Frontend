@@ -30,7 +30,7 @@ const stats = [
     glyph: "β · 002",
   },
   {
-    target: 10, unit: "K",
+    target: 50, unit: "K",
     label: "Hours Saved",
     desc: "Manual labor dependence is eliminated instantly.",
     glyph: "γ · 003",
@@ -270,8 +270,8 @@ function InvisibleInk({ children, hideDelay = 2000 }) {
 }
 
 /* ─── Synced pulse hook ───
-   Drives the grow-arrow on counting cards and the New Hires
-   pulse, all from a single shared heartbeat. */
+   Drives the trend-line draw-in on counting cards and the flat-line
+   draw-in on the New Hires card, all from a single shared heartbeat. */
 function usePulse(period = 3600, holdDuration = 2100) {
   const [active, setActive] = useState(false);
 
@@ -295,64 +295,121 @@ function usePulse(period = 3600, holdDuration = 2100) {
   return active;
 }
 
-/* Upward arrow — enters from bottom, exits through top, resets hidden below */
-function GrowArrow({ active }) {
+/* ─── Trend line ───
+   Draws itself in as a rising line + arrowhead each pulse, like a
+   stock ticker climbing. This is the visual proof that the metric
+   is still climbing — paired against FlatLine on the New Hires card,
+   the contrast is the whole point: "zero new hires, everything else
+   still trends up." */
+function TrendArrow({ active }) {
   return (
     <span
       aria-hidden
-      className="inline-flex overflow-hidden shrink-0"
+      className="inline-flex shrink-0"
       style={{
-        width: "0.48em",
-        height: "0.58em",
-        marginLeft: "0.12em",
+        width: "0.95em",
+        height: "0.68em",
+        marginLeft: "0.22em",
         alignSelf: "center",
         position: "relative",
       }}
     >
-      <motion.span
-        initial={{ y: "100%", opacity: 0 }}
-        animate={
-          active
-            ? {
-                y: ["100%", "0%", "-100%"],
-                opacity: [0, 1, 0],
-              }
-            : { y: "100%", opacity: 0 }
-        }
-        transition={
-          active
-            ? {
-                duration: 1.6,
-                delay: 0.2,
-                ease: [0.16, 1, 0.3, 1],
-                times: [0, 0.42, 1],
-              }
-            : { duration: 0, delay: 0 }
-        }
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "rgba(255,255,255,0.85)",
-          willChange: "transform, opacity",
-        }}
-      >
-        <svg
-          width="88%"
-          height="88%"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
+      <svg width="100%" height="100%" viewBox="0 0 34 24" fill="none" style={{ overflow: "visible" }}>
+        {/* Rising line */}
+        <motion.path
+          d="M2 20 L11 11 L16 16 L27 4"
+          stroke="rgba(255,255,255,0.9)"
           strokeWidth="2.75"
           strokeLinecap="round"
           strokeLinejoin="round"
-        >
-          <path d="M12 19V5" />
-          <path d="M6 11l6-6 6 6" />
-        </svg>
-      </motion.span>
+          fill="none"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={
+            active
+              ? { pathLength: 1, opacity: 1 }
+              : { pathLength: 0, opacity: 0 }
+          }
+          transition={
+            active
+              ? { duration: 1.0, ease: [0.16, 1, 0.3, 1] }
+              : { duration: 0.3, ease: "easeIn" }
+          }
+        />
+        {/* Arrowhead, draws in right after the line lands */}
+        <motion.path
+          d="M20 4 L28 4 L28 12"
+          stroke="rgba(255,255,255,0.9)"
+          strokeWidth="2.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={
+            active
+              ? { pathLength: 1, opacity: 1 }
+              : { pathLength: 0, opacity: 0 }
+          }
+          transition={
+            active
+              ? { duration: 0.45, delay: 0.85, ease: [0.16, 1, 0.3, 1] }
+              : { duration: 0.2, ease: "easeIn" }
+          }
+        />
+      </svg>
+    </span>
+  );
+}
+
+/* ─── Flat line ───
+   The New Hires counterpart to TrendArrow: a static horizontal line
+   that draws in at the exact same moment the other cards' lines rise.
+   Same motion language, opposite direction — headcount stays flat
+   while everything else climbs. */
+function FlatLine({ active }) {
+  return (
+    <span
+      aria-hidden
+      className="inline-flex shrink-0"
+      style={{
+        width: "0.95em",
+        height: "0.68em",
+        marginLeft: "0.22em",
+        alignSelf: "center",
+        position: "relative",
+      }}
+    >
+      <svg width="100%" height="100%" viewBox="0 0 34 24" fill="none" style={{ overflow: "visible" }}>
+        <motion.path
+          d="M2 12 L28 12"
+          stroke="rgba(255,255,255,0.9)"
+          strokeWidth="2.75"
+          strokeLinecap="round"
+          fill="none"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={
+            active
+              ? { pathLength: 1, opacity: 1 }
+              : { pathLength: 0, opacity: 0 }
+          }
+          transition={
+            active
+              ? { duration: 1.0, ease: [0.16, 1, 0.3, 1] }
+              : { duration: 0.3, ease: "easeIn" }
+          }
+        />
+        {/* Small end-cap dot instead of an arrowhead — nothing to point to, it's flat */}
+        <motion.circle
+          cx="28" cy="12" r="2.2"
+          fill="rgba(255,255,255,0.9)"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={active ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
+          transition={
+            active
+              ? { duration: 0.35, delay: 0.85, ease: [0.16, 1, 0.3, 1] }
+              : { duration: 0.2, ease: "easeIn" }
+          }
+        />
+      </svg>
     </span>
   );
 }
@@ -415,7 +472,7 @@ function Counter({
         }}
       >
         <span>{val}{unit}</span>
-        <GrowArrow active={showPulse} />
+        <TrendArrow active={showPulse} />
       </motion.span>
     </div>
   );
@@ -521,7 +578,8 @@ function Card({ stat, index, inView, pulse, countsComplete }) {
   );
 }
 
-/* ─── New Hires card ─── stays at 0, pulses in sync with the "+" cards */
+/* ─── New Hires card ─── stays at 0, draws a flat line in sync with
+   the other cards' rising trend lines — the deliberate contrast. */
 function NewHiresCard({ inView, pulse, countsComplete }) {
   const [hovered, setHovered] = useState(false);
   const showPulse = pulse && countsComplete;
@@ -583,7 +641,7 @@ function NewHiresCard({ inView, pulse, countsComplete }) {
         </div>
 
         <motion.span
-          className="font-semibold tracking-tight inline-flex items-baseline min-w-0 max-w-full overflow-hidden"
+          className="font-semibold tracking-tight inline-flex items-center min-w-0 max-w-full overflow-hidden"
           animate={
             showPulse
               ? {
@@ -607,7 +665,8 @@ function NewHiresCard({ inView, pulse, countsComplete }) {
             transformOrigin: "left center",
           }}
         >
-          0
+          <span>0</span>
+          <FlatLine active={showPulse} />
         </motion.span>
 
         <h4 className="text-white/90 font-semibold tracking-tight text-lg leading-tight">
