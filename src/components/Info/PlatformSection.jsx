@@ -312,6 +312,13 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
           color: #fff;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
           font-weight: 300;
+          height: calc(100vh - var(--pf-nav-h, 64px));
+          min-height: 560px;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          padding: clamp(14px, 2vh, 24px) 0 0;
+          box-sizing: border-box;
         }
 
         .pf-header {
@@ -444,12 +451,159 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
         .pf-tile-glass-shine { position:absolute; inset:0; opacity:0.7; pointer-events:none; z-index:0; background:radial-gradient(circle at 20% 10%, rgba(255,255,255,0.10), transparent 36%), radial-gradient(circle at 85% 90%, rgba(255,255,255,0.08), transparent 42%); }
         .pf-tile-glass-edge { position:absolute; left:0; right:0; top:0; height:1px; z-index:1; pointer-events:none; background-image: ${OPAL_LIGHT_GRADIENT}; }
 
+        .pf-card-content {
+          position: relative;
+          z-index: 10;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          height: 100%;
+          padding: clamp(22px, 3vh, 36px) clamp(24px, 3vw, 40px);
+          gap: clamp(14px, 2vh, 22px);
+          min-height: 0;
+          flex: 1;
+          justify-content: space-evenly;
+        }
+        .pf-card-title {
+          font-size: clamp(20px, 2.5vh, 26px);
+          font-weight: 700;
+          line-height: 1.34;
+          color: rgba(255,255,255,0.94);
+          max-width: 540px;
+        }
+        .pf-card-features {
+          width: 100%;
+          max-width: 500px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: clamp(10px, 1.4vh, 14px);
+        }
+        .pf-card-feature {
+          display: inline-flex;
+          align-items: flex-start;
+          gap: 9px;
+          font-size: clamp(15px, 1.65vh, 18px);
+          line-height: 1.46;
+          color: rgba(255,255,255,0.55);
+          text-align: left;
+        }
+        .pf-card-footer {
+          font-size: clamp(10.5px, 1.15vh, 12px);
+          color: rgba(255,255,255,0.24);
+          flex-shrink: 0;
+        }
+        .pf-tile-glyph {
+          position: absolute;
+          bottom: 12px;
+          right: 16px;
+          z-index: 10;
+          font-size: 10px;
+          letter-spacing: 0.3em;
+          color: rgba(255,255,255,0.18);
+          pointer-events: none;
+        }
+
+        /* ── Mobile-only card label & dots (hidden on desktop) ── */
+        .pf-card-label { display: none; }
+        .pf-dot-row { display: none; }
+
         @media (max-width: 600px) {
-          .pf-tabs { gap: 6px !important; }
-          .pf-icon-box { max-width: min(96px, 18vh) !important; }
-          .pf-tab-label { font-size: 8.5px !important; letter-spacing: 0.16em !important; }
+          .pf-section-inner {
+            height: auto;
+            min-height: calc(100svh - var(--pf-nav-h, 64px));
+            overflow: visible;
+            padding-bottom: 32px;
+          }
+          .pf-body {
+            flex: unset;
+            padding: 0 16px;
+          }
+          .pf-header {
+            margin-bottom: 20px;
+            padding: 0 14px;
+          }
           .pf-hl-hero { font-size: clamp(24px, 7vw, 34px); }
-          .pf-tile { min-height: min(32vh, 280px); max-height: min(36vh, 300px); }
+
+          /* ── Hide the 4-tab icon row on mobile ── */
+          .pf-tabs { display: none !important; }
+
+          /* ── Card fills remaining space ── */
+          .pf-tile {
+            flex: unset;
+            min-height: unset;
+            max-height: none;
+            height: calc(100svh - var(--pf-nav-h, 64px) - 160px);
+          }
+          .pf-card-content {
+            height: 100%;
+            justify-content: space-evenly;
+            padding: 32px 20px 28px;
+            gap: 16px;
+          }
+
+          /* ── Large centered icon in card ── */
+          .pf-card-icon img {
+            width: 84px !important;
+            height: 84px !important;
+          }
+
+          /* ── Service name label below big icon ── */
+          .pf-card-label {
+            display: block;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.35);
+            margin-top: -4px;
+          }
+
+          .pf-card-title {
+            font-size: clamp(17px, 4.8vw, 21px);
+            line-height: 1.38;
+          }
+          .pf-card-feature {
+            font-size: clamp(13px, 3.6vw, 15px);
+            line-height: 1.5;
+            width: 100%;
+            max-width: 290px;
+          }
+
+          /* ── Footer text hidden; replaced by dot indicators ── */
+          .pf-card-footer { display: none !important; }
+
+          /* ── Dot indicator row ── */
+          .pf-dot-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            padding-top: 4px;
+          }
+          .pf-dot {
+            appearance: none; -webkit-appearance: none;
+            border: none; background: none; padding: 0; margin: 0; cursor: pointer;
+            width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+          }
+          .pf-dot::after {
+            content: '';
+            display: block;
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.22);
+            transition: width 0.3s ease, background 0.3s ease, border-radius 0.3s ease;
+          }
+          .pf-dot.active::after {
+            width: 22px;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.75);
+          }
+
+          .pf-tile-glyph { display: none; }
         }
         @media (prefers-reduced-motion: reduce) {
           .pf-wave-ring { animation: none !important; }
@@ -463,13 +617,7 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
       >
         <div
           className="pf-section-inner"
-          style={{
-            height: `calc(100vh - ${navbarHeight}px)`, minHeight: 560,
-            overflow: "hidden",
-            display: "flex", flexDirection: "column",
-            padding: "clamp(14px, 2vh, 24px) 0 0",
-            boxSizing: "border-box",
-          }}
+          style={{ "--pf-nav-h": `${navbarHeight}px` }}
         >
           {/* ── Centered header ── */}
           <div className="pf-header">
@@ -488,8 +636,8 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, ease: EASE, delay: 0.32 }}
               className="pf-tabs"
-              onMouseEnter={() => { hoverRef.current = true; }}
-              onMouseLeave={() => { hoverRef.current = false; }}
+              onPointerEnter={(e) => { if (e.pointerType === "mouse") hoverRef.current = true; }}
+              onPointerLeave={(e) => { if (e.pointerType === "mouse") hoverRef.current = false; }}
             >
               {MODULES.map((m, i) => {
                 const isHero = displayIndex === i;
@@ -541,8 +689,8 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
                 boxShadow: "0 12px 48px rgba(255,255,255,0.08)",
               }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              onMouseEnter={() => { hoverRef.current = true; setTileHovered(true); }}
-              onMouseLeave={() => { hoverRef.current = false; setTileHovered(false); }}
+              onPointerEnter={(e) => { if (e.pointerType === "mouse") { hoverRef.current = true; setTileHovered(true); } }}
+              onPointerLeave={(e) => { if (e.pointerType === "mouse") { hoverRef.current = false; setTileHovered(false); } }}
             >
               <div className="pf-tile-glass-shine" aria-hidden />
               <div className="pf-tile-glass-edge" aria-hidden />
@@ -578,15 +726,13 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
                 )}
               </div>
 
-              <div style={{
-                position: "relative", zIndex: 10, display: "flex", flexDirection: "column",
-                alignItems: "center", textAlign: "center", height: "100%",
-                padding: "clamp(22px, 3vh, 36px) clamp(24px, 3vw, 40px)",
-                gap: "clamp(14px, 2vh, 22px)", minHeight: 0, flex: 1,
-                justifyContent: "space-evenly",
-                opacity: isSettled ? 1 : 0,
-                transition: `opacity ${phase === "out" ? BURST_DUR : 260}ms ease`,
-              }}>
+              <div
+                className="pf-card-content"
+                style={{
+                  opacity: isSettled ? 1 : 0,
+                  transition: `opacity ${phase === "out" ? BURST_DUR : 260}ms ease`,
+                }}
+              >
                 <motion.div
                   key={mod.id}
                   className="pf-card-icon"
@@ -597,17 +743,17 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
                   style={{
                     flexShrink: 0,
                     display: "flex",
+                    flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "center",
+                    gap: 10,
                   }}
                 >
                   <ModuleIcon src={mod.icon} active size={CARD_ICON_INNER} />
+                  <span className="pf-card-label">{mod.label}</span>
                 </motion.div>
 
-                <div style={{
-                  fontSize: "clamp(20px, 2.5vh, 26px)", fontWeight: 700, lineHeight: 1.34,
-                  color: "rgba(255,255,255,0.94)", maxWidth: 540,
-                }}>
+                <div className="pf-card-title">
                   {mod.title}
                 </div>
 
@@ -616,18 +762,9 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
                   background: "rgba(255,255,255,0.10)", flexShrink: 0,
                 }} />
 
-                <div style={{
-                  width: "100%", maxWidth: 500,
-                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                  gap: "clamp(10px, 1.4vh, 14px)",
-                }}>
+                <div className="pf-card-features">
                   {mod.features.map((feat, fi) => (
-                    <div key={fi} style={{
-                      display: "inline-flex", alignItems: "flex-start",
-                      gap: 9,
-                      fontSize: "clamp(15px, 1.65vh, 18px)", lineHeight: 1.46,
-                      color: "rgba(255,255,255,0.55)", textAlign: "left",
-                    }}>
+                    <div key={fi} className="pf-card-feature">
                       <span style={{ color: "#ffffff", flexShrink: 0, marginTop: 1 }}>✓</span>
                       <span>{feat}</span>
                     </div>
@@ -643,18 +780,32 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
                     height: "100%", background: "rgba(255,255,255,0.55)", width: "0%",
                   }} />
                 </div>
-                <div style={{ fontSize: "clamp(10.5px, 1.15vh, 12px)", color: "rgba(255,255,255,0.24)", flexShrink: 0 }}>
+                <div className="pf-card-footer">
                   auto-advancing — click an icon to jump, hover to pause
+                </div>
+
+                {/* Dot indicators — visible only on mobile */}
+                <div className="pf-dot-row" aria-label="Service navigation">
+                  {MODULES.map((m, i) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      className={`pf-dot${displayIndex === i ? " active" : ""}`}
+                      onClick={() => goToIndex(i)}
+                      aria-label={`Switch to ${m.label}`}
+                      aria-pressed={displayIndex === i}
+                    />
+                  ))}
                 </div>
               </div>
 
-              <span style={{
-                position: "absolute", bottom: 12, right: 16, zIndex: 10,
-                fontSize: 10, letterSpacing: "0.3em",
-                color: "rgba(255,255,255,0.18)", pointerEvents: "none",
-                opacity: isSettled ? 1 : 0,
-                transition: `opacity ${phase === "out" ? BURST_DUR : 260}ms ease`,
-              }}>
+              <span
+                className="pf-tile-glyph"
+                style={{
+                  opacity: isSettled ? 1 : 0,
+                  transition: `opacity ${phase === "out" ? BURST_DUR : 260}ms ease`,
+                }}
+              >
                 {mod.glyph}
               </span>
             </motion.div>
