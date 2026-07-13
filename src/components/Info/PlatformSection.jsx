@@ -443,9 +443,9 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
           border: 1px solid rgba(255,255,255,0.1);
           background: linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018));
           backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-          flex: 0 1 auto;
+          flex: 1 1 auto;
           min-height: min(34vh, 320px);
-          max-height: min(38vh, 360px);
+          max-height: none;
           align-self: stretch;
         }
         .pf-tile-glass-shine { position:absolute; inset:0; opacity:0.7; pointer-events:none; z-index:0; background:radial-gradient(circle at 20% 10%, rgba(255,255,255,0.10), transparent 36%), radial-gradient(circle at 85% 90%, rgba(255,255,255,0.08), transparent 42%); }
@@ -460,10 +460,21 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
           text-align: center;
           height: 100%;
           padding: clamp(22px, 3vh, 36px) clamp(24px, 3vw, 40px);
-          gap: clamp(14px, 2vh, 22px);
+          gap: clamp(12px, 1.6vh, 18px);
           min-height: 0;
           flex: 1;
-          justify-content: space-evenly;
+          justify-content: flex-start;
+        }
+        .pf-card-icon { display: none; }
+        .pf-card-autoplay {
+          margin-top: auto;
+          flex-shrink: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: clamp(8px, 1vh, 12px);
+          width: 100%;
+          padding-top: clamp(4px, 0.8vh, 10px);
         }
         .pf-card-title {
           font-size: clamp(20px, 2.5vh, 26px);
@@ -478,8 +489,10 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: center;
-          gap: clamp(10px, 1.4vh, 14px);
+          justify-content: flex-start;
+          gap: clamp(8px, 1.2vh, 12px);
+          flex: 1 1 auto;
+          min-height: 0;
         }
         .pf-card-feature {
           display: inline-flex;
@@ -544,9 +557,14 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
           }
           .pf-card-content {
             height: 100%;
-            justify-content: space-evenly;
+            justify-content: flex-start;
             padding: 32px 20px 28px;
             gap: 16px;
+          }
+          .pf-card-icon { display: flex; }
+          .pf-card-autoplay {
+            margin-top: auto;
+            padding-top: 8px;
           }
 
           /* ── Large centered icon in card ── */
@@ -796,21 +814,22 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
                   ))}
                 </div>
 
-                <div style={{
-                  width: "min(240px, 64%)", height: 1.5,
-                  background: "rgba(255,255,255,0.06)", borderRadius: 2,
-                  overflow: "hidden", flexShrink: 0, marginTop: 2,
-                }}>
-                  <div ref={barRef} style={{
-                    height: "100%", background: "rgba(255,255,255,0.55)", width: "0%",
-                  }} />
-                </div>
-                <div className="pf-card-footer">
-                  auto-advancing — click an icon to jump, hover to pause
-                </div>
+                <div className="pf-card-autoplay">
+                  <div style={{
+                    width: "min(240px, 64%)", height: 1.5,
+                    background: "rgba(255,255,255,0.06)", borderRadius: 2,
+                    overflow: "hidden", flexShrink: 0,
+                  }}>
+                    <div ref={barRef} style={{
+                      height: "100%", background: "rgba(255,255,255,0.55)", width: "0%",
+                    }} />
+                  </div>
+                  <div className="pf-card-footer">
+                    auto-advancing — click an icon to jump, hover to pause
+                  </div>
 
-                {/* Dot indicators — visible only on mobile */}
-                <div className="pf-dot-row" aria-label="Service navigation">
+                  {/* Dot indicators — visible only on mobile */}
+                  <div className="pf-dot-row" aria-label="Service navigation">
                   {MODULES.map((m, i) => (
                     <button
                       key={m.id}
@@ -821,6 +840,7 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
                       aria-pressed={displayIndex === i}
                     />
                   ))}
+                  </div>
                 </div>
               </div>
 

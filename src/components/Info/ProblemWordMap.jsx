@@ -184,6 +184,7 @@ function buildLayout(W, H) {
       floatPhase: seed(i * 11) * Math.PI * 2,
       delay:      seed(i * 13) * 0.8,
       restPx:     TIER_PX[word.tier],
+      centerPx:   TIER_PX[word.tier] * (isMobile ? TIER_CENTER_SCALE_MOBILE[word.tier] : TIER_CENTER_SCALE[word.tier]),
     });
   });
 
@@ -229,7 +230,7 @@ export default function ProblemWordMap() {
     stateRef.current = words.map((w) => ({
       x: w.x, y: w.y,
       opacity: 0,
-      scale: 1,
+      fontSize: w.restPx,
     }));
     phaseRef.current = words.map(() => ({ phase: "rest", startTime: 0 }));
     queueRef.current = 0;
@@ -249,7 +250,7 @@ export default function ProblemWordMap() {
     states[i].x = floatX;
     states[i].y = floatY;
     states[i].opacity = restOpacity;
-    states[i].scale = 1;
+    states[i].fontSize = word.restPx;
     phaseRef.current[i] = { phase: "rest", startTime: now };
   }, []);
 
@@ -305,7 +306,6 @@ export default function ProblemWordMap() {
     const cx = W / 2;
     const cy = H / 2;
     const isMobile = W < 600;
-    const centerScales = isMobile ? TIER_CENTER_SCALE_MOBILE : TIER_CENTER_SCALE;
     const activeIdx = activeRef.current;
     const centerBusy = activeIdx >= 0 && (
       phaseRef.current[activeIdx]?.phase === "flyIn" ||
@@ -319,13 +319,12 @@ export default function ProblemWordMap() {
 
       const restStyle  = TIER_STYLE[word.tier];
       const restOpacity = parseFloat(restStyle.color.match(/[\d.]+\)$/)?.[0] ?? "0.5");
-      const centerScale = centerScales[word.tier];
       const ph          = phases[i];
 
       const floatX = word.x + Math.sin(now * word.floatFreq + word.floatPhase) * word.floatAmp;
       const floatY = word.y + Math.cos(now * word.floatFreq * 0.7 + word.floatPhase) * word.floatAmp;
 
-      let tx, ty, top, ts;
+      let tx, ty, top, tFont;
 
       if (ph.phase === "flyIn") {
         const t = Math.min(1, (now - ph.startTime) / FLY_IN_DUR);
@@ -333,18 +332,18 @@ export default function ProblemWordMap() {
         tx  = lerpN(word.x, cx, e);
         ty  = lerpN(word.y, cy, e);
         top = lerpN(restOpacity, 1, e);
-        ts  = lerpN(1, centerScale, e);
+        tFont = lerpN(word.restPx, word.centerPx, e);
       } else if (ph.phase === "hold") {
-        tx = cx; ty = cy; top = 1; ts = centerScale;
+        tx = cx; ty = cy; top = 1; tFont = word.centerPx;
       } else if (ph.phase === "flyOut") {
         const t = Math.min(1, (now - ph.startTime) / FLY_OUT_DUR);
         const e = easeInOutCubic(t);
         tx  = lerpN(cx, floatX, e);
         ty  = lerpN(cy, floatY, e);
         top = lerpN(1, restOpacity, easeInCubic(t));
-        ts  = lerpN(centerScale, 1, e);
+        tFont = lerpN(word.centerPx, word.restPx, e);
       } else {
-        tx = floatX; ty = floatY; top = restOpacity; ts = 1;
+        tx = floatX; ty = floatY; top = restOpacity; tFont = word.restPx;
         if (centerBusy && i !== activeIdx) {
           top = restOpacity * (isMobile ? 0.22 : 0.38);
         }
@@ -354,18 +353,25 @@ export default function ProblemWordMap() {
       const isActive = ph.phase === "flyIn" || ph.phase === "hold" || ph.phase === "flyOut";
       const moveSpd = isActive ? 0.38 : 0.12;
       const fadeSpd = isActive ? 0.22 : 0.1;
-      const scaleSpd = isActive ? 0.28 : 0.12;
+      const fontSpd = isActive ? 0.32 : 0.12;
 
-      s.x = lerpN(s.x, tx, moveSpd);
-      s.y = lerpN(s.y, ty, moveSpd);
-      s.opacity = lerpN(s.opacity, top, fadeSpd);
-      s.scale = lerpN(s.scale, ts, scaleSpd);
+      if (ph.phase === "hold") {
+        s.x = cx;
+        s.y = cy;
+        s.opacity = 1;
+        s.fontSize = word.centerPx;
+      } else {
+        s.x = lerpN(s.x, tx, moveSpd);
+        s.y = lerpN(s.y, ty, moveSpd);
+        s.opacity = lerpN(s.opacity, top, fadeSpd);
+        s.fontSize = lerpN(s.fontSize, tFont, fontSpd);
+      }
 
-      el.style.left = `${s.x}px`;
-      el.style.top = `${s.y}px`;
+      el.style.left = `${Math.round(s.x)}px`;
+      el.style.top = `${Math.round(s.y)}px`;
       el.style.opacity = `${s.opacity}`;
-      el.style.fontSize = `${word.restPx}px`;
-      el.style.transform = `translate(-50%, -50%) scale(${s.scale})`;
+      el.style.fontSize = `${Math.round(s.fontSize * 2) / 2}px`;
+      el.style.transform = "translate(-50%, -50%)";
       el.style.fontWeight = i === activeRef.current ? "800" : `${restStyle.fontWeight}`;
       el.style.zIndex = i === activeRef.current ? "10" : word.tier === 1 ? "2" : "1";
     });
@@ -403,14 +409,14 @@ export default function ProblemWordMap() {
           states[i].opacity = op;
           states[i].x = word.x;
           states[i].y = word.y;
-          states[i].scale = 1;
+          states[i].fontSize = word.restPx;
         }
         if (els[i]) {
           els[i].style.opacity = `${op}`;
-          els[i].style.left = `${word.x}px`;
-          els[i].style.top = `${word.y}px`;
+          els[i].style.left = `${Math.round(word.x)}px`;
+          els[i].style.top = `${Math.round(word.y)}px`;
           els[i].style.fontSize = `${word.restPx}px`;
-          els[i].style.transform = "translate(-50%, -50%) scale(1)";
+          els[i].style.transform = "translate(-50%, -50%)";
         }
       });
 
@@ -498,11 +504,13 @@ export default function ProblemWordMap() {
           user-select: none;
           line-height: 1.1;
           color: #ffffff;
-          transform: translate(-50%, -50%) scale(1);
+          transform: translate(-50%, -50%);
           transform-origin: center center;
-          will-change: transform, left, top, opacity;
+          will-change: left, top, opacity, font-size;
           letter-spacing: -0.02em;
           -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+          text-rendering: optimizeLegibility;
           backface-visibility: hidden;
         }
 
