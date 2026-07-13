@@ -2,49 +2,53 @@
  * Single source of truth for nav targets used by both the top bar
  * (large screens) and the full-screen overlay (small screens).
  *
- * Each target maps to a section actually rendered in HomePageLayout.jsx:
- *   #system       → Info/Mechanism.jsx          (the operating-system explainer)
- *   #modules      → Info/ModuleSection.jsx      (Relay / Collect / Produce / Schedule)
- *   #impact       → Info/Stats.jsx              (numbers / proof)
- *   #services     → Info/HeroFlow.jsx           (services + flow)
- *   #testimonials → Info/Testimonial.tsx        (voices from the field)
+ * Homepage section map (top → bottom):
+ *   #problem      → Info/ProblemWordMap.jsx
+ *   #platform     → Info/PlatformSection.jsx   (Modules — four services)
+ *   #loop         → Info/FiveStepLoop.jsx      (The Platform — gOS loop)
+ *   #impact       → Info/Stats.jsx
+ *   #stack        → LogoStream/LogoStream.jsx
+ *   #testimonials → Info/Testimonial.tsx
  *
- *   home          → null  (scrolls to top)
- *   contact       → "/contact-us"  (route)
+ *   home          → null  (scroll to top)
+ *   contact       → "/contact-us"
  */
+
+/** Fixed navbar clearance — keep section tops visible below the bar */
+export const NAV_SCROLL_OFFSET = 80;
 
 export const NAV_TARGET = {
   home: null,
-  system: "#system",
-  modules: "#modules",
+  problem: "#problem",
+  platform: "#platform",
+  loop: "#loop",
   impact: "#impact",
-  services: "#services",
+  stack: "#stack",
   testimonials: "#testimonials",
   contact: "/contact-us",
 };
 
-/** Items used inside the full-screen overlay (mobile / hamburger menu). */
+/** Full-screen overlay — page order */
 export const OVERLAY_NAV_ITEMS = [
   { key: "home", label: "Home", target: NAV_TARGET.home },
-  { key: "system", label: "Platform", target: NAV_TARGET.system },
-  { key: "modules", label: "Modules", target: NAV_TARGET.modules },
+  { key: "problem", label: "The Problem", target: NAV_TARGET.problem },
+  { key: "modules", label: "Modules", target: NAV_TARGET.platform },
+  { key: "loop", label: "The Platform", target: NAV_TARGET.loop },
   { key: "impact", label: "Impact", target: NAV_TARGET.impact },
+  { key: "stack", label: "The Stack", target: NAV_TARGET.stack },
   { key: "testimonials", label: "Testimonials", target: NAV_TARGET.testimonials },
   { key: "contact", label: "Contact", target: NAV_TARGET.contact },
 ];
 
-/**
- * Items used by the desktop top bar.
- * The logo handles "home", so we don't repeat it here.
- * The last item on the right (`accent: true`) is rendered as a gradient
- * call-to-action.
- */
+/** Desktop top bar — logo is home */
 export const NAVBAR_LINKS = {
   left: [
-    { key: "system", label: "Platform", target: NAV_TARGET.system },
-    { key: "modules", label: "Modules", target: NAV_TARGET.modules },
+    { key: "problem", label: "The Problem", target: NAV_TARGET.problem },
+    { key: "modules", label: "Modules", target: NAV_TARGET.platform },
+    { key: "loop", label: "The Platform", target: NAV_TARGET.loop },
   ],
   right: [
+    { key: "stack", label: "The Stack", target: NAV_TARGET.stack },
     { key: "impact", label: "Impact", target: NAV_TARGET.impact },
     { key: "testimonials", label: "Testimonials", target: NAV_TARGET.testimonials },
     { key: "contact", label: "Contact", target: NAV_TARGET.contact, accent: true },
@@ -74,7 +78,11 @@ export function goToTarget(target, navigate, options = {}) {
     }
     const el = document.querySelector(target);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      const top =
+        el.getBoundingClientRect().top +
+        window.scrollY -
+        NAV_SCROLL_OFFSET;
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
     }
   };
 

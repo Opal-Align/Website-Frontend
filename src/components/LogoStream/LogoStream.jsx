@@ -1,3 +1,5 @@
+import { useRef, useState, useEffect } from "react";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 import Carestack from "../../assets/Carestack.svg";
 import Cloud9 from "../../assets/Cloud 9.svg";
 import Curve from "../../assets/Curve.svg";
@@ -65,6 +67,74 @@ const COLUMN_VISIBILITY = [
   "hidden xl:flex",       // from extra-large screens up
 ];
 
+const TAGLINE_LINES = [
+  { prefix: "Your Practice Management Systems.", highlight: "Unchanged." },
+  { prefix: "Your Operations.", highlight: "Transformed." },
+  { prefix: "Integrated & Interoperable", highlight: "by Design." },
+];
+
+const taglineVariants = {
+  enter: {
+    x: "-100%",
+    opacity: 0,
+    filter: "blur(8px)",
+  },
+  center: {
+    x: "0%",
+    opacity: 1,
+    filter: "blur(0px)",
+    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
+  },
+  exit: {
+    x: "100%",
+    opacity: 0,
+    filter: "blur(6px)",
+    transition: { duration: 0.45, ease: [0.55, 0, 0.78, 0] },
+  },
+};
+
+function TaglineTicker({ active }) {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    if (!active) return;
+    const timer = setInterval(() => {
+      setIndex((i) => (i + 1) % TAGLINE_LINES.length);
+    }, 2800);
+    return () => clearInterval(timer);
+  }, [active]);
+
+  const { prefix, highlight } = TAGLINE_LINES[index];
+
+  return (
+    <div className="ls-tagline-wrap">
+      <div className="ls-tagline-ticker">
+        <div className="ls-tagline-inner">
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.div
+              key={index}
+              className="ls-tagline-line"
+              variants={taglineVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+            >
+              <span className="ls-tagline-prefix">{prefix}</span>
+              <span className="ls-tagline-highlight">{highlight}</span>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+
+      <div className="ls-tagline-dots" aria-hidden>
+        {TAGLINE_LINES.map((_, i) => (
+          <span key={i} className={`ls-tagline-dot${i === index ? " active" : ""}`} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Column({ logos, direction, visibility }) {
   // Duplicate the (now equal-length, padded) column content so the loop is
   // seamless: we animate the track by exactly 50% of its own height, then
@@ -122,10 +192,15 @@ function LogoCard({ logo }) {
 }
 
 export default function LogoStream() {
+  const sectionRef = useRef(null);
+  const inView = useInView(sectionRef, { once: true, margin: "-80px" });
+
   return (
     <div
+      id="stack"
+      ref={sectionRef}
       className="relative w-full py-10 md:py-16"
-      style={{ background: "#07080D" }}
+      style={{ background: "#07080D", scrollMarginTop: 80 }}
     >
       {/* Edge fades, top & bottom, so columns appear to scroll into the void */}
       <div className="pointer-events-none absolute top-0 left-0 w-full h-16 md:h-24 z-10" style={{ background: "linear-gradient(to bottom, #07080D, transparent)" }} />
@@ -133,8 +208,25 @@ export default function LogoStream() {
 
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
         <header className="ls-header">
-          <span className="ls-eyebrow">Who we work with</span>
-          <span className="ls-hl-hero">Our partners.</span>
+          <div className="ls-heading">
+            <motion.span
+              className="ls-hl-bold"
+              initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
+              animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+              transition={{ duration: 0.85, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+            >
+              THE STACK
+            </motion.span>
+
+            <motion.div
+              className="ls-tagline-motion"
+              initial={{ opacity: 0, y: 10 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.7, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <TaglineTicker active={inView} />
+            </motion.div>
+          </div>
         </header>
 
         <div className="flex gap-4 md:gap-5 h-[420px] md:h-[520px]">
@@ -154,33 +246,129 @@ export default function LogoStream() {
 
         .ls-header {
           text-align: center;
+          flex-shrink: 0;
           margin-bottom: clamp(28px, 4.2vh, 52px);
+          width: 100%;
+          padding: 0 clamp(16px, 3vw, 52px);
+          box-sizing: border-box;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
           font-weight: 300;
         }
 
-        .ls-eyebrow {
-          display: block;
-          font-size: clamp(8px, 0.9vw, 10px);
-          letter-spacing: 0.38em;
-          color: rgba(255,255,255,0.32);
-          text-transform: uppercase;
-          margin-bottom: clamp(6px, 1vh, 10px);
+        .ls-heading {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: clamp(8px, 1.2vh, 14px);
+          width: 100%;
         }
 
-        .ls-hl-hero {
+        .ls-hl-bold {
           display: block;
-          font-size: clamp(20px, 3.2vw, 36px);
+          width: 100%;
+          font-size: clamp(26px, 4.2vw, 44px);
           font-weight: 800;
-          color: #fff;
           letter-spacing: -0.03em;
-          line-height: 1;
-          max-width: 720px;
-          margin: 0 auto;
+          color: #fff;
+          line-height: 1.06;
+          white-space: nowrap;
+        }
+
+        .ls-tagline-motion {
+          width: 100%;
+          align-self: stretch;
+        }
+
+        .ls-tagline-wrap {
+          width: 100%;
+          max-width: min(960px, 100%);
+          margin: clamp(4px, 0.8vh, 10px) auto 0;
+        }
+        .ls-tagline-ticker {
+          position: relative;
+          overflow: hidden;
+          width: 100%;
+          min-height: clamp(32px, 3.8vh, 44px);
+          height: clamp(32px, 3.8vh, 44px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .ls-tagline-inner {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          -webkit-mask-image: linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%);
+        }
+        .ls-tagline-line {
+          position: absolute;
+          left: 0;
+          right: 0;
+          display: flex;
+          align-items: baseline;
+          justify-content: center;
+          gap: 0.28em;
+          white-space: nowrap;
+          width: 100%;
+          min-width: 100%;
+          padding: 0 8px;
+          box-sizing: border-box;
+        }
+        .ls-tagline-prefix {
+          font-size: clamp(17px, 2.6vw, 26px);
+          font-weight: 600;
+          letter-spacing: -0.02em;
+          color: rgba(255,255,255,0.48);
+          line-height: 1.14;
+        }
+        .ls-tagline-highlight {
+          font-size: clamp(17px, 2.6vw, 26px);
+          font-weight: 600;
+          letter-spacing: -0.02em;
+          color: #fff;
+          line-height: 1.14;
+        }
+        .ls-tagline-dots {
+          display: flex;
+          gap: 6px;
+          justify-content: center;
+          margin-top: 12px;
+        }
+        .ls-tagline-dot {
+          width: 4px;
+          height: 4px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.18);
+          transition: background 0.3s ease, transform 0.3s ease;
+        }
+        .ls-tagline-dot.active {
+          background: rgba(255,255,255,0.55);
+          transform: scale(1.25);
         }
 
         @media (max-width: 600px) {
-          .ls-hl-hero { font-size: clamp(22px, 7vw, 32px); }
+          .ls-header { margin-bottom: 24px; padding: 0 14px; }
+          .ls-heading { gap: 8px; width: 100%; }
+          .ls-hl-bold { font-size: clamp(22px, 6.8vw, 30px); }
+          .ls-tagline-wrap { max-width: 100%; }
+          .ls-tagline-ticker {
+            min-height: clamp(28px, 5vw, 36px);
+            height: clamp(28px, 5vw, 36px);
+          }
+          .ls-tagline-line { padding: 0 4px; }
+          .ls-tagline-prefix,
+          .ls-tagline-highlight {
+            font-size: clamp(12px, 3.4vw, 16px);
+          }
+          .ls-tagline-dots { margin-top: 10px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .ls-tagline-line { position: relative; }
         }
 
         @keyframes scroll-up {

@@ -753,11 +753,26 @@ export default function Processes() {
         justifyContent: "center",
         padding: "clamp(32px, 5vh, 64px) 0",
         boxSizing: "border-box",
+        scrollMarginTop: 80,
       }}
     >
       <Process />
 
       <div ref={ref} className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+
+        {/* Section header */}
+        <header className="st-header">
+          <div className="st-heading">
+            <motion.span
+              className="st-hl-bold"
+              initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
+              animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+              transition={{ duration: 0.85, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+            >
+              THE REFRAME
+            </motion.span>
+          </div>
+        </header>
 
         {/* Heading */}
         <motion.div
@@ -831,6 +846,44 @@ export default function Processes() {
         </motion.div>
 
       </div>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+        .st-header {
+          text-align: center;
+          flex-shrink: 0;
+          margin-bottom: clamp(24px, 3.5vh, 40px);
+          width: 100%;
+          padding: 0 clamp(16px, 3vw, 52px);
+          box-sizing: border-box;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+          font-weight: 300;
+        }
+
+        .st-heading {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: clamp(8px, 1.2vh, 14px);
+        }
+
+        .st-hl-bold {
+          display: block;
+          font-size: clamp(26px, 4.2vw, 44px);
+          font-weight: 800;
+          letter-spacing: -0.03em;
+          color: #fff;
+          line-height: 1.06;
+          white-space: nowrap;
+        }
+
+        @media (max-width: 600px) {
+          .st-header { margin-bottom: 20px; padding: 0 14px; }
+          .st-heading { gap: 8px; }
+          .st-hl-bold { font-size: clamp(22px, 6.8vw, 30px); }
+        }
+      `}</style>
     </div>
   );
 }

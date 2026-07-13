@@ -331,6 +331,7 @@ export default function FiveStepLoop() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
         .fsl-section {
+          scroll-margin-top: 80px;
           background: ${BG};
           color: #fff;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -598,7 +599,7 @@ export default function FiveStepLoop() {
         }
       `}</style>
 
-      <section className="fsl-section">
+      <section id="loop" className="fsl-section">
 
         {/* ══ HEADING ══ */}
         <div ref={headingRef} className="fsl-heading">

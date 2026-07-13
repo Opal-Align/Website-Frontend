@@ -258,11 +258,10 @@ const TestimonialSection = () => {
   return (
     <section
       id="testimonials"
-      className="relative flex flex-col overflow-hidden"
+      className="tm-section relative flex flex-col overflow-hidden"
       style={{
-        minHeight: "100svh",
-        height: "100svh",
         backgroundColor: "transparent",
+        scrollMarginTop: 80,
       }}
     >
       <StarsCanvas />
@@ -277,53 +276,32 @@ const TestimonialSection = () => {
 
       <div
         ref={ref}
-        className="relative z-10 flex flex-col flex-1 min-h-0 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-8 pb-6 md:pt-10 md:pb-8"
+        className="tm-inner relative z-10 flex flex-col flex-1 min-h-0 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-8 pb-6 md:pt-10 md:pb-8"
       >
-        {/* Header — compact so the “page” breathes */}
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-          className="shrink-0 text-center mb-6 md:mb-8"
-        >
-          <div className="inline-flex items-center gap-3 mb-3">
-            <span
-              className="h-px w-8 sm:w-10"
-              style={{
-                background:
-                  "linear-gradient(to right, transparent, rgba(255,255,255,0.6))",
-              }}
-            />
-            <p
-              className="text-[10px] sm:text-[11px] tracking-[0.28em] sm:tracking-[0.32em] uppercase"
-              style={{ color: "rgba(244,248,255,0.55)" }}
+        {/* Header */}
+        <div className="tm-header">
+          <div className="tm-heading">
+            <motion.span
+              className="tm-hl-muted"
+              initial={{ opacity: 0, y: 8 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            >
+              Testimonials
+            </motion.span>
+            <motion.span
+              className="tm-hl-bold"
+              initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
+              animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+              transition={{ duration: 0.85, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
             >
               Voices from the field
-            </p>
-            <span
-              className="h-px w-8 sm:w-10"
-              style={{
-                background:
-                  "linear-gradient(to left, transparent, rgba(255,255,255,0.6))",
-              }}
-            />
+            </motion.span>
           </div>
-
-          <h2
-            className="font-semibold tracking-tight leading-[1.02] font-['Montserrat']"
-            style={{
-              ...gradientText,
-              fontSize: "clamp(32px, 6vw, 64px)",
-              letterSpacing: "-0.02em",
-              textShadow: "0 0 50px rgba(255,255,255,0.10)",
-            }}
-          >
-            Testimonials
-          </h2>
-        </motion.div>
+        </div>
 
         {/* Main stage — one quote at a time = true full-viewport “page” */}
-        <div className="flex-1 min-h-0 flex flex-col justify-center">
+        <div className="tm-stage flex-1 min-h-0 flex flex-col justify-center">
           <AnimatePresence mode="wait">
             <motion.div
               key={active}
@@ -427,7 +405,7 @@ const TestimonialSection = () => {
         </div>
 
         {/* Auto-rotation progress strip — replaces click carousel */}
-        <div className="shrink-0 mt-auto pt-4 md:pt-6 space-y-5">
+        <div className="tm-progress shrink-0 mt-5 md:mt-auto pt-0 md:pt-6 space-y-4 md:space-y-5">
           <div
             role="tablist"
             aria-label="Testimonials auto-rotation"
@@ -492,6 +470,76 @@ const TestimonialSection = () => {
           </motion.div>
         </div>
       </div>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+        .tm-section {
+          min-height: 100svh;
+          height: 100svh;
+        }
+
+        .tm-header {
+          text-align: center;
+          flex-shrink: 0;
+          margin-bottom: clamp(16px, 2.5vh, 28px);
+          width: 100%;
+          padding: 0 clamp(16px, 3vw, 52px);
+          box-sizing: border-box;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+          font-weight: 300;
+        }
+
+        .tm-heading {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: clamp(8px, 1.2vh, 14px);
+          width: 100%;
+        }
+
+        .tm-hl-bold {
+          display: block;
+          font-size: clamp(26px, 4.2vw, 44px);
+          font-weight: 800;
+          letter-spacing: -0.03em;
+          color: #fff;
+          line-height: 1.06;
+        }
+
+        .tm-hl-muted {
+          display: block;
+          font-size: clamp(17px, 2.6vw, 26px);
+          font-weight: 600;
+          letter-spacing: -0.02em;
+          color: rgba(255,255,255,0.48);
+          line-height: 1.14;
+        }
+
+        @media (max-width: 600px) {
+          .tm-section {
+            height: auto;
+            min-height: 0;
+          }
+          .tm-inner {
+            flex: unset;
+            min-height: 0;
+            padding-top: 20px;
+            padding-bottom: 20px;
+          }
+          .tm-stage {
+            flex: unset;
+            justify-content: flex-start;
+          }
+          .tm-progress {
+            gap: 16px;
+          }
+          .tm-header { margin-bottom: 12px; padding: 0 14px; }
+          .tm-heading { gap: 8px; }
+          .tm-hl-bold { font-size: clamp(22px, 6.8vw, 30px); }
+          .tm-hl-muted { font-size: clamp(14px, 4.2vw, 18px); color: rgba(255,255,255,0.52); }
+        }
+      `}</style>
     </section>
   );
 };

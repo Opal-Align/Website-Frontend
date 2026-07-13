@@ -440,6 +440,7 @@ export default function ProblemWordMap() {
 
         .pwm-section {
           --pwm-nav-h: 84px;
+          scroll-margin-top: 80px;
           background: #0a0a0a;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
           font-weight: 300; color: #fff;
@@ -454,30 +455,40 @@ export default function ProblemWordMap() {
           display: flex; flex-direction: column; flex: 1; min-height: 0;
           padding: 1.75rem 2rem 1.5rem; box-sizing: border-box;
         }
-        .pwm-eyebrow {
-          display: flex; align-items: center; justify-content: center;
-          gap: 10px; margin-bottom: 16px; flex-shrink: 0;
+        .pwm-header {
+          text-align: center;
+          flex-shrink: 0;
+          margin-bottom: clamp(16px, 2.5vh, 28px);
+          width: 100%;
+          padding: 0 clamp(16px, 3vw, 52px);
+          box-sizing: border-box;
         }
-        .pwm-eyebrow-text {
-          font-size: 10.5px; letter-spacing: 0.2em;
-          color: rgba(255,255,255,0.35); text-transform: uppercase; font-weight: 400;
+        .pwm-heading {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: clamp(8px, 1.2vh, 14px);
         }
-        .pwm-heading { text-align: center; margin-bottom: 0; flex-shrink: 0; }
         .pwm-hl-bold {
           display: block;
-          font-size: clamp(30px, 5vw, 50px); font-weight: 800;
-          letter-spacing: -0.028em; color: #fff; line-height: 1.05;
+          font-size: clamp(26px, 4.2vw, 44px);
+          font-weight: 800;
+          letter-spacing: -0.03em;
+          color: #fff;
+          line-height: 1.06;
         }
         .pwm-hl-muted {
           display: block;
-          font-size: clamp(26px, 4.4vw, 44px); font-weight: 800;
-          letter-spacing: -0.028em; color: rgba(255,255,255,0.26);
-          line-height: 1.05; margin-top: 4px;
+          font-size: clamp(17px, 2.6vw, 26px);
+          font-weight: 600;
+          letter-spacing: -0.02em;
+          color: rgba(255,255,255,0.48);
+          line-height: 1.14;
         }
         .pwm-map-wrap {
           position: relative; width: 100%;
-          flex: 1 1 auto; min-height: 320px;
-          margin: 1.5rem 0 0;
+          flex: 1 1 auto; min-height: 300px;
+          margin: clamp(1.25rem, 2.5vh, 2rem) 0 0;
           overflow: visible;
         }
         .pwm-word {
@@ -498,34 +509,48 @@ export default function ProblemWordMap() {
         @media (max-width: 600px) {
           .pwm-section { --pwm-nav-h: 64px; min-height: 620px; overflow-x: clip; }
           .pwm-inner { padding: 1.25rem 1rem 1rem; }
-          .pwm-map-wrap { min-height: 300px; overflow: visible; }
+          .pwm-header { margin-bottom: 16px; padding: 0 14px; }
+          .pwm-heading { gap: 8px; }
+          .pwm-hl-bold { font-size: clamp(22px, 6.8vw, 30px); }
+          .pwm-hl-muted { font-size: clamp(14px, 4.2vw, 18px); color: rgba(255,255,255,0.52); }
+          .pwm-map-wrap { min-height: 280px; margin-top: 1rem; overflow: visible; }
         }
         @media (prefers-reduced-motion: reduce) {
           .pwm-word { transition: none !important; }
         }
       `}</style>
 
-      <section className="pwm-section" ref={sectionRef}>
+      <section id="problem" className="pwm-section" ref={sectionRef}>
         <div className="pwm-inner">
 
-          <motion.div
-            className="pwm-eyebrow"
-            initial={{ opacity: 0, y: 10 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.55 }}
-          >
-            <span className="pwm-eyebrow-text">Where Practices Lose Revenue</span>
-          </motion.div>
-
-          <motion.div
-            className="pwm-heading"
-            initial={{ opacity: 0, y: 14 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.08 }}
-          >
-            <span className="pwm-hl-bold">The gaps you can't see.</span>
-            <span className="pwm-hl-muted">The revenue you're losing.</span>
-          </motion.div>
+          <div className="pwm-header">
+            <div className="pwm-heading">
+              <motion.span
+                className="pwm-hl-muted"
+                initial={{ opacity: 0, y: 8 }}
+                animate={inView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              >
+                The structural problem
+              </motion.span>
+              <motion.span
+                className="pwm-hl-bold"
+                initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
+                animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+                transition={{ duration: 0.85, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              >
+                The gaps you can't see.
+              </motion.span>
+              <motion.span
+                className="pwm-hl-muted"
+                initial={{ opacity: 0, y: 12 }}
+                animate={inView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.75, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
+              >
+                The revenue you're losing.
+              </motion.span>
+            </div>
+          </div>
 
           <motion.div
             ref={containerRef}

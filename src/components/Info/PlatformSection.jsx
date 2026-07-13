@@ -293,12 +293,6 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
     setActiveIndex(i);
   }, [applyProgress]);
 
-  const fadeUp = (delay = 0) => ({
-    initial: { opacity: 0, y: 20 },
-    animate: inView ? { opacity: 1, y: 0 } : {},
-    transition: { duration: 0.65, ease: EASE, delay },
-  });
-
   const mod = MODULES[displayIndex];
   const isSettled = phase === "idle";
 
@@ -324,28 +318,34 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
         .pf-header {
           text-align: center;
           flex-shrink: 0;
-          margin-bottom: clamp(24px, 3.4vh, 40px);
+          margin-bottom: clamp(16px, 2.5vh, 28px);
           width: 100%;
+          padding: 0 clamp(16px, 3vw, 52px);
+          box-sizing: border-box;
         }
 
-        .pf-eyebrow {
-          display: block;
-          font-size: clamp(10px, 1.1vw, 12px);
-          letter-spacing: 0.38em;
-          color: rgba(255,255,255,0.32);
-          text-transform: uppercase;
-          margin-bottom: clamp(6px, 0.8vh, 10px);
+        .pf-heading {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: clamp(8px, 1.2vh, 14px);
         }
-
-        .pf-hl-hero {
+        .pf-hl-bold {
           display: block;
-          font-size: clamp(24px, 3.8vw, 42px);
+          font-size: clamp(26px, 4.2vw, 44px);
           font-weight: 800;
-          color: #fff;
           letter-spacing: -0.03em;
-          line-height: 1;
-          max-width: 720px;
-          margin: 0 auto;
+          color: #fff;
+          line-height: 1.06;
+          white-space: nowrap;
+        }
+        .pf-hl-muted {
+          display: block;
+          font-size: clamp(17px, 2.6vw, 26px);
+          font-weight: 600;
+          letter-spacing: -0.02em;
+          color: rgba(255,255,255,0.48);
+          line-height: 1.14;
         }
 
         .pf-body {
@@ -522,10 +522,15 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
             padding: 0 16px;
           }
           .pf-header {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             padding: 0 14px;
           }
-          .pf-hl-hero { font-size: clamp(24px, 7vw, 34px); }
+          .pf-heading { gap: 8px; }
+          .pf-hl-bold {
+            font-size: clamp(13px, 3.6vw, 18px);
+            white-space: nowrap;
+          }
+          .pf-hl-muted { font-size: clamp(14px, 4.2vw, 18px); color: rgba(255,255,255,0.52); }
 
           /* ── Hide the 4-tab icon row on mobile ── */
           .pf-tabs { display: none !important; }
@@ -613,7 +618,7 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
       <section
         ref={sectionRef}
         id="platform"
-        style={{ position: "relative"}}
+        style={{ position: "relative", scrollMarginTop: 80 }}
       >
         <div
           className="pf-section-inner"
@@ -621,12 +626,32 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
         >
           {/* ── Centered header ── */}
           <div className="pf-header">
-            <motion.span {...fadeUp(0.04)} className="pf-eyebrow">
-              Where the revenue comes back
-            </motion.span>
-            <motion.span {...fadeUp(0.1)} className="pf-hl-hero">
-              Four services.
-            </motion.span>
+            <div className="pf-heading">
+              <motion.span
+                className="pf-hl-muted"
+                initial={{ opacity: 0, y: 8 }}
+                animate={inView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              >
+                The platform
+              </motion.span>
+              <motion.span
+                className="pf-hl-bold"
+                initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
+                animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+                transition={{ duration: 0.85, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              >
+                Structural leakage. Continuous recovery.
+              </motion.span>
+              <motion.span
+                className="pf-hl-muted"
+                initial={{ opacity: 0, y: 12 }}
+                animate={inView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.75, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
+              >
+                One guided operating system.
+              </motion.span>
+            </div>
           </div>
 
           <div className="pf-body">

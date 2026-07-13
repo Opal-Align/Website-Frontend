@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 // eslint-disable-next-line no-unused-vars
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { MdCall, MdEmail } from "react-icons/md";
 import instagramIcon from "../assets/instagram.svg";
@@ -86,31 +86,67 @@ function useIsDesktop() {
 export default function Footer() {
   const isDesktop = useIsDesktop();
   const [isRevealed, setIsRevealed] = useState(false);
-  const hideTimerRef = useRef(null);
-  const footerRef = useRef(null);
+  const touchStartY = useRef(0);
+  const dismissedAtBottomRef = useRef(false);
+
+  const closeOverlay = () => {
+    dismissedAtBottomRef.current = true;
+    setIsRevealed(false);
+  };
 
   const mobileRef = useRef(null);
   const mobileInView = useInView(mobileRef, { once: true, margin: "-80px" });
 
-  const handleEnter = () => {
-    if (!isDesktop) return;
-    clearTimeout(hideTimerRef.current);
-    setIsRevealed(true);
-    setTimeout(() => {
-      footerRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-    }, 100);
-  };
-
-  const handleLeave = () => {
-    if (!isDesktop) return;
-    hideTimerRef.current = setTimeout(() => {
-      setIsRevealed(false);
-    }, 600);
-  };
-
+  /* ── Open overlay only at the absolute bottom of the page ── */
   useEffect(() => {
-    return () => clearTimeout(hideTimerRef.current);
-  }, []);
+    if (!isDesktop || isRevealed) return;
+
+    const atPageEnd = () => {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const viewportBottom = scrollTop + window.innerHeight;
+      const pageHeight = document.documentElement.scrollHeight;
+      return viewportBottom >= pageHeight;
+    };
+
+    const onScroll = () => {
+      if (atPageEnd()) {
+        if (!dismissedAtBottomRef.current) setIsRevealed(true);
+      } else {
+        dismissedAtBottomRef.current = false;
+      }
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [isDesktop, isRevealed]);
+
+  /* ── Lock body scroll while overlay is open ── */
+  useEffect(() => {
+    if (!isDesktop) return;
+    if (isRevealed) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [isRevealed, isDesktop]);
+
+  /* ── Dismiss handlers exposed to the overlay div ── */
+  const onOverlayWheel = (e) => {
+    // Scroll up (negative deltaY) = user wants to go back → close overlay
+    if (e.deltaY < 0) closeOverlay();
+  };
+
+  const onOverlayTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const onOverlayTouchMove = (e) => {
+    const dy = e.touches[0].clientY - touchStartY.current;
+    // Swipe down (positive dy) = close
+    if (dy > 60) closeOverlay();
+  };
 
   const typewriterStarted = isDesktop ? isRevealed : mobileInView;
 
@@ -338,58 +374,72 @@ export default function Footer() {
 
   /* ─── Desktop ─── */
   return (
-    <div ref={footerRef} className="relative w-full">
+    <div className="relative w-full">
 
-      {/* Expanding footer */}
-      <div
-        onMouseEnter={handleEnter}
-        onMouseLeave={handleLeave}
-      >
-        <motion.footer
-          className="relative w-full overflow-hidden origin-center"
-          animate={{ height: isRevealed ? "auto" : "80px" }}
-          transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
-          style={{ minHeight: isRevealed ? "50vh" : "80px" }}
-        >
-          {/* Video Background */}
-          <div className="absolute inset-0 w-full h-full">
-            <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
-              <source src="https://framerusercontent.com/assets/XR85lzld6QlWDzCJZj9Q3EXIs.mp4" type="video/mp4" />
-            </video>
+      {/* Full-page overlay — fixed so it covers the whole viewport */}
+      <AnimatePresence>
+        {isRevealed && (
+          <motion.div
+            key="footer-overlay"
+            className="fixed inset-0 z-200 flex flex-col overflow-hidden"
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ duration: 0.72, ease: [0.23, 1, 0.32, 1] }}
+            onWheel={onOverlayWheel}
+            onTouchStart={onOverlayTouchStart}
+            onTouchMove={onOverlayTouchMove}
+          >
+            {/* Video background */}
+            <div className="absolute inset-0">
+              <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
+                <source src="https://framerusercontent.com/assets/XR85lzld6QlWDzCJZj9Q3EXIs.mp4" type="video/mp4" />
+              </video>
+              <div className="absolute inset-0 bg-black/60" />
+            </div>
+
+            {/* Close control */}
+            <div className="relative z-10 flex justify-end px-8 pt-6">
+              <button
+                onClick={closeOverlay}
+                aria-label="Close footer"
+                style={{
+                  background: "rgba(255,255,255,0.07)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: "50%",
+                  width: 40, height: 40,
+                  cursor: "pointer",
+                  color: "rgba(255,255,255,0.65)",
+                  fontSize: 18, lineHeight: 1,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "background 0.2s",
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.14)"}
+                onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.07)"}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Footer content — centred vertically in remaining space */}
             <motion.div
-              className="absolute inset-0 bg-black"
-              animate={{ opacity: isRevealed ? 0.55 : 0.8 }}
-              transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
-            />
-          </div>
+              className="relative z-10 flex flex-col flex-1 justify-center"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {footerContent}
+            </motion.div>
 
-          {/* Collapsed stripe — logo */}
-          <motion.div
-            className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none"
-            animate={{ opacity: isRevealed ? 0 : 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <img
-              src={opalLogo}
-              alt="OPAL gOS"
-              className="h-6 w-auto object-contain"
-              style={{ filter: "brightness(0) invert(1)", opacity: 0.5 }}
-            />
+            {/* Bottom bar inside overlay */}
+            <div className="relative z-10">
+              {bottomBar}
+            </div>
           </motion.div>
+        )}
+      </AnimatePresence>
 
-          {/* Expanded content */}
-          <motion.div
-            className="relative z-10 flex flex-col justify-between"
-            animate={{ opacity: isRevealed ? 1 : 0 }}
-            transition={{ duration: 0.5, delay: isRevealed ? 0.4 : 0 }}
-            style={{ minHeight: "50vh" }}
-          >
-            {footerContent}
-          </motion.div>
-        </motion.footer>
-      </div>
-
-      {/* Always-visible bottom bar */}
+      {/* Always-visible bottom bar in document flow (behind the overlay) */}
       {bottomBar}
 
     </div>
