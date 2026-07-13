@@ -149,6 +149,7 @@ export default function Footer() {
   };
 
   const typewriterStarted = isDesktop ? isRevealed : mobileInView;
+  const headerVisible = typewriterStarted;
 
   const s = isDesktop
     ? { phone: { d: 600, sp: 35 }, email: { d: 900, sp: 35 }, follow: { d: 500, sp: 50 }, insta: { d: 800, sp: 40 }, linked: { d: 1000, sp: 40 }, cta1: { d: 600, sp: 25 }, cta2: { d: 1200, sp: 25 }, btn: 1.8 }
@@ -168,6 +169,27 @@ export default function Footer() {
           </linearGradient>
         </defs>
       </svg>
+
+      <div className="ft-header">
+        <div className="ft-heading">
+          <motion.span
+            className="ft-hl-bold"
+            initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
+            animate={headerVisible ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+            transition={{ duration: 0.85, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+          >
+            THE NEXT STEP
+          </motion.span>
+          <motion.span
+            className="ft-hl-muted"
+            initial={{ opacity: 0, y: 8 }}
+            animate={headerVisible ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.7, delay: 0.32, ease: [0.16, 1, 0.3, 1] }}
+          >
+            See what your queue looks like
+          </motion.span>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12 lg:gap-20 items-start">
 
@@ -355,7 +377,51 @@ export default function Footer() {
   /* ─── Mobile ─── */
   if (!isDesktop) {
     return (
-      <div ref={mobileRef}>
+      <>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+          .ft-header {
+            text-align: center;
+            flex-shrink: 0;
+            margin-bottom: clamp(24px, 3.5vh, 40px);
+            width: 100%;
+            padding: 0 clamp(16px, 3vw, 52px);
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-weight: 300;
+          }
+          .ft-heading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: clamp(8px, 1.2vh, 14px);
+            width: 100%;
+          }
+          .ft-hl-bold {
+            display: block;
+            font-size: clamp(26px, 4.2vw, 44px);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #fff;
+            line-height: 1.06;
+          }
+          .ft-hl-muted {
+            display: block;
+            font-size: clamp(17px, 2.6vw, 26px);
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: rgba(255,255,255,0.48);
+            line-height: 1.14;
+          }
+          @media (max-width: 600px) {
+            .ft-header { margin-bottom: 20px; padding: 0 14px; }
+            .ft-heading { gap: 8px; }
+            .ft-hl-bold { font-size: clamp(22px, 6.8vw, 30px); }
+            .ft-hl-muted { font-size: clamp(14px, 4.2vw, 18px); color: rgba(255,255,255,0.52); }
+          }
+        `}</style>
+        <div ref={mobileRef}>
         <footer className="relative w-full min-h-[50vh] overflow-hidden">
           <div className="absolute inset-0 w-full h-full">
             <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
@@ -368,13 +434,58 @@ export default function Footer() {
           </div>
         </footer>
         {bottomBar}
-      </div>
+        </div>
+      </>
     );
   }
 
   /* ─── Desktop ─── */
   return (
-    <div className="relative w-full">
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+        .ft-header {
+          text-align: center;
+          flex-shrink: 0;
+          margin-bottom: clamp(24px, 3.5vh, 40px);
+          width: 100%;
+          padding: 0 clamp(16px, 3vw, 52px);
+          box-sizing: border-box;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+          font-weight: 300;
+        }
+        .ft-heading {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: clamp(8px, 1.2vh, 14px);
+          width: 100%;
+        }
+        .ft-hl-bold {
+          display: block;
+          font-size: clamp(26px, 4.2vw, 44px);
+          font-weight: 800;
+          letter-spacing: -0.03em;
+          color: #fff;
+          line-height: 1.06;
+        }
+        .ft-hl-muted {
+          display: block;
+          font-size: clamp(17px, 2.6vw, 26px);
+          font-weight: 600;
+          letter-spacing: -0.02em;
+          color: rgba(255,255,255,0.48);
+          line-height: 1.14;
+        }
+        @media (max-width: 600px) {
+          .ft-header { margin-bottom: 20px; padding: 0 14px; }
+          .ft-heading { gap: 8px; }
+          .ft-hl-bold { font-size: clamp(22px, 6.8vw, 30px); }
+          .ft-hl-muted { font-size: clamp(14px, 4.2vw, 18px); color: rgba(255,255,255,0.52); }
+        }
+      `}</style>
+      <div className="relative w-full">
 
       {/* Full-page overlay — fixed so it covers the whole viewport */}
       <AnimatePresence>
@@ -442,6 +553,7 @@ export default function Footer() {
       {/* Always-visible bottom bar in document flow (behind the overlay) */}
       {bottomBar}
 
-    </div>
+      </div>
+    </>
   );
 }
