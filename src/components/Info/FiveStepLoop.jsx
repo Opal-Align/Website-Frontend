@@ -43,16 +43,16 @@ const MOBILE_SEQUENCE = [3, 4, 5, 0, 1, 2]; // 01 Identify → 06 Resolve, top t
 const ORBIT_DURATION = 14000;
 const MANUAL_PAUSE   = 7000;
 const BG             = "#0a0a0a";
-const NODE_SIZE      = 74;
+const NODE_SIZE      = 96;
 const NODE_ACTIVE_SCALE = 1.14;
-const ORBIT_PAD      = 8;
+const ORBIT_PAD      = 6;
 const INNER_RING_RATIO = 0.58; // inner orbit ring — higher = closer to outer ring
 
 function degToRad(d) { return d * Math.PI / 180; }
 function calcOrbitRadius(W, H) {
   const nodeOuter = (NODE_SIZE * NODE_ACTIVE_SCALE) / 2 + 3 + ORBIT_PAD;
   const target = (Math.min(W, H) - nodeOuter * 2) / 2;
-  return Math.max(90, target);
+  return Math.max(120, target);
 }
 
 function polarToXY(r, deg, cx, cy) {
@@ -267,7 +267,7 @@ function useOrbitalCanvas({ canvasRef, containerRef, setActive }) {
 /* ─── Main component ──────────────────────────────────────────────── */
 export default function FiveStepLoop() {
   const [active, setActive] = useState(0);
-  const [orbitDim, setOrbitDim] = useState(480);
+  const [orbitDim, setOrbitDim] = useState(560);
   const canvasRef    = useRef(null);
   const containerRef = useRef(null);
   const headingRef   = useRef(null);
@@ -282,7 +282,7 @@ export default function FiveStepLoop() {
   useEffect(() => {
     const measure = () => {
       if (window.innerWidth < 768) {
-        setOrbitDim(Math.min(320, Math.round(window.innerWidth - 32)));
+        setOrbitDim(Math.min(360, Math.round(window.innerWidth - 24)));
         return;
       }
       const bottomEl = bottomRef.current;
@@ -291,12 +291,12 @@ export default function FiveStepLoop() {
       const bottomH = bottomEl.clientHeight;
       const bottomW = bottomEl.clientWidth;
       const colW = leftColRef.current?.offsetWidth ?? 272;
-      const gap = 24;
+      const gap = 20;
       const centerW = bottomW - colW * 2 - gap * 2;
 
       // Largest square that fills the center slot and bottom-row height
-      const dim = Math.min(bottomH * 0.90, centerW * 0.90);
-      setOrbitDim(Math.round(Math.max(300, dim)));
+      const dim = Math.min(bottomH * 0.98, centerW * 0.98);
+      setOrbitDim(Math.round(Math.max(360, dim)));
     };
     measure();
     requestAnimationFrame(measure);
@@ -331,13 +331,15 @@ export default function FiveStepLoop() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
         .fsl-section {
-          scroll-margin-top: 80px;
+          --fsl-nav-h: var(--page-nav-h, 80px);
+          scroll-margin-top: var(--fsl-nav-h);
           background: ${BG};
           color: #fff;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
           font-weight: 300;
-          height: 100vh;
-          max-height: 100vh;
+          height: calc(100svh - var(--fsl-nav-h));
+          min-height: calc(100svh - var(--fsl-nav-h));
+          max-height: calc(100svh - var(--fsl-nav-h));
           display: flex;
           flex-direction: column;
           padding: clamp(14px, 2vh, 24px) clamp(20px, 3vw, 40px) clamp(12px, 1.5vh, 20px);
@@ -373,6 +375,11 @@ export default function FiveStepLoop() {
           text-transform: uppercase;
           margin-bottom: clamp(6px, 1vh, 10px);
         }
+        .fsl-ampersand {
+          letter-spacing: 0;
+          margin-top: clamp(5px, 0.8vh, 8px);
+          margin-bottom: clamp(4px, 0.6vh, 8px);
+        }
 
         .fsl-hl-hero {
           display: block;
@@ -391,7 +398,6 @@ export default function FiveStepLoop() {
           align-items: center;
           justify-content: center;
           gap: 8px;
-          margin-top: clamp(5px, 0.8vh, 8px);
         }
         .fsl-loop-text {
           font-size: clamp(11px, 1.2vw, 14px);
@@ -534,13 +540,13 @@ export default function FiveStepLoop() {
             0 0 75px rgba(255,255,255,0.06);
         }
         .fsl-sn-name {
-          font-size: 10px; font-weight: 500; line-height: 1.12;
+          font-size: 13px; font-weight: 500; line-height: 1.12;
           letter-spacing: 0.01em; text-align: center;
-          padding: 0 8px; max-width: 92%;
+          padding: 0 6px; max-width: 94%;
           color: rgba(255,255,255,0.42);
           transition: color 0.3s, font-size 0.3s;
         }
-        .fsl-node.active .fsl-sn-name { color: rgba(0,0,0,0.72); font-size: 10.5px; font-weight: 600; }
+        .fsl-node.active .fsl-sn-name { color: rgba(0,0,0,0.72); font-size: 13.5px; font-weight: 600; }
 
         /* center badge — logo only, no border */
         .fsl-center-badge {
@@ -552,8 +558,8 @@ export default function FiveStepLoop() {
         }
         .fsl-cb-logo {
           display: block;
-          width: clamp(56px, 14%, 84px);
-          height: clamp(56px, 14%, 84px);
+          width: clamp(68px, 16%, 104px);
+          height: clamp(68px, 16%, 104px);
           aspect-ratio: ${OPAL_GOS_LOGO_RATIO};
           object-fit: contain;
           filter: brightness(0) invert(1);
@@ -561,7 +567,13 @@ export default function FiveStepLoop() {
         }
 
         @media (max-width: 767px) {
-          .fsl-section { height: auto; max-height: none; overflow: visible; padding: 20px 16px; }
+          .fsl-section {
+            height: auto;
+            min-height: calc(100svh - var(--fsl-nav-h));
+            max-height: none;
+            overflow: visible;
+            padding: 20px 16px;
+          }
           .fsl-bottom { flex-direction: column; gap: 20px; align-items: center; }
           .fsl-col { flex: unset; width: 100%; }
           .fsl-col-left,
@@ -589,7 +601,9 @@ export default function FiveStepLoop() {
             width: 100%;
             max-width: 340px;
           }
-          .fsl-orbital   { order: 1 !important; flex: unset; align-self: auto; width: 100% !important; max-width: 280px; }
+          .fsl-orbital   { order: 1 !important; flex: unset; align-self: auto; width: 100% !important; max-width: 360px; }
+          .fsl-sn-name { font-size: 12px; }
+          .fsl-node.active .fsl-sn-name { font-size: 12.5px; }
           .fsl-hl-hero { font-size: clamp(22px, 7vw, 32px); }
           .fsl-brand-opal img {
             height: clamp(24px, 8vw, 38px);
@@ -608,6 +622,7 @@ export default function FiveStepLoop() {
           </div>
           <span className="fsl-presents-text">presents</span>
           <span className="fsl-hl-hero">The Guided Operating System</span>
+          <span className="fsl-presents-text fsl-ampersand">&</span>
           <div className="fsl-loop-row">
             <span className="fsl-loop-text">The</span>
             <span className="fsl-logo-gos">gOS</span>

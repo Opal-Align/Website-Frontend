@@ -445,14 +445,15 @@ export default function ProblemWordMap() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap');
 
         .pwm-section {
-          --pwm-nav-h: 84px;
-          scroll-margin-top: 80px;
+          --pwm-nav-h: var(--page-nav-h, 80px);
+          scroll-margin-top: var(--pwm-nav-h);
           background: #0a0a0a;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
           font-weight: 300; color: #fff;
           padding: 0;
           height: calc(100svh - var(--pwm-nav-h));
-          min-height: 560px;
+          min-height: calc(100svh - var(--pwm-nav-h));
+          max-height: calc(100svh - var(--pwm-nav-h));
           display: flex; flex-direction: column;
           overflow: hidden; position: relative;
         }
@@ -515,7 +516,14 @@ export default function ProblemWordMap() {
         }
 
         @media (max-width: 600px) {
-          .pwm-section { --pwm-nav-h: 64px; min-height: 620px; overflow-x: clip; }
+          .pwm-section {
+            --pwm-nav-h: var(--page-nav-h, 80px);
+            height: calc(100svh - var(--pwm-nav-h));
+            min-height: calc(100svh - var(--pwm-nav-h));
+            max-height: none;
+            overflow-x: clip;
+            overflow-y: hidden;
+          }
           .pwm-inner { padding: 1.25rem 1rem 1rem; }
           .pwm-header { margin-bottom: 16px; padding: 0 14px; }
           .pwm-heading { gap: 8px; }

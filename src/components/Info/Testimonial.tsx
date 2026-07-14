@@ -261,7 +261,7 @@ const TestimonialSection = () => {
       className="tm-section relative flex flex-col overflow-hidden"
       style={{
         backgroundColor: "transparent",
-        scrollMarginTop: 80,
+        scrollMarginTop: "var(--page-nav-h, 80px)",
       }}
     >
       <StarsCanvas />
@@ -295,7 +295,7 @@ const TestimonialSection = () => {
               animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
               transition={{ duration: 0.85, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
             >
-              Voices from the field
+              Voices from our Partners
             </motion.span>
           </div>
         </div>
@@ -475,8 +475,10 @@ const TestimonialSection = () => {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
         .tm-section {
-          min-height: 100svh;
-          height: 100svh;
+          --tm-nav-h: var(--page-nav-h, 80px);
+          min-height: calc(100svh - var(--tm-nav-h));
+          height: calc(100svh - var(--tm-nav-h));
+          max-height: calc(100svh - var(--tm-nav-h));
         }
 
         .tm-header {
@@ -520,12 +522,13 @@ const TestimonialSection = () => {
           .tm-section {
             height: auto;
             min-height: 0;
+            max-height: none;
           }
           .tm-inner {
             flex: unset;
             min-height: 0;
             padding-top: 20px;
-            padding-bottom: 20px;
+            padding-bottom: 28px;
           }
           .tm-stage {
             flex: unset;

@@ -199,14 +199,14 @@ export default function LogoStream() {
     <div
       id="stack"
       ref={sectionRef}
-      className="relative w-full py-10 md:py-16"
-      style={{ background: "#07080D", scrollMarginTop: 80 }}
+      className="ls-section relative w-full"
+      style={{ background: "#07080D", scrollMarginTop: "var(--page-nav-h, 80px)" }}
     >
       {/* Edge fades, top & bottom, so columns appear to scroll into the void */}
       <div className="pointer-events-none absolute top-0 left-0 w-full h-16 md:h-24 z-10" style={{ background: "linear-gradient(to bottom, #07080D, transparent)" }} />
       <div className="pointer-events-none absolute bottom-0 left-0 w-full h-16 md:h-24 z-10" style={{ background: "linear-gradient(to top, #07080D, transparent)" }} />
 
-      <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="ls-inner relative mx-auto max-w-6xl px-4 sm:px-6">
         <header className="ls-header">
           <div className="ls-heading">
             <motion.span
@@ -229,7 +229,7 @@ export default function LogoStream() {
           </div>
         </header>
 
-        <div className="flex gap-4 md:gap-5 h-[420px] md:h-[520px]">
+        <div className="ls-columns flex gap-4 md:gap-5">
           {COLUMNS.map((col, i) => (
             <Column
               key={i}
@@ -244,10 +244,36 @@ export default function LogoStream() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
+        .ls-section {
+          --ls-nav-h: var(--page-nav-h, 80px);
+          height: calc(100svh - var(--ls-nav-h));
+          min-height: calc(100svh - var(--ls-nav-h));
+          max-height: calc(100svh - var(--ls-nav-h));
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          padding: clamp(20px, 3vh, 40px) 0;
+          box-sizing: border-box;
+          overflow: hidden;
+        }
+        .ls-inner {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          min-height: 0;
+        }
+        .ls-columns {
+          flex: 1 1 auto;
+          min-height: 280px;
+          height: auto;
+          max-height: none;
+        }
+
         .ls-header {
           text-align: center;
           flex-shrink: 0;
-          margin-bottom: clamp(28px, 4.2vh, 52px);
+          margin-bottom: clamp(20px, 3vh, 40px);
           width: 100%;
           padding: 0 clamp(16px, 3vw, 52px);
           box-sizing: border-box;
@@ -351,6 +377,13 @@ export default function LogoStream() {
         }
 
         @media (max-width: 600px) {
+          .ls-section {
+            height: auto;
+            min-height: calc(100svh - var(--ls-nav-h));
+            max-height: none;
+            overflow: visible;
+          }
+          .ls-columns { min-height: 320px; height: 380px; }
           .ls-header { margin-bottom: 24px; padding: 0 14px; }
           .ls-heading { gap: 8px; width: 100%; }
           .ls-hl-bold { font-size: clamp(22px, 6.8vw, 30px); }

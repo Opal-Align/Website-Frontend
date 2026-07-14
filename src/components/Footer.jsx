@@ -178,7 +178,7 @@ export default function Footer() {
             animate={headerVisible ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
             transition={{ duration: 0.85, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
           >
-            THE NEXT STEP
+            YOUR NEXT STEP
           </motion.span>
           <motion.span
             className="ft-hl-muted"

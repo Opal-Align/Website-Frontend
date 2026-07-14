@@ -31,7 +31,7 @@
  */
 
 import { useRef, useState, useEffect, useCallback } from "react";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 import scheduleIcon from "../../assets/schedule.svg";
 import productionIcon from "../../assets/production.svg";
 import collectIcon from "../../assets/collect.svg";
@@ -42,6 +42,65 @@ const N            = 4;
 const BURST_DUR    = 700;    // ms — dissolve burst duration (each direction)
 const PS           = 3;      // burst particle pixel size
 const EASE         = [0.22, 1, 0.36, 1];
+
+/* Vertical headline ticker — same language as LogoStream tagline, on Y */
+const HEADLINE_LINES = [
+  "Follow-Ups Sent",
+  "Workflows Automated",
+  "Gaps Identified",
+  "Continuous recovery",
+];
+
+const headlineVariants = {
+  enter: {
+    y: "100%",
+    opacity: 0,
+    filter: "blur(8px)",
+  },
+  center: {
+    y: "0%",
+    opacity: 1,
+    filter: "blur(0px)",
+    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
+  },
+  exit: {
+    y: "-100%",
+    opacity: 0,
+    filter: "blur(6px)",
+    transition: { duration: 0.45, ease: [0.55, 0, 0.78, 0] },
+  },
+};
+
+function HeadlineTicker({ active }) {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    if (!active) return;
+    const timer = setInterval(() => {
+      setIndex((i) => (i + 1) % HEADLINE_LINES.length);
+    }, 2800);
+    return () => clearInterval(timer);
+  }, [active]);
+
+  return (
+    <div className="pf-headline-ticker" aria-live="polite">
+      <div className="pf-headline-inner">
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.span
+            key={index}
+            className="pf-hl-bold pf-headline-line"
+            variants={headlineVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+          >
+            {HEADLINE_LINES[index]}
+          </motion.span>
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
 const OPAL_LIGHT_GRADIENT =
   "linear-gradient(120deg, #FFFFFF 0%, #F8FAFC 30%, #F3F4F6 65%, #FFFFFF 100%)";
 const OPAL_SOFT_GLOW = "rgba(255,255,255,0.28)";
@@ -127,7 +186,7 @@ function buildBurst(W, H) {
 function easeOut3(t) { return 1 - Math.pow(1 - t, 3); }
 
 /* ─── Main component ──────────────────────────────────────────────── */
-export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }) {
+export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }) {
   const sectionRef = useRef(null);
   const tileRef     = useRef(null);
   const canvasRef   = useRef(null);
@@ -306,8 +365,9 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
           color: #fff;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
           font-weight: 300;
-          height: calc(100vh - var(--pf-nav-h, 64px));
-          min-height: 560px;
+          height: calc(100svh - var(--pf-nav-h, var(--page-nav-h, 80px)));
+          min-height: calc(100svh - var(--pf-nav-h, var(--page-nav-h, 80px)));
+          max-height: calc(100svh - var(--pf-nav-h, var(--page-nav-h, 80px)));
           overflow: hidden;
           display: flex;
           flex-direction: column;
@@ -346,6 +406,41 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
           letter-spacing: -0.02em;
           color: rgba(255,255,255,0.48);
           line-height: 1.14;
+        }
+
+        /* Vertical ticker (LogoStream tagline, on Y — scrolls upward) */
+        .pf-headline-ticker {
+          width: 100%;
+          max-width: min(1100px, 100%);
+          margin: 0 auto;
+          overflow: hidden;
+          height: clamp(52px, 7vh, 72px);
+          padding: 0 8px;
+          box-sizing: border-box;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .pf-headline-inner {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+          mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+        }
+        .pf-headline-line {
+          position: absolute;
+          left: 0;
+          right: 0;
+          text-align: center;
+          width: 100%;
+          padding: 0 12px;
+          box-sizing: border-box;
+          line-height: 1.15;
+          white-space: nowrap;
         }
 
         .pf-body {
@@ -525,8 +620,9 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
 
         @media (max-width: 600px) {
           .pf-section-inner {
-            height: auto;
-            min-height: calc(100svh - var(--pf-nav-h, 64px));
+            height: calc(100svh - var(--pf-nav-h, var(--page-nav-h, 80px)));
+            min-height: calc(100svh - var(--pf-nav-h, var(--page-nav-h, 80px)));
+            max-height: none;
             overflow: visible;
             padding-bottom: 32px;
           }
@@ -540,9 +636,15 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
           }
           .pf-heading { gap: 8px; }
           .pf-hl-bold {
-            font-size: clamp(13px, 3.6vw, 18px);
+            font-size: clamp(17px, 4.8vw, 22px);
             white-space: nowrap;
           }
+          .pf-headline-ticker {
+            height: clamp(40px, 10vw, 52px);
+            max-width: 100%;
+            padding: 0 4px;
+          }
+          .pf-headline-line { padding: 0 4px; }
           .pf-hl-muted { font-size: clamp(14px, 4.2vw, 18px); color: rgba(255,255,255,0.52); }
 
           /* ── Hide the 4-tab icon row on mobile ── */
@@ -553,7 +655,7 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
             flex: unset;
             min-height: unset;
             max-height: none;
-            height: calc(100svh - var(--pf-nav-h, 64px) - 160px);
+            height: calc(100svh - var(--pf-nav-h, var(--page-nav-h, 80px)) - 160px);
           }
           .pf-card-content {
             height: 100%;
@@ -636,11 +738,11 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
       <section
         ref={sectionRef}
         id="platform"
-        style={{ position: "relative", scrollMarginTop: 80 }}
+        style={{ position: "relative", scrollMarginTop: "var(--page-nav-h, 80px)" }}
       >
         <div
           className="pf-section-inner"
-          style={{ "--pf-nav-h": `${navbarHeight}px` }}
+          style={{ ["--pf-nav-h"]: `${navbarHeight}px` }}
         >
           {/* ── Centered header ── */}
           <div className="pf-header">
@@ -653,14 +755,7 @@ export default function PlatformSection({ navbarHeight = 64, autoplayMs = 4500 }
               >
                 The platform
               </motion.span>
-              <motion.span
-                className="pf-hl-bold"
-                initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
-                animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
-                transition={{ duration: 0.85, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
-              >
-                Structural leakage. Continuous recovery.
-              </motion.span>
+              <HeadlineTicker active={inView} />
               <motion.span
                 className="pf-hl-muted"
                 initial={{ opacity: 0, y: 12 }}

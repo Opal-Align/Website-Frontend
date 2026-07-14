@@ -6,6 +6,9 @@ import clientLogo from "../../assets/marquee-logo.svg";
 const OPAL_LIGHT_GRADIENT =
   "linear-gradient(120deg, #FFFFFF 0%, #F8FAFC 30%, #F3F4F6 65%, #FFFFFF 100%)";
 const OPAL_SOFT_GLOW = "rgba(255,255,255,0.28)";
+/* Matches the cyan glow on the marquee / client logo hover */
+const MARQUEE_GLOW = "rgba(34,211,238,0.95)";
+const MARQUEE_GLOW_SOFT = "rgba(34,211,238,0.55)";
 const gradientText = {
   backgroundImage: OPAL_LIGHT_GRADIENT,
   WebkitBackgroundClip: "text",
@@ -312,13 +315,14 @@ function TrendArrow({ active }) {
         marginLeft: "0.22em",
         alignSelf: "center",
         position: "relative",
+        filter: `drop-shadow(0 0 6px ${MARQUEE_GLOW_SOFT})`,
       }}
     >
       <svg width="100%" height="100%" viewBox="0 0 34 24" fill="none" style={{ overflow: "visible" }}>
         {/* Rising line */}
         <motion.path
           d="M2 20 L11 11 L16 16 L27 4"
-          stroke="rgba(255,255,255,0.9)"
+          stroke={MARQUEE_GLOW}
           strokeWidth="2.75"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -338,7 +342,7 @@ function TrendArrow({ active }) {
         {/* Arrowhead, draws in right after the line lands */}
         <motion.path
           d="M20 4 L28 4 L28 12"
-          stroke="rgba(255,255,255,0.9)"
+          stroke={MARQUEE_GLOW}
           strokeWidth="2.75"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -376,12 +380,13 @@ function FlatLine({ active }) {
         marginLeft: "0.22em",
         alignSelf: "center",
         position: "relative",
+        filter: `drop-shadow(0 0 6px ${MARQUEE_GLOW_SOFT})`,
       }}
     >
       <svg width="100%" height="100%" viewBox="0 0 34 24" fill="none" style={{ overflow: "visible" }}>
         <motion.path
           d="M2 12 L28 12"
-          stroke="rgba(255,255,255,0.9)"
+          stroke={MARQUEE_GLOW}
           strokeWidth="2.75"
           strokeLinecap="round"
           fill="none"
@@ -400,7 +405,7 @@ function FlatLine({ active }) {
         {/* Small end-cap dot instead of an arrowhead — nothing to point to, it's flat */}
         <motion.circle
           cx="28" cy="12" r="2.2"
-          fill="rgba(255,255,255,0.9)"
+          fill={MARQUEE_GLOW}
           initial={{ scale: 0, opacity: 0 }}
           animate={active ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
           transition={
@@ -744,16 +749,18 @@ export default function Processes() {
   return (
     <div
       id="impact"
-      className="relative"
+      className="relative st-section"
       style={{
         backgroundColor: "transparent",
-        minHeight: "100vh",
+        height: "calc(100svh - var(--page-nav-h, 80px))",
+        minHeight: "calc(100svh - var(--page-nav-h, 80px))",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
         padding: "clamp(32px, 5vh, 64px) 0",
         boxSizing: "border-box",
-        scrollMarginTop: 80,
+        scrollMarginTop: "var(--page-nav-h, 80px)",
+        overflow: "hidden",
       }}
     >
       <Process />
@@ -769,7 +776,7 @@ export default function Processes() {
               animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
               transition={{ duration: 0.85, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
             >
-              THE REFRAME
+              ROI REFRAME
             </motion.span>
           </div>
         </header>
@@ -879,6 +886,12 @@ export default function Processes() {
         }
 
         @media (max-width: 600px) {
+          .st-section {
+            height: auto !important;
+            min-height: calc(100svh - var(--page-nav-h, 80px)) !important;
+            max-height: none !important;
+            overflow: visible !important;
+          }
           .st-header { margin-bottom: 20px; padding: 0 14px; }
           .st-heading { gap: 8px; }
           .st-hl-bold { font-size: clamp(22px, 6.8vw, 30px); }
