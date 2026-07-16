@@ -365,9 +365,7 @@ export default function FiveStepLoop() {
           width: auto;
           aspect-ratio: ${OPAL_LOGO_RATIO};
           object-fit: contain;
-          filter: drop-shadow(0 0 8px rgba(255,255,255,0.85))
-                  drop-shadow(0 0 20px rgba(255,255,255,0.45))
-                  drop-shadow(0 0 40px rgba(255,255,255,0.22));
+          animation: logoGlowMorphSoft 10s ease-in-out infinite;
         }
 
         .fsl-presents-text {
@@ -551,6 +549,39 @@ export default function FiveStepLoop() {
         }
         .fsl-node.active .fsl-sn-name { color: rgba(0,0,0,0.72); font-size: 13.5px; font-weight: 600; }
 
+        /* badge logo (brightness+invert needed)
+           0–12%  : glow fades in fast
+           12–75% : glow holds
+           75–88% : glow fades out fast
+           88–100%: off, waiting */
+        @keyframes logoGlowMorph {
+          0%, 88%, 100% {
+            filter: brightness(0) invert(1)
+                    drop-shadow(0 0 0px rgba(255,255,255,0))
+                    drop-shadow(0 0 0px rgba(255,255,255,0))
+                    drop-shadow(0 0 0px rgba(255,255,255,0));
+          }
+          12%, 75% {
+            filter: brightness(0) invert(1)
+                    drop-shadow(0 0 8px rgba(255,255,255,0.45))
+                    drop-shadow(0 0 20px rgba(255,255,255,0.18))
+                    drop-shadow(0 0 40px rgba(255,255,255,0.08));
+          }
+        }
+        /* heading OPAL logo (no invert — keeps original colors) */
+        @keyframes logoGlowMorphSoft {
+          0%, 88%, 100% {
+            filter: drop-shadow(0 0 0px rgba(255,255,255,0))
+                    drop-shadow(0 0 0px rgba(255,255,255,0))
+                    drop-shadow(0 0 0px rgba(255,255,255,0));
+          }
+          12%, 75% {
+            filter: drop-shadow(0 0 8px rgba(255,255,255,0.45))
+                    drop-shadow(0 0 20px rgba(255,255,255,0.18))
+                    drop-shadow(0 0 40px rgba(255,255,255,0.08));
+          }
+        }
+
         /* center badge — logo only, no border */
         .fsl-center-badge {
           position: absolute; top: 50%; left: 50%;
@@ -565,11 +596,11 @@ export default function FiveStepLoop() {
           height: clamp(68px, 16%, 104px);
           aspect-ratio: ${OPAL_GOS_LOGO_RATIO};
           object-fit: contain;
-          filter: brightness(0) invert(1)
-                  drop-shadow(0 0 8px rgba(255,255,255,0.85))
-                  drop-shadow(0 0 20px rgba(255,255,255,0.45))
-                  drop-shadow(0 0 40px rgba(255,255,255,0.22));
-          opacity: 1;
+          animation: logoGlowMorph 10s ease-in-out infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .fsl-cb-logo { animation: none; filter: brightness(0) invert(1) drop-shadow(0 0 8px rgba(255,255,255,0.45)); }
+          .fsl-brand-opal img { animation: none; filter: drop-shadow(0 0 8px rgba(255,255,255,0.45)); }
         }
 
         @media (max-width: 767px) {
