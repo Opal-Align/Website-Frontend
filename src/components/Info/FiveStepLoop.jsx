@@ -365,6 +365,9 @@ export default function FiveStepLoop() {
           width: auto;
           aspect-ratio: ${OPAL_LOGO_RATIO};
           object-fit: contain;
+          filter: drop-shadow(0 0 8px rgba(255,255,255,0.85))
+                  drop-shadow(0 0 20px rgba(255,255,255,0.45))
+                  drop-shadow(0 0 40px rgba(255,255,255,0.22));
         }
 
         .fsl-presents-text {
@@ -562,7 +565,10 @@ export default function FiveStepLoop() {
           height: clamp(68px, 16%, 104px);
           aspect-ratio: ${OPAL_GOS_LOGO_RATIO};
           object-fit: contain;
-          filter: brightness(0) invert(1);
+          filter: brightness(0) invert(1)
+                  drop-shadow(0 0 8px rgba(255,255,255,0.85))
+                  drop-shadow(0 0 20px rgba(255,255,255,0.45))
+                  drop-shadow(0 0 40px rgba(255,255,255,0.22));
           opacity: 1;
         }
 

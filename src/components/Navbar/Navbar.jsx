@@ -73,6 +73,14 @@ export default function Navbar() {
 
   return (
     <>
+      <style>{`
+        .nav-logo-glow {
+          filter: brightness(0) invert(1)
+                  drop-shadow(0 0 8px rgba(255,255,255,0.85))
+                  drop-shadow(0 0 20px rgba(255,255,255,0.45))
+                  drop-shadow(0 0 40px rgba(255,255,255,0.22));
+        }
+      `}</style>
       <div
         className="fixed top-0 left-0 w-full z-90 px-6 md:px-10 py-3 md:py-4 backdrop-blur-md"
         style={{
@@ -103,8 +111,7 @@ export default function Navbar() {
               <img
                 src={opalGosLogo}
                 alt="OPAL gOS"
-                className="h-7 w-auto select-none"
-                style={{ filter: "brightness(0) invert(1)" }}
+                className="nav-logo-glow h-7 w-auto select-none"
                 draggable={false}
               />
             </button>
@@ -141,8 +148,7 @@ export default function Navbar() {
             <img
               src={opalGosLogo}
               alt="OPAL gOS"
-              className="h-7 w-auto select-none"
-              style={{ filter: "brightness(0) invert(1)" }}
+              className="nav-logo-glow h-7 w-auto select-none"
               draggable={false}
             />
           </button>

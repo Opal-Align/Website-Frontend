@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import Navbar from "./Navbar/Navbar";
 import Footer from "./Footer";
 import LogoStream from "./LogoStream/LogoStream";
@@ -11,10 +12,140 @@ import { NAV_HEIGHT } from "./Navbar/navigationConfig";
 
 /* ─── Each section slides over the previous one, like the footer overlay.
        Position: sticky + ascending z-index creates the stacked-card effect.
+       A wheel/touch snap controller turns the *continuous* scroll into a
+       *single-scroll-per-section* jump (fully reversible) — the visual is
+       identical, only the scroll granularity changes.
        On mobile we fall back to normal block flow so content can breathe. ─── */
 const SLIDE_BG = "#07080D";
+const SECTION_COUNT = 6;
 
 export default function HomePageLayout() {
+  const stackRef = useRef(null);
+
+  /* ── Single-scroll snap between sticky sections (desktop only) ──────────── */
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    let attached = false;
+    let animating = false;
+    let animTimer = null;
+    let touchStartY = 0;
+
+    // Snap Y positions: one per section, computed from live layout.
+    const snapPoints = () => {
+      const container = stackRef.current;
+      if (!container) return [];
+      const containerTop =
+        container.getBoundingClientRect().top + window.scrollY;
+      const sectionHeight = window.innerHeight - NAV_HEIGHT;
+      return Array.from({ length: SECTION_COUNT }, (_, i) =>
+        Math.max(0, containerTop + i * sectionHeight - NAV_HEIGHT),
+      );
+    };
+
+    const snapTo = (top) => {
+      animating = true;
+      window.scrollTo({ top, behavior: "smooth" });
+      clearTimeout(animTimer);
+      animTimer = setTimeout(() => { animating = false; }, 720);
+    };
+
+    // Returns index of the snap point nearest the current scroll position.
+    const nearestIndex = (points, y) => {
+      let idx = 0, best = Infinity;
+      points.forEach((p, i) => {
+        const d = Math.abs(p - y);
+        if (d < best) { best = d; idx = i; }
+      });
+      return idx;
+    };
+
+    // direction: +1 (down) or -1 (up). Returns true if it consumed the gesture.
+    const step = (direction) => {
+      const points = snapPoints();
+      if (!points.length) return false;
+      const y = window.scrollY;
+      const first = points[0];
+
+      // Hero zone (above the first section) → let native scroll run so the
+      // hero's scroll-driven animation plays normally.
+      if (y < first - 6) return false;
+
+      const index = nearestIndex(points, y);
+      const target = index + direction;
+
+      // Past the last section (down) or back into the hero (up) → native scroll
+      // so the footer / hero remain reachable.
+      if (target < 0 || target > points.length - 1) return false;
+
+      snapTo(points[target]);
+      return true;
+    };
+
+    const onWheel = (e) => {
+      if (animating) { e.preventDefault(); return; }
+      if (Math.abs(e.deltaY) < 4) return;
+      const consumed = step(e.deltaY > 0 ? 1 : -1);
+      if (consumed) e.preventDefault();
+    };
+
+    const onTouchStart = (e) => { touchStartY = e.touches[0].clientY; };
+    const onTouchMove = (e) => {
+      if (animating) { e.preventDefault(); return; }
+      const dy = touchStartY - e.touches[0].clientY;
+      if (Math.abs(dy) < 50) return;
+      const consumed = step(dy > 0 ? 1 : -1);
+      if (consumed) {
+        e.preventDefault();
+        touchStartY = e.touches[0].clientY;
+      }
+    };
+
+    // Arrow keys / Page keys / Space — same one-section-per-press snap.
+    const DOWN_KEYS = new Set(["ArrowDown", "PageDown", " ", "Spacebar"]);
+    const UP_KEYS   = new Set(["ArrowUp", "PageUp"]);
+    const onKeyDown = (e) => {
+      // Don't hijack keys while typing in a field.
+      const t = e.target;
+      const tag = t && t.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (t && t.isContentEditable)) return;
+
+      const isDown = DOWN_KEYS.has(e.key);
+      const isUp   = UP_KEYS.has(e.key);
+      if (!isDown && !isUp) return;
+      if (animating) { e.preventDefault(); return; }
+
+      const consumed = step(isDown ? 1 : -1);
+      if (consumed) e.preventDefault();
+    };
+
+    const attach = () => {
+      if (attached) return;
+      window.addEventListener("wheel", onWheel, { passive: false });
+      window.addEventListener("touchstart", onTouchStart, { passive: true });
+      window.addEventListener("touchmove", onTouchMove, { passive: false });
+      window.addEventListener("keydown", onKeyDown);
+      attached = true;
+    };
+    const detach = () => {
+      if (!attached) return;
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("keydown", onKeyDown);
+      attached = false;
+    };
+
+    const sync = () => { mq.matches ? attach() : detach(); };
+    sync();
+    mq.addEventListener("change", sync);
+
+    return () => {
+      mq.removeEventListener("change", sync);
+      detach();
+      clearTimeout(animTimer);
+    };
+  }, []);
+
   return (
     <div
       className="w-full"
@@ -84,6 +215,7 @@ export default function HomePageLayout() {
 
         {/* ── Section stack ── */}
         <div
+          ref={stackRef}
           style={{
             position: "relative",
             zIndex: 1,
