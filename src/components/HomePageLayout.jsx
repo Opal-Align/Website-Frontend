@@ -68,27 +68,52 @@ export default function HomePageLayout() {
       clearTimeout(fallbackTimer);
     };
 
+    // After any section change, block further snaps so a long swipe / fling
+    // cannot chain Stats → LogoStream → Testimonials in one go.
+    let snapLockUntil = 0;
+    let pendingSnapTop = null;
+
     const snapTo = (top) => {
       // No-op guard: if we're already at (or within 1px of) the target, the
       // browser won't move and will never fire `scrollend`, leaving `busy`
       // stuck true for the full fallback window. Release immediately instead.
       if (Math.abs(top - window.scrollY) < 1) {
         busy = false;
+        pendingSnapTop = null;
         return;
       }
       busy = true;
+      pendingSnapTop = top;
+      // Block a second section change while this animation runs + a short beat
+      // after it settles (stops Stats → LogoStream → Testimonials chaining).
+      snapLockUntil = Date.now() + 900;
       clearTimers();
       window.scrollTo({ top, behavior: "smooth" });
-      // Safety net if `scrollend` never arrives (older engines / no movement).
-      fallbackTimer = setTimeout(() => { busy = false; }, 400);
+
+      // Safety net + hard clamp to the exact target if the engine overshoots.
+      fallbackTimer = setTimeout(() => {
+        if (pendingSnapTop != null) {
+          if (Math.abs(window.scrollY - pendingSnapTop) > 1) {
+            window.scrollTo({ top: pendingSnapTop, behavior: "auto" });
+          }
+          pendingSnapTop = null;
+        }
+        busy = false;
+      }, 900);
     };
 
     // Released shortly AFTER the smooth scroll truly settles, so trailing
     // momentum from a trackpad fling is swallowed instead of skipping ahead.
     const onScrollEnd = () => {
+      if (pendingSnapTop != null) {
+        if (Math.abs(window.scrollY - pendingSnapTop) > 2) {
+          window.scrollTo({ top: pendingSnapTop, behavior: "auto" });
+        }
+        pendingSnapTop = null;
+      }
       if (!busy) return;
       clearTimeout(releaseTimer);
-      releaseTimer = setTimeout(() => { busy = false; }, 140);
+      releaseTimer = setTimeout(() => { busy = false; }, 160);
     };
 
     // Card scrollability for the active .home-slide.
@@ -131,6 +156,9 @@ export default function HomePageLayout() {
     //   "internal" → let the card scroll its own overflow (allow native)
     //   "outside"  → we're in the hero/footer zone (allow native)
     const step = (direction) => {
+      // Hard lock after a snap — one section change max until cooldown ends
+      if (busy || Date.now() < snapLockUntil) return "locked";
+
       const points = snapPoints();
       if (!points.length) return "outside";
       const y = window.scrollY;
@@ -199,19 +227,21 @@ export default function HomePageLayout() {
       if (y < firstP - slideH - 4) return;
       if (y > lastP + 4) return;
 
-      if (busy || Date.now() < wheelIgnoreUntil) {
+      if (busy || Date.now() < wheelIgnoreUntil || Date.now() < snapLockUntil) {
         e.preventDefault();
         return;
       }
       if (Math.abs(e.deltaY) < 4) return;
 
       const result = step(e.deltaY > 0 ? 1 : -1);
-      if (result === "snap") {
+      if (result === "snap" || result === "locked") {
         e.preventDefault();
-        // Swallow trailing fling events (~half a second)
-        wheelIgnoreUntil = Date.now() + 520;
-        clearTimeout(wheelQuietTimer);
-        wheelQuietTimer = setTimeout(() => { wheelIgnoreUntil = 0; }, 520);
+        if (result === "snap") {
+          // Swallow trailing fling events
+          wheelIgnoreUntil = Date.now() + 900;
+          clearTimeout(wheelQuietTimer);
+          wheelQuietTimer = setTimeout(() => { wheelIgnoreUntil = 0; }, 900);
+        }
       }
     };
 
@@ -250,7 +280,7 @@ export default function HomePageLayout() {
       if (y > lastP + 4) return;
 
       // Already snapped this finger-down — swallow everything until lift
-      if (busy || snappedForGesture === gestureId) {
+      if (busy || snappedForGesture === gestureId || Date.now() < snapLockUntil) {
         e.preventDefault();
         return;
       }
@@ -305,7 +335,9 @@ export default function HomePageLayout() {
       // snap mode — fire step exactly once for this finger-down
       e.preventDefault();
       const result = step(direction);
-      if (result === "snap") snappedForGesture = gestureId;
+      if (result === "snap" || result === "locked") {
+        snappedForGesture = gestureId;
+      }
     };
 
     // Do not clear snap/internal locks here — touchcancel fires on iOS
@@ -335,9 +367,9 @@ export default function HomePageLayout() {
       if (y < firstP - slideH - 4) return;
       if (y > lastP + 4) return;
 
-      if (busy) { e.preventDefault(); return; }
+      if (busy || Date.now() < snapLockUntil) { e.preventDefault(); return; }
       const result = step(isDown ? 1 : -1);
-      if (result === "snap") e.preventDefault();
+      if (result === "snap" || result === "locked") e.preventDefault();
     };
 
     window.addEventListener("wheel", onWheel, { passive: false });
