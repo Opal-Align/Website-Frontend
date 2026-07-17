@@ -4,9 +4,11 @@
  *
  * Homepage section map (top → bottom):
  *   #problem      → Info/ProblemWordMap.jsx
- *   #platform     → Info/PlatformSection.jsx   (Modules — four services)
- *   #loop         → Info/FiveStepLoop.jsx      (The Platform — gOS loop)
- *   #impact       → Info/Stats.jsx
+ *   #platform     → Info/PlatformSection.jsx
+ *   #loop         → desktop: FiveStepLoop (full)
+ *                   mobile:  FiveStepLoopOrbit, then FiveStepLoopCards
+ *   #impact       → desktop: Processes (full)
+ *                   mobile:  ImpactNarrative, then ImpactMetrics
  *   #stack        → LogoStream/LogoStream.jsx
  *   #testimonials → Info/Testimonial.tsx
  *

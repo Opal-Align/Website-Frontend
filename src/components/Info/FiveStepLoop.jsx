@@ -264,16 +264,343 @@ function useOrbitalCanvas({ canvasRef, containerRef, setActive }) {
   return { nodeXY, userActivate };
 }
 
-/* ─── Main component ──────────────────────────────────────────────── */
-export default function FiveStepLoop() {
+/* ─── Shared styles ──────────────────────────────────────────────── */
+function FslStyles() {
+  return (
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+      .fsl-section {
+        --fsl-nav-h: var(--page-nav-h, 80px);
+        scroll-margin-top: var(--fsl-nav-h);
+        background: ${BG};
+        color: #fff;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-weight: 300;
+        height: calc(100svh - var(--fsl-nav-h));
+        min-height: calc(100svh - var(--fsl-nav-h));
+        max-height: calc(100svh - var(--fsl-nav-h));
+        display: flex;
+        flex-direction: column;
+        padding: clamp(14px, 2vh, 24px) clamp(20px, 3vw, 40px) clamp(12px, 1.5vh, 20px);
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+
+      .fsl-heading {
+        text-align: center;
+        margin-bottom: clamp(6px, 1vh, 12px);
+        flex-shrink: 0;
+      }
+      .fsl-brand-opal {
+        display: inline-block;
+        margin-bottom: 6px;
+        line-height: 0;
+      }
+      .fsl-brand-opal img {
+        display: block;
+        height: clamp(28px, 3.8vw, 44px);
+        width: auto;
+        aspect-ratio: ${OPAL_LOGO_RATIO};
+        object-fit: contain;
+        animation: logoGlowMorphSoft 10s ease-in-out infinite;
+      }
+      .fsl-presents-text {
+        display: block;
+        font-size: clamp(8px, 0.9vw, 10px);
+        letter-spacing: 0.38em;
+        color: rgba(255,255,255,0.32);
+        text-transform: uppercase;
+        margin-bottom: clamp(6px, 1vh, 10px);
+      }
+      .fsl-ampersand {
+        letter-spacing: 0;
+        margin-top: clamp(5px, 0.8vh, 8px);
+        margin-bottom: clamp(4px, 0.6vh, 8px);
+      }
+      .fsl-hl-hero {
+        display: block;
+        font-size: clamp(20px, 3.2vw, 36px);
+        font-weight: 800;
+        color: #fff;
+        text-transform: uppercase;
+        letter-spacing: -0.03em;
+        line-height: 1;
+        max-width: 720px;
+        margin: 0 auto;
+      }
+      .fsl-loop-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .fsl-loop-text {
+        font-size: clamp(11px, 1.2vw, 14px);
+        font-weight: 400;
+        color: rgba(255,255,255,0.28);
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+      }
+      .fsl-logo-gos {
+        font-size: clamp(18px, 2.4vw, 28px);
+        font-weight: 600;
+        color: #fff;
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+
+      .fsl-orbit-stage {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+      }
+
+      .fsl-bottom {
+        display: flex;
+        gap: clamp(10px, 1.5vw, 24px);
+        align-items: stretch;
+        justify-content: center;
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        max-width: min(1280px, 96vw);
+        margin: 0 auto;
+      }
+      .fsl-col {
+        flex: 0 0 clamp(260px, 24vw, 340px);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        padding: clamp(10px, 1.4vh, 18px) 0;
+        border-top: 1px solid rgba(255,255,255,0.07);
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+      }
+      .fsl-col-right { order: 3; }
+      .fsl-col-left  { order: 1; }
+      .fsl-col-mobile { display: none; }
+      .fsl-orbital   { order: 2; align-self: center; }
+
+      .fsl-steps { display: flex; flex-direction: column; gap: 8px; flex: 1; justify-content: space-evenly; margin-bottom: 0; }
+
+      .fsl-card {
+        position: relative;
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 14px; cursor: pointer; overflow: hidden;
+        background: rgba(255,255,255,0.03);
+        transition: border-color 0.3s, background 0.3s, box-shadow 0.4s;
+      }
+      .fsl-card:hover { border-color: rgba(255,255,255,0.14); }
+      .fsl-card.active {
+        border-color: rgba(255,255,255,0.2);
+        background: rgba(255,255,255,0.055);
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 0 24px rgba(255,255,255,0.07), 0 0 52px rgba(255,255,255,0.03);
+      }
+      .fsl-card::after {
+        content: ''; position: absolute; top: 11px; right: 11px;
+        width: 4px; height: 4px; border-radius: 50%;
+        background: rgba(255,255,255,0.13);
+        transition: background 0.3s, box-shadow 0.3s;
+      }
+      .fsl-card.active::after {
+        background: rgba(255,255,255,0.6);
+        box-shadow: 0 0 5px rgba(255,255,255,0.45);
+      }
+      .fsl-card-header {
+        display: flex; align-items: center; justify-content: center;
+        padding: 14px 18px 12px;
+      }
+      .fsl-sc-title {
+        font-size: clamp(15px, 1.5vh, 17px); font-weight: 700;
+        text-align: center; width: 100%;
+        color: rgba(255,255,255,0.38);
+        transition: color 0.3s;
+      }
+      .fsl-card.active .fsl-sc-title { color: #fff; }
+      .fsl-card-body {
+        overflow: hidden; max-height: 0;
+        transition: max-height 0.38s ease, padding 0.3s;
+        padding: 0 18px;
+      }
+      .fsl-card.active .fsl-card-body { max-height: 120px; padding: 0 18px 16px; }
+      .fsl-card-body p {
+        font-size: clamp(12.5px, 1.35vh, 14px); font-weight: 300;
+        color: rgba(255,255,255,0.42); line-height: 1.62;
+        border-top: 1px solid rgba(255,255,255,0.07); padding-top: 10px; margin: 0;
+      }
+      .fsl-card-body p strong { color: rgba(255,255,255,0.82); font-weight: 600; }
+
+      .fsl-orbital {
+        flex: 1 1 auto;
+        position: relative;
+        min-width: 0;
+      }
+      .fsl-node-circle {
+        width: ${NODE_SIZE}px; height: ${NODE_SIZE}px; border-radius: 50%;
+        background: rgba(10,10,10,0.97);
+        border: 1.5px solid rgba(255,255,255,0.18);
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        transition: border-color 0.35s, background 0.35s, box-shadow 0.4s, transform 0.35s;
+        box-shadow: 0 0 0 3px ${BG};
+      }
+      .fsl-node.active .fsl-node-circle {
+        border-color: rgba(255,255,255,0.9);
+        background: #fff;
+        transform: scale(${NODE_ACTIVE_SCALE});
+        box-shadow:
+          0 0 0 3px ${BG},
+          0 0 0 5px rgba(255,255,255,0.18),
+          0 0 18px rgba(255,255,255,0.38),
+          0 0 45px rgba(255,255,255,0.15),
+          0 0 75px rgba(255,255,255,0.06);
+      }
+      .fsl-sn-name {
+        font-size: 13px; font-weight: 500; line-height: 1.12;
+        letter-spacing: 0.01em; text-align: center;
+        padding: 0 6px; max-width: 94%;
+        color: rgba(255,255,255,0.42);
+        transition: color 0.3s, font-size 0.3s;
+      }
+      .fsl-node.active .fsl-sn-name { color: rgba(0,0,0,0.72); font-size: 13.5px; font-weight: 600; }
+
+      @keyframes logoGlowMorph {
+        0%, 88%, 100% {
+          filter: brightness(0) invert(1)
+                  drop-shadow(0 0 0px rgba(255,255,255,0))
+                  drop-shadow(0 0 0px rgba(255,255,255,0))
+                  drop-shadow(0 0 0px rgba(255,255,255,0));
+        }
+        12%, 75% {
+          filter: brightness(0) invert(1)
+                  drop-shadow(0 0 8px rgba(255,255,255,0.45))
+                  drop-shadow(0 0 20px rgba(255,255,255,0.18))
+                  drop-shadow(0 0 40px rgba(255,255,255,0.08));
+        }
+      }
+      @keyframes logoGlowMorphSoft {
+        0%, 88%, 100% {
+          filter: drop-shadow(0 0 0px rgba(255,255,255,0))
+                  drop-shadow(0 0 0px rgba(255,255,255,0))
+                  drop-shadow(0 0 0px rgba(255,255,255,0));
+        }
+        12%, 75% {
+          filter: drop-shadow(0 0 8px rgba(255,255,255,0.45))
+                  drop-shadow(0 0 20px rgba(255,255,255,0.18))
+                  drop-shadow(0 0 40px rgba(255,255,255,0.08));
+        }
+      }
+      .fsl-center-badge {
+        position: absolute; top: 50%; left: 50%;
+        transform: translate(-50%,-50%);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 22; pointer-events: none;
+        line-height: 0;
+      }
+      .fsl-cb-logo {
+        display: block;
+        width: clamp(68px, 16%, 104px);
+        height: clamp(68px, 16%, 104px);
+        aspect-ratio: ${OPAL_GOS_LOGO_RATIO};
+        object-fit: contain;
+        animation: logoGlowMorph 10s ease-in-out infinite;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .fsl-cb-logo { animation: none; filter: brightness(0) invert(1) drop-shadow(0 0 8px rgba(255,255,255,0.45)); }
+        .fsl-brand-opal img { animation: none; filter: drop-shadow(0 0 8px rgba(255,255,255,0.45)); }
+      }
+
+      /* Cards-only slide — fill the full sticky viewport */
+      .fsl-cards-only {
+        padding: clamp(10px, 1.5vh, 18px) clamp(14px, 4vw, 24px);
+      }
+      .fsl-cards-only .fsl-bottom {
+        max-width: none;
+        width: 100%;
+        flex: 1;
+        min-height: 0;
+      }
+      .fsl-cards-only .fsl-col-mobile {
+        display: none;
+      }
+
+      @media (max-width: 767px) {
+        .fsl-section {
+          padding: 20px 16px;
+        }
+        .fsl-hl-hero { font-size: clamp(22px, 7vw, 32px); }
+        .fsl-brand-opal img {
+          height: clamp(24px, 8vw, 38px);
+          width: auto;
+          aspect-ratio: ${OPAL_LOGO_RATIO};
+        }
+        .fsl-sn-name { font-size: 12px; }
+        .fsl-node.active .fsl-sn-name { font-size: 12.5px; }
+
+        .fsl-cards-only {
+          padding: 12px 14px;
+        }
+        .fsl-cards-only .fsl-bottom {
+          flex-direction: column;
+          gap: 0;
+          align-items: stretch;
+          height: 100%;
+        }
+        .fsl-cards-only .fsl-col-left,
+        .fsl-cards-only .fsl-col-right { display: none !important; }
+        .fsl-cards-only .fsl-col-mobile {
+          display: flex !important;
+          flex-direction: column;
+          align-items: stretch;
+          width: 100%;
+          max-width: none;
+          margin: 0;
+          flex: 1;
+          min-height: 0;
+          border-top: none;
+          border-bottom: none;
+          padding: 0;
+        }
+        .fsl-cards-only .fsl-col-mobile .fsl-steps {
+          width: 100%;
+          max-width: none;
+          flex: 1;
+          min-height: 0;
+          gap: clamp(6px, 1.2vh, 10px);
+          justify-content: space-evenly;
+          align-items: stretch;
+        }
+        .fsl-cards-only .fsl-col-mobile .fsl-card {
+          width: 100%;
+          max-width: none;
+          flex: 1 1 0;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+        .fsl-cards-only .fsl-col-mobile .fsl-card-header {
+          padding: clamp(10px, 1.6vh, 14px) 16px;
+        }
+        .fsl-cards-only .fsl-col-mobile .fsl-card.active .fsl-card-body {
+          max-height: 140px;
+          padding: 0 16px 12px;
+        }
+      }
+    `}</style>
+  );
+}
+
+/** Slide 1 — heading + orbital loop (nav #loop) */
+export function FiveStepLoopOrbit() {
   const [active, setActive] = useState(0);
   const [orbitDim, setOrbitDim] = useState(560);
   const canvasRef    = useRef(null);
   const containerRef = useRef(null);
-  const headingRef   = useRef(null);
-  const bottomRef    = useRef(null);
-  const leftColRef   = useRef(null);
-  const rightColRef  = useRef(null);
+  const stageRef     = useRef(null);
 
   const { nodeXY, userActivate } = useOrbitalCanvas({
     canvasRef, containerRef, setActive,
@@ -281,20 +608,146 @@ export default function FiveStepLoop() {
 
   useEffect(() => {
     const measure = () => {
-      if (window.innerWidth < 768) {
-        setOrbitDim(Math.min(360, Math.round(window.innerWidth - 24)));
-        return;
-      }
+      const stage = stageRef.current;
+      if (!stage) return;
+      const w = stage.clientWidth;
+      const h = stage.clientHeight;
+      const dim = Math.min(w, h) * (window.innerWidth < 768 ? 0.92 : 0.88);
+      setOrbitDim(Math.round(Math.max(280, dim)));
+    };
+    measure();
+    requestAnimationFrame(measure);
+    window.addEventListener("resize", measure);
+    const ro = stageRef.current ? new ResizeObserver(measure) : null;
+    if (stageRef.current) ro.observe(stageRef.current);
+    return () => {
+      window.removeEventListener("resize", measure);
+      ro?.disconnect();
+    };
+  }, []);
+
+  return (
+    <>
+      <FslStyles />
+      <section id="loop" className="fsl-section">
+        <div className="fsl-heading">
+          <div className="fsl-brand-opal">
+            <img src={opalLogo} alt="OPAL" />
+          </div>
+          <span className="fsl-presents-text">presents</span>
+          <span className="fsl-hl-hero">The Guided Operating System</span>
+          <span className="fsl-presents-text fsl-ampersand">&</span>
+          <div className="fsl-loop-row">
+            <span className="fsl-loop-text">The</span>
+            <span className="fsl-logo-gos">gOS</span>
+            <span className="fsl-loop-text">Loop</span>
+          </div>
+        </div>
+
+        <div ref={stageRef} className="fsl-orbit-stage">
+          <div
+            ref={containerRef}
+            className="fsl-orbital"
+            style={{ width: orbitDim, height: orbitDim, flexShrink: 0 }}
+          >
+            <canvas ref={canvasRef} style={{ position:"absolute", inset:0, width:"100%", height:"100%" }} />
+            <div style={{ position:"absolute", inset:0 }}>
+              {STEP_DATA.map((step, i) => (
+                <div
+                  key={step.num}
+                  className={`fsl-node${active === i ? " active" : ""}`}
+                  onClick={() => userActivate(i)}
+                  style={{
+                    position:"absolute",
+                    left: nodeXY[i]?.left ?? "50%",
+                    top:  nodeXY[i]?.top  ?? "50%",
+                    transform: "translate(-50%,-50%)",
+                    zIndex: 20, cursor: "pointer",
+                  }}
+                >
+                  <div className="fsl-node-circle">
+                    <span className="fsl-sn-name">{step.label}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="fsl-center-badge">
+              <img src={opalGosLogo} alt="OPAL gOS" className="fsl-cb-logo" />
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
+/** Slide 2 — step detail cards */
+export function FiveStepLoopCards() {
+  const [active, setActive] = useState(0);
+
+  const renderStepCard = (step, globalIdx) => (
+    <div
+      key={step.num}
+      className={`fsl-card${active === globalIdx ? " active" : ""}`}
+      onClick={() => setActive(globalIdx)}
+    >
+      <div className="fsl-card-header">
+        <span className="fsl-sc-title">{step.label}</span>
+      </div>
+      <div className="fsl-card-body">
+        <p dangerouslySetInnerHTML={{ __html: step.body }} />
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      <FslStyles />
+      <section className="fsl-section fsl-cards-only">
+        <div className="fsl-bottom">
+          <div className="fsl-col fsl-col-left">
+            <div className="fsl-steps">
+              {LEFT_COLUMN.map((idx) => renderStepCard(STEP_DATA[idx], idx))}
+            </div>
+          </div>
+          <div className="fsl-col fsl-col-right">
+            <div className="fsl-steps">
+              {RIGHT_COLUMN.map((idx) => renderStepCard(STEP_DATA[idx], idx))}
+            </div>
+          </div>
+          <div className="fsl-col fsl-col-mobile">
+            <div className="fsl-steps">
+              {MOBILE_SEQUENCE.map((idx) => renderStepCard(STEP_DATA[idx], idx))}
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
+/** Desktop — full loop: header + orbit + step cards in one viewport */
+export default function FiveStepLoop() {
+  const [active, setActive] = useState(0);
+  const [orbitDim, setOrbitDim] = useState(560);
+  const canvasRef    = useRef(null);
+  const containerRef = useRef(null);
+  const bottomRef    = useRef(null);
+  const leftColRef   = useRef(null);
+
+  const { nodeXY, userActivate } = useOrbitalCanvas({
+    canvasRef, containerRef, setActive,
+  });
+
+  useEffect(() => {
+    const measure = () => {
       const bottomEl = bottomRef.current;
       if (!bottomEl) return;
-
       const bottomH = bottomEl.clientHeight;
       const bottomW = bottomEl.clientWidth;
       const colW = leftColRef.current?.offsetWidth ?? 272;
       const gap = 20;
       const centerW = bottomW - colW * 2 - gap * 2;
-
-      // Largest square that fills the center slot and bottom-row height
       const dim = Math.min(bottomH * 0.98, centerW * 0.98);
       setOrbitDim(Math.round(Math.max(360, dim)));
     };
@@ -327,333 +780,9 @@ export default function FiveStepLoop() {
 
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-
-        .fsl-section {
-          --fsl-nav-h: var(--page-nav-h, 80px);
-          scroll-margin-top: var(--fsl-nav-h);
-          background: ${BG};
-          color: #fff;
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-          font-weight: 300;
-          height: calc(100svh - var(--fsl-nav-h));
-          min-height: calc(100svh - var(--fsl-nav-h));
-          max-height: calc(100svh - var(--fsl-nav-h));
-          display: flex;
-          flex-direction: column;
-          padding: clamp(14px, 2vh, 24px) clamp(20px, 3vw, 40px) clamp(12px, 1.5vh, 20px);
-          box-sizing: border-box;
-          overflow: hidden;
-        }
-
-        /* heading — OPAL presents (Marvel-style) */
-        .fsl-heading {
-          text-align: center;
-          margin-bottom: clamp(6px, 1vh, 12px);
-          flex-shrink: 0;
-        }
-
-        .fsl-brand-opal {
-          display: inline-block;
-          margin-bottom: 6px;
-          line-height: 0;
-        }
-        .fsl-brand-opal img {
-          display: block;
-          height: clamp(28px, 3.8vw, 44px);
-          width: auto;
-          aspect-ratio: ${OPAL_LOGO_RATIO};
-          object-fit: contain;
-          animation: logoGlowMorphSoft 10s ease-in-out infinite;
-        }
-
-        .fsl-presents-text {
-          display: block;
-          font-size: clamp(8px, 0.9vw, 10px);
-          letter-spacing: 0.38em;
-          color: rgba(255,255,255,0.32);
-          text-transform: uppercase;
-          margin-bottom: clamp(6px, 1vh, 10px);
-        }
-        .fsl-ampersand {
-          letter-spacing: 0;
-          margin-top: clamp(5px, 0.8vh, 8px);
-          margin-bottom: clamp(4px, 0.6vh, 8px);
-        }
-
-        .fsl-hl-hero {
-          display: block;
-          font-size: clamp(20px, 3.2vw, 36px);
-          font-weight: 800;
-          color: #fff;
-          text-transform: uppercase;
-          letter-spacing: -0.03em;
-          line-height: 1;
-          max-width: 720px;
-          margin: 0 auto;
-        }
-
-        .fsl-loop-row {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-        }
-        .fsl-loop-text {
-          font-size: clamp(11px, 1.2vw, 14px);
-          font-weight: 400;
-          color: rgba(255,255,255,0.28);
-          text-transform: uppercase;
-          letter-spacing: 0.16em;
-        }
-        .fsl-logo-gos {
-          font-size: clamp(18px, 2.4vw, 28px);
-          font-weight: 600;
-          color: #fff;
-          letter-spacing: -0.02em;
-          line-height: 1;
-        }
-
-        .fsl-section-body {
-          font-size: 12px; font-weight: 300; color: rgba(255,255,255,0.38);
-          line-height: 1.68; max-width: 600px; margin: 9px auto 0;
-        }
-
-        /* bottom row — fills width, orbit takes center space */
-        .fsl-bottom {
-          display: flex;
-          gap: clamp(10px, 1.5vw, 24px);
-          align-items: stretch;
-          justify-content: center;
-          flex: 1;
-          min-height: 0;
-          width: 100%;
-          max-width: min(1280px, 96vw);
-          margin: 0 auto;
-        }
-        .fsl-col {
-          flex: 0 0 clamp(260px, 24vw, 340px);
-          display: flex;
-          flex-direction: column;
-          min-height: 0;
-          padding: clamp(10px, 1.4vh, 18px) 0;
-          border-top: 1px solid rgba(255,255,255,0.07);
-          border-bottom: 1px solid rgba(255,255,255,0.07);
-        }
-        .fsl-col-right { order: 3; }
-        .fsl-col-left  { order: 1; }
-        .fsl-col-mobile { display: none; }
-        .fsl-orbital   { order: 2; align-self: center; }
-
-        /* step cards */
-        .fsl-steps { display: flex; flex-direction: column; gap: 8px; flex: 1; justify-content: space-evenly; margin-bottom: 0; }
-
-        .fsl-card {
-          position: relative;
-          border: 1px solid rgba(255,255,255,0.07);
-          border-radius: 14px; cursor: pointer; overflow: hidden;
-          background: rgba(255,255,255,0.03);
-          transition: border-color 0.3s, background 0.3s, box-shadow 0.4s;
-        }
-        .fsl-card:hover { border-color: rgba(255,255,255,0.14); }
-        .fsl-card.active {
-          border-color: rgba(255,255,255,0.2);
-          background: rgba(255,255,255,0.055);
-          box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 0 24px rgba(255,255,255,0.07), 0 0 52px rgba(255,255,255,0.03);
-        }
-        .fsl-card::after {
-          content: ''; position: absolute; top: 11px; right: 11px;
-          width: 4px; height: 4px; border-radius: 50%;
-          background: rgba(255,255,255,0.13);
-          transition: background 0.3s, box-shadow 0.3s;
-        }
-        .fsl-card.active::after {
-          background: rgba(255,255,255,0.6);
-          box-shadow: 0 0 5px rgba(255,255,255,0.45);
-        }
-
-        .fsl-card-header {
-          display: flex; align-items: center; justify-content: center;
-          padding: 14px 18px 12px;
-        }
-        .fsl-sc-title {
-          font-size: clamp(15px, 1.5vh, 17px); font-weight: 700;
-          text-align: center; width: 100%;
-          color: rgba(255,255,255,0.38);
-          transition: color 0.3s;
-        }
-        .fsl-card.active .fsl-sc-title { color: #fff; }
-
-        .fsl-card-body {
-          overflow: hidden; max-height: 0;
-          transition: max-height 0.38s ease, padding 0.3s;
-          padding: 0 18px;
-        }
-        .fsl-card.active .fsl-card-body { max-height: 120px; padding: 0 18px 16px; }
-        .fsl-card-body p {
-          font-size: clamp(12.5px, 1.35vh, 14px); font-weight: 300;
-          color: rgba(255,255,255,0.42); line-height: 1.62;
-          border-top: 1px solid rgba(255,255,255,0.07); padding-top: 10px; margin: 0;
-        }
-        .fsl-card-body p strong { color: rgba(255,255,255,0.82); font-weight: 600; }
-
-        /* book button */
-        .fsl-book {
-          display: inline-flex; align-items: center; gap: 8px;
-          padding: 12px 24px;
-          border: 1px solid rgba(255,255,255,0.45); border-radius: 999px;
-          font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
-          color: #fff; text-transform: uppercase; cursor: pointer;
-          background: transparent; width: fit-content;
-          transition: border-color 0.25s, background 0.25s, color 0.25s;
-        }
-        .fsl-book:hover { border-color: #fff; background: #fff; color: ${BG}; }
-        .fsl-book svg { width: 10px; height: 10px; transition: transform 0.2s; }
-        .fsl-book:hover svg { transform: translate(2px,-2px); }
-
-        /* orbital — flex-grow center, square via inline dim */
-        .fsl-orbital {
-          flex: 1 1 auto;
-          position: relative;
-          min-width: 0;
-        }
-
-        /* node circles */
-        .fsl-node-circle {
-          width: ${NODE_SIZE}px; height: ${NODE_SIZE}px; border-radius: 50%;
-          background: rgba(10,10,10,0.97);
-          border: 1.5px solid rgba(255,255,255,0.18);
-          display: flex; flex-direction: column;
-          align-items: center; justify-content: center;
-          transition: border-color 0.35s, background 0.35s, box-shadow 0.4s, transform 0.35s;
-          box-shadow: 0 0 0 3px ${BG};
-        }
-        .fsl-node.active .fsl-node-circle {
-          border-color: rgba(255,255,255,0.9);
-          background: #fff;
-          transform: scale(${NODE_ACTIVE_SCALE});
-          box-shadow:
-            0 0 0 3px ${BG},
-            0 0 0 5px rgba(255,255,255,0.18),
-            0 0 18px rgba(255,255,255,0.38),
-            0 0 45px rgba(255,255,255,0.15),
-            0 0 75px rgba(255,255,255,0.06);
-        }
-        .fsl-sn-name {
-          font-size: 13px; font-weight: 500; line-height: 1.12;
-          letter-spacing: 0.01em; text-align: center;
-          padding: 0 6px; max-width: 94%;
-          color: rgba(255,255,255,0.42);
-          transition: color 0.3s, font-size 0.3s;
-        }
-        .fsl-node.active .fsl-sn-name { color: rgba(0,0,0,0.72); font-size: 13.5px; font-weight: 600; }
-
-        /* badge logo (brightness+invert needed)
-           0–12%  : glow fades in fast
-           12–75% : glow holds
-           75–88% : glow fades out fast
-           88–100%: off, waiting */
-        @keyframes logoGlowMorph {
-          0%, 88%, 100% {
-            filter: brightness(0) invert(1)
-                    drop-shadow(0 0 0px rgba(255,255,255,0))
-                    drop-shadow(0 0 0px rgba(255,255,255,0))
-                    drop-shadow(0 0 0px rgba(255,255,255,0));
-          }
-          12%, 75% {
-            filter: brightness(0) invert(1)
-                    drop-shadow(0 0 8px rgba(255,255,255,0.45))
-                    drop-shadow(0 0 20px rgba(255,255,255,0.18))
-                    drop-shadow(0 0 40px rgba(255,255,255,0.08));
-          }
-        }
-        /* heading OPAL logo (no invert — keeps original colors) */
-        @keyframes logoGlowMorphSoft {
-          0%, 88%, 100% {
-            filter: drop-shadow(0 0 0px rgba(255,255,255,0))
-                    drop-shadow(0 0 0px rgba(255,255,255,0))
-                    drop-shadow(0 0 0px rgba(255,255,255,0));
-          }
-          12%, 75% {
-            filter: drop-shadow(0 0 8px rgba(255,255,255,0.45))
-                    drop-shadow(0 0 20px rgba(255,255,255,0.18))
-                    drop-shadow(0 0 40px rgba(255,255,255,0.08));
-          }
-        }
-
-        /* center badge — logo only, no border */
-        .fsl-center-badge {
-          position: absolute; top: 50%; left: 50%;
-          transform: translate(-50%,-50%);
-          display: flex; align-items: center; justify-content: center;
-          z-index: 22; pointer-events: none;
-          line-height: 0;
-        }
-        .fsl-cb-logo {
-          display: block;
-          width: clamp(68px, 16%, 104px);
-          height: clamp(68px, 16%, 104px);
-          aspect-ratio: ${OPAL_GOS_LOGO_RATIO};
-          object-fit: contain;
-          animation: logoGlowMorph 10s ease-in-out infinite;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .fsl-cb-logo { animation: none; filter: brightness(0) invert(1) drop-shadow(0 0 8px rgba(255,255,255,0.45)); }
-          .fsl-brand-opal img { animation: none; filter: drop-shadow(0 0 8px rgba(255,255,255,0.45)); }
-        }
-
-        @media (max-width: 767px) {
-          .fsl-section {
-            height: auto;
-            min-height: calc(100svh - var(--fsl-nav-h));
-            max-height: none;
-            overflow: visible;
-            padding: 20px 16px;
-          }
-          .fsl-bottom { flex-direction: column; gap: 20px; align-items: center; }
-          .fsl-col { flex: unset; width: 100%; }
-          .fsl-col-left,
-          .fsl-col-right { display: none !important; }
-          .fsl-col-mobile {
-            display: flex !important;
-            flex-direction: column;
-            align-items: center;
-            order: 2 !important;
-            width: 100%;
-            max-width: 360px;
-            margin: 0 auto;
-            border-top: 1px solid rgba(255,255,255,0.07);
-            border-bottom: 1px solid rgba(255,255,255,0.07);
-            padding: 8px 0;
-          }
-          .fsl-col-mobile .fsl-steps {
-            width: 100%;
-            max-width: 320px;
-            gap: 8px;
-            justify-content: flex-start;
-            align-items: center;
-          }
-          .fsl-col-mobile .fsl-card {
-            width: 100%;
-            max-width: 340px;
-          }
-          .fsl-orbital   { order: 1 !important; flex: unset; align-self: auto; width: 100% !important; max-width: 360px; }
-          .fsl-sn-name { font-size: 12px; }
-          .fsl-node.active .fsl-sn-name { font-size: 12.5px; }
-          .fsl-hl-hero { font-size: clamp(22px, 7vw, 32px); }
-          .fsl-brand-opal img {
-            height: clamp(24px, 8vw, 38px);
-            width: auto;
-            aspect-ratio: ${OPAL_LOGO_RATIO};
-          }
-        }
-      `}</style>
-
-      <section id="loop" className="fsl-section">
-
-        {/* ══ HEADING ══ */}
-        <div ref={headingRef} className="fsl-heading">
+      <FslStyles />
+      <section id="loop" className="fsl-section fsl-desktop-combined">
+        <div className="fsl-heading">
           <div className="fsl-brand-opal">
             <img src={opalLogo} alt="OPAL" />
           </div>
@@ -667,24 +796,19 @@ export default function FiveStepLoop() {
           </div>
         </div>
 
-        {/* ══ BOTTOM ROW — left steps | orbit | right steps ══ */}
         <div ref={bottomRef} className="fsl-bottom">
-
-          {/* LEFT — 01, 02, 03 (bottom → top) */}
           <div ref={leftColRef} className="fsl-col fsl-col-left">
             <div className="fsl-steps">
               {LEFT_COLUMN.map((idx) => renderStepCard(STEP_DATA[idx], idx))}
             </div>
           </div>
 
-          {/* ORBITAL — center */}
           <div
             ref={containerRef}
             className="fsl-orbital"
             style={{ width: orbitDim, height: orbitDim, flexShrink: 0 }}
           >
             <canvas ref={canvasRef} style={{ position:"absolute", inset:0, width:"100%", height:"100%" }} />
-
             <div style={{ position:"absolute", inset:0 }}>
               {STEP_DATA.map((step, i) => (
                 <div
@@ -705,26 +829,16 @@ export default function FiveStepLoop() {
                 </div>
               ))}
             </div>
-
             <div className="fsl-center-badge">
               <img src={opalGosLogo} alt="OPAL gOS" className="fsl-cb-logo" />
             </div>
           </div>
 
-          {/* RIGHT — 04, 05, 06 (top → bottom) */}
-          <div ref={rightColRef} className="fsl-col fsl-col-right">
+          <div className="fsl-col fsl-col-right">
             <div className="fsl-steps">
               {RIGHT_COLUMN.map((idx) => renderStepCard(STEP_DATA[idx], idx))}
             </div>
           </div>
-
-          {/* MOBILE — 01 → 06 sequential */}
-          <div className="fsl-col fsl-col-mobile">
-            <div className="fsl-steps">
-              {MOBILE_SEQUENCE.map((idx) => renderStepCard(STEP_DATA[idx], idx))}
-            </div>
-          </div>
-
         </div>
       </section>
     </>

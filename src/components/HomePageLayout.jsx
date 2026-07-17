@@ -1,37 +1,51 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Navbar from "./Navbar/Navbar";
 import Footer from "./Footer";
 import LogoStream from "./LogoStream/LogoStream";
-import Processes from "./Info/Stats.jsx";
+import Processes, { ImpactNarrative, ImpactMetrics } from "./Info/Stats.jsx";
 import TestimonialSection from "./Info/Testimonial";
 import ScrollHero from "./HomeHero/ScrollHero";
 import ProblemWordMap from "./Info/ProblemWordMap.jsx";
 import PlatformSection from "./Info/PlatformSection.jsx";
-import FiveStepLoop from "./Info/FiveStepLoop.jsx";
+import FiveStepLoop, {
+  FiveStepLoopOrbit,
+  FiveStepLoopCards,
+} from "./Info/FiveStepLoop.jsx";
 import { NAV_HEIGHT } from "./Navbar/navigationConfig";
 
-/* ─── Stacked-card scroll experience (mobile + desktop, identical) ───────────
-   Every section is a full-viewport sticky card; the next one slides up over
-   the previous. One gesture = one section, fully reversible.
-
-   Robustness rules that fix the earlier glitches:
-   • Snap targets are read from each card's REAL layout offset (no drift).
-   • Native scrolling is blocked ONLY while inside the stack, so the hero's
-     scroll-driven animation and the footer stay free.
-   • The "busy" lock is released on the real `scrollend` event (not a guessed
-     timer), so trackpad momentum can't skip multiple sections and a snap can't
-     re-fire mid-animation.
-   • Tall cards (FiveStepLoop, Stats) scroll INSIDE themselves first; only at
-     their top/bottom edge does the next gesture advance to the neighbour. ─── */
+/* ─── Stacked-card scroll experience ───────────────────────────────────────
+   Desktop: Loop + Impact stay as single full-viewport cards.
+   Mobile:  those two are split into two cards each so one swipe = one card. ─ */
 const SLIDE_BG = "#07080D";
-const SECTION_COUNT = 6;
-const OVERFLOW_EPS = 48; // a card counts as "scrollable" only past this many px
+const OVERFLOW_EPS = 48;
+const MOBILE_BP = 767;
+
+function useIsMobile(breakpoint = MOBILE_BP) {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia(`(max-width: ${breakpoint}px)`).matches
+      : false,
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`);
+    const onChange = () => setIsMobile(mq.matches);
+    onChange();
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, [breakpoint]);
+
+  return isMobile;
+}
 
 export default function HomePageLayout() {
   const stackRef = useRef(null);
   const sectionRefs = useRef([]);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
+    sectionRefs.current = [];
+
     let busy = false;            // true while a programmatic snap is in flight
     let releaseTimer = null;
     let fallbackTimer = null;
@@ -132,7 +146,7 @@ export default function HomePageLayout() {
     // Card scrollability for the active .home-slide.
     // Platform / Problem are always one-viewport snaps (never "internal").
     // Stats (#impact) and other tall cards may scroll inside first.
-    const ONE_SHOT_IDS = new Set(["platform", "problem"]);
+    const ONE_SHOT_IDS = new Set(["platform", "problem", "loop", "impact"]);
     const cardScrollInfo = (el) => {
       if (!el) return { scrollable: false, atTop: true, atBottom: true };
       if (el.dataset.cardScroll === "none") {
@@ -417,7 +431,7 @@ export default function HomePageLayout() {
       clearTimers();
       clearTimeout(wheelQuietTimer);
     };
-  }, []);
+  }, [isMobile]);
 
   const setSectionRef = (i) => (el) => { sectionRefs.current[i] = el; };
 
@@ -444,7 +458,7 @@ export default function HomePageLayout() {
             radial-gradient(ellipse at 82% 70%, rgba(34,211,238,0.06) 0%, transparent 42%);
         }
 
-        /* ── Sticky overlay cards (identical on mobile + desktop) ──
+        /* ── Sticky overlay cards ──
               Fixed to one viewport below the navbar. Content taller than the
               card scrolls INSIDE it; the controller advances to the next card
               only once you reach the edge. ── */
@@ -487,8 +501,9 @@ export default function HomePageLayout() {
           <div className="home-glow-inner" />
         </div>
 
-        {/* ── Section stack ── */}
+        {/* ── Section stack: desktop = full Loop/Impact; mobile = split ── */}
         <div
+          key={isMobile ? "mobile" : "desktop"}
           ref={stackRef}
           style={{
             position: "relative",
@@ -496,35 +511,51 @@ export default function HomePageLayout() {
             ["--page-nav-h"]: `${NAV_HEIGHT}px`,
           }}
         >
-          {/* 1 — The Problem */}
           <div className="home-slide" ref={setSectionRef(0)} data-card-scroll="none" style={{ ["--slide-z"]: 1, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
             <ProblemWordMap />
           </div>
 
-          {/* 2 — Modules */}
           <div className="home-slide" ref={setSectionRef(1)} data-card-scroll="none" style={{ ["--slide-z"]: 2, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
             <PlatformSection navbarHeight={NAV_HEIGHT} />
           </div>
 
-          {/* 3 — The Platform Loop */}
-          <div className="home-slide" ref={setSectionRef(2)} style={{ ["--slide-z"]: 3, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-            <FiveStepLoop />
-          </div>
-
-          {/* 4 — Impact / Stats (tall on mobile — scroll inside, then next swipe advances) */}
-          <div className="home-slide" ref={setSectionRef(3)} data-card-scroll="auto" style={{ ["--slide-z"]: 4, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-            <Processes />
-          </div>
-
-          {/* 5 — The Stack */}
-          <div className="home-slide" ref={setSectionRef(4)} data-card-scroll="none" style={{ ["--slide-z"]: 5, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-            <LogoStream />
-          </div>
-
-          {/* 6 — Testimonials */}
-          <div className="home-slide" ref={setSectionRef(5)} style={{ ["--slide-z"]: 6, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-            <TestimonialSection />
-          </div>
+          {isMobile ? (
+            <>
+              <div className="home-slide" ref={setSectionRef(2)} data-card-scroll="none" style={{ ["--slide-z"]: 3, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+                <FiveStepLoopOrbit />
+              </div>
+              <div className="home-slide" ref={setSectionRef(3)} data-card-scroll="none" style={{ ["--slide-z"]: 4, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+                <FiveStepLoopCards />
+              </div>
+              <div className="home-slide" ref={setSectionRef(4)} data-card-scroll="none" style={{ ["--slide-z"]: 5, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+                <ImpactNarrative />
+              </div>
+              <div className="home-slide" ref={setSectionRef(5)} style={{ ["--slide-z"]: 6, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+                <ImpactMetrics />
+              </div>
+              <div className="home-slide" ref={setSectionRef(6)} data-card-scroll="none" style={{ ["--slide-z"]: 7, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+                <LogoStream />
+              </div>
+              <div className="home-slide" ref={setSectionRef(7)} style={{ ["--slide-z"]: 8, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+                <TestimonialSection />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="home-slide" ref={setSectionRef(2)} style={{ ["--slide-z"]: 3, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+                <FiveStepLoop />
+              </div>
+              <div className="home-slide" ref={setSectionRef(3)} style={{ ["--slide-z"]: 4, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+                <Processes />
+              </div>
+              <div className="home-slide" ref={setSectionRef(4)} data-card-scroll="none" style={{ ["--slide-z"]: 5, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+                <LogoStream />
+              </div>
+              <div className="home-slide" ref={setSectionRef(5)} style={{ ["--slide-z"]: 6, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+                <TestimonialSection />
+              </div>
+            </>
+          )}
         </div>
       </div>
 

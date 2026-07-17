@@ -726,48 +726,71 @@ function ClientBadge() {
   );
 }
 
-export default function Processes() {
+const stSectionStyle = {
+  backgroundColor: "transparent",
+  height: "calc(100svh - var(--page-nav-h, 80px))",
+  minHeight: "calc(100svh - var(--page-nav-h, 80px))",
+  maxHeight: "calc(100svh - var(--page-nav-h, 80px))",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+  padding: "clamp(28px, 4vh, 56px) 0",
+  boxSizing: "border-box",
+  scrollMarginTop: "var(--page-nav-h, 80px)",
+  overflow: "hidden",
+};
+
+function StStyles() {
+  return (
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+      .st-header {
+        text-align: center;
+        flex-shrink: 0;
+        margin-bottom: clamp(20px, 3vh, 36px);
+        width: 100%;
+        padding: 0 clamp(16px, 3vw, 52px);
+        box-sizing: border-box;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-weight: 300;
+      }
+      .st-heading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: clamp(8px, 1.2vh, 14px);
+      }
+      .st-hl-bold {
+        display: block;
+        font-size: clamp(26px, 4.2vw, 44px);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: #fff;
+        line-height: 1.06;
+        white-space: nowrap;
+      }
+      @media (max-width: 600px) {
+        .st-section { padding: 24px 0 32px !important; }
+        .st-header { margin-bottom: 16px; padding: 0 14px; }
+        .st-hl-bold { font-size: clamp(22px, 6.8vw, 30px); }
+      }
+    `}</style>
+  );
+}
+
+/** Slide 1 — centered ROI wording (nav #impact) */
+export function ImpactNarrative() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: false, margin: "-80px" });
-  const pulse = usePulse();
-  const [countsComplete, setCountsComplete] = useState(false);
-
-  useEffect(() => {
-    if (!inView) {
-      setCountsComplete(false);
-      return;
-    }
-
-    const timer = setTimeout(
-      () => setCountsComplete(true),
-      COUNTER_END_TIME * 1000,
-    );
-
-    return () => clearTimeout(timer);
-  }, [inView]);
 
   return (
-    <div
-      id="impact"
-      className="relative st-section"
-      style={{
-        backgroundColor: "transparent",
-        height: "calc(100svh - var(--page-nav-h, 80px))",
-        minHeight: "calc(100svh - var(--page-nav-h, 80px))",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        padding: "clamp(32px, 5vh, 64px) 0",
-        boxSizing: "border-box",
-        scrollMarginTop: "var(--page-nav-h, 80px)",
-        overflow: "hidden",
-      }}
-    >
+    <div id="impact" className="relative st-section" style={stSectionStyle}>
       <Process />
-
-      <div ref={ref} className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-
-        {/* Section header */}
+      <div
+        ref={ref}
+        className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex flex-col items-center justify-center text-center"
+      >
         <header className="st-header">
           <div className="st-heading">
             <motion.span
@@ -781,7 +804,149 @@ export default function Processes() {
           </div>
         </header>
 
-        {/* Heading */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6 }}
+          className="w-full"
+        >
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white/45 leading-tight text-center">
+            They sell{" "}
+            <AnimatedStrike inView={inView}>ROI</AnimatedStrike>.<br />{" "}
+            We deliver <InvisibleInk>Realtime Operational Impact</InvisibleInk>.
+          </h2>
+        </motion.div>
+      </div>
+      <StStyles />
+    </div>
+  );
+}
+
+/** Slide 2 — stats grid */
+export function ImpactMetrics() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: false, margin: "-80px" });
+  const pulse = usePulse();
+  const [countsComplete, setCountsComplete] = useState(false);
+
+  useEffect(() => {
+    if (!inView) {
+      setCountsComplete(false);
+      return;
+    }
+    const timer = setTimeout(
+      () => setCountsComplete(true),
+      COUNTER_END_TIME * 1000,
+    );
+    return () => clearTimeout(timer);
+  }, [inView]);
+
+  return (
+    <div
+      className="relative st-section"
+      style={{
+        ...stSectionStyle,
+        height: "auto",
+        maxHeight: "none",
+        justifyContent: "flex-start",
+        overflow: "visible",
+      }}
+    >
+      <Process />
+      <div ref={ref} className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.7, delay: 0.1 }}
+          className="text-center text-xl md:text-2xl lg:text-3xl font-semibold tracking-tight font-['Montserrat'] mb-5 md:mb-6"
+          style={{
+            color: "#ffffff",
+            letterSpacing: "-0.02em",
+            lineHeight: 1.05,
+            textShadow: "0 0 60px rgba(255,255,255,0.10)",
+          }}
+        >
+          gOS in Action
+        </motion.h2>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="flex items-center gap-4 mb-6 md:mb-7"
+        >
+          <div
+            className="flex-1 h-px"
+            style={{ background: "linear-gradient(to right, transparent, rgba(255,255,255,0.15))" }}
+          />
+          <ClientBadge />
+          <div
+            className="flex-1 h-px"
+            style={{ background: "linear-gradient(to left, transparent, rgba(255,255,255,0.15))" }}
+          />
+        </motion.div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {stats.map((stat, i) => (
+            <Card key={i} stat={stat} index={i} inView={inView} pulse={pulse} countsComplete={countsComplete} />
+          ))}
+          <NewHiresCard inView={inView} pulse={pulse} countsComplete={countsComplete} />
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ delay: 0.5, duration: 0.8 }}
+          className="flex items-center gap-4 mt-6 border-t border-white/10 pt-4"
+        >
+          <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(255,255,255,0.28), transparent)` }} />
+          <span className="text-[10px] tracking-[0.3em] uppercase text-white/28">
+             observed · catalogued · verified
+          </span>
+          <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(255,255,255,0.25), transparent)` }} />
+        </motion.div>
+      </div>
+      <StStyles />
+    </div>
+  );
+}
+
+/** Desktop — full impact section in one viewport */
+export default function Processes() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: false, margin: "-80px" });
+  const pulse = usePulse();
+  const [countsComplete, setCountsComplete] = useState(false);
+
+  useEffect(() => {
+    if (!inView) {
+      setCountsComplete(false);
+      return;
+    }
+    const timer = setTimeout(
+      () => setCountsComplete(true),
+      COUNTER_END_TIME * 1000,
+    );
+    return () => clearTimeout(timer);
+  }, [inView]);
+
+  return (
+    <div id="impact" className="relative st-section" style={stSectionStyle}>
+      <Process />
+      <div ref={ref} className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <header className="st-header">
+          <div className="st-heading">
+            <motion.span
+              className="st-hl-bold"
+              initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
+              animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+              transition={{ duration: 0.85, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+            >
+              ROI REFRAME
+            </motion.span>
+          </div>
+        </header>
+
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -795,7 +960,6 @@ export default function Processes() {
           </h2>
         </motion.div>
 
-        {/* Hero header */}
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -811,7 +975,6 @@ export default function Processes() {
           gOS in Action
         </motion.h2>
 
-        {/* ─── Client attribution bridge ─── */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -828,9 +991,7 @@ export default function Processes() {
             style={{ background: "linear-gradient(to left, transparent, rgba(255,255,255,0.15))" }}
           />
         </motion.div>
-        {/* ─── End client attribution bridge ─── */}
 
-        {/* Stats grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {stats.map((stat, i) => (
             <Card key={i} stat={stat} index={i} inView={inView} pulse={pulse} countsComplete={countsComplete} />
@@ -838,7 +999,6 @@ export default function Processes() {
           <NewHiresCard inView={inView} pulse={pulse} countsComplete={countsComplete} />
         </div>
 
-        {/* Footer */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
@@ -851,56 +1011,8 @@ export default function Processes() {
           </span>
           <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(255,255,255,0.25), transparent)` }} />
         </motion.div>
-
       </div>
-
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-
-        .st-header {
-          text-align: center;
-          flex-shrink: 0;
-          margin-bottom: clamp(24px, 3.5vh, 40px);
-          width: 100%;
-          padding: 0 clamp(16px, 3vw, 52px);
-          box-sizing: border-box;
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-          font-weight: 300;
-        }
-
-        .st-heading {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: clamp(8px, 1.2vh, 14px);
-        }
-
-        .st-hl-bold {
-          display: block;
-          font-size: clamp(26px, 4.2vw, 44px);
-          font-weight: 800;
-          letter-spacing: -0.03em;
-          color: #fff;
-          line-height: 1.06;
-          white-space: nowrap;
-        }
-
-        @media (max-width: 600px) {
-          /* Tall on mobile — home-slide scrolls this content; keep overflow
-             clipped to the section box so only .home-slide is the scrollport. */
-          .st-section {
-            height: auto !important;
-            min-height: calc(100svh - var(--page-nav-h, 80px)) !important;
-            max-height: none !important;
-            overflow: hidden !important;
-            justify-content: flex-start !important;
-            padding: 28px 0 48px !important;
-          }
-          .st-header { margin-bottom: 20px; padding: 0 14px; }
-          .st-heading { gap: 8px; }
-          .st-hl-bold { font-size: clamp(22px, 6.8vw, 30px); }
-        }
-      `}</style>
+      <StStyles />
     </div>
   );
 }
