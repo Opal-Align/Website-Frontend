@@ -202,7 +202,7 @@ export default function Footer() {
             >
               <MdCall
                 className="w-5 h-5 md:w-6 md:h-6 shrink-0"
-                style={{ fill: "url(#opalIconGrad)" }}
+                style={{ color: "#fff" }}
               />
               <Typewriter
                 text="877-996-6725 (OPAL)"
@@ -218,7 +218,7 @@ export default function Footer() {
             >
               <MdEmail
                 className="w-5 h-5 md:w-6 md:h-6 shrink-0"
-                style={{ fill: "url(#opalIconGrad)" }}
+                style={{ color: "#fff" }}
               />
               <Typewriter
                 text="info@opalgos.com"
