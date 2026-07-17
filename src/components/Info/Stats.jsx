@@ -775,6 +775,93 @@ function StStyles() {
         .st-header { margin-bottom: 16px; padding: 0 14px; }
         .st-hl-bold { font-size: clamp(22px, 6.8vw, 30px); }
       }
+
+      /* Mobile metrics — vertical stack, compact heights to fit one view */
+      @media (max-width: 767px) {
+        .st-metrics-fit {
+          justify-content: flex-start !important;
+          padding: 8px 0 6px !important;
+          overflow: hidden !important;
+        }
+        .st-metrics-fit .st-metrics-wrap {
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+          min-height: 0;
+          padding-left: 14px;
+          padding-right: 14px;
+        }
+        .st-metrics-fit .st-metrics-title {
+          font-size: 0.95rem !important;
+          margin-bottom: 6px !important;
+          flex-shrink: 0;
+        }
+        .st-metrics-fit .st-metrics-badge {
+          margin-bottom: 6px !important;
+          gap: 8px !important;
+          flex-shrink: 0;
+        }
+        .st-metrics-fit .st-metrics-badge > div.flex.items-center {
+          padding: 5px 10px !important;
+          gap: 8px !important;
+        }
+        .st-metrics-fit .st-metrics-badge img {
+          height: 22px !important;
+        }
+        .st-metrics-fit .st-metrics-grid {
+          display: flex !important;
+          flex-direction: column;
+          gap: 5px;
+          flex: 1;
+          min-height: 0;
+        }
+        .st-metrics-fit .st-metrics-grid > * {
+          flex: 1 1 0;
+          min-height: 0;
+          border-radius: 14px !important;
+        }
+        .st-metrics-fit .st-metrics-grid .relative.z-10 {
+          padding: 6px 10px !important;
+          gap: 2px !important;
+          height: 100%;
+          justify-content: center;
+        }
+        .st-metrics-fit .st-metrics-grid .absolute.top-4.right-4 {
+          top: 6px !important;
+          right: 8px !important;
+        }
+        .st-metrics-fit .st-metrics-grid .absolute.top-4.right-4 > div {
+          width: 4px !important;
+          height: 4px !important;
+        }
+        .st-metrics-fit .st-metrics-grid .font-semibold.tracking-tight.inline-flex {
+          font-size: 1.2rem !important;
+        }
+        .st-metrics-fit .st-metrics-grid h4 {
+          font-size: 11px !important;
+          line-height: 1.15 !important;
+        }
+        .st-metrics-fit .st-metrics-grid .h-px {
+          margin: 1px 0 !important;
+        }
+        .st-metrics-fit .st-metrics-grid p.text-sm {
+          font-size: 9.5px !important;
+          line-height: 1.25 !important;
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        .st-metrics-fit .st-metrics-foot {
+          margin-top: 6px !important;
+          padding-top: 5px !important;
+          flex-shrink: 0;
+        }
+        .st-metrics-fit .st-metrics-foot span {
+          font-size: 7.5px;
+          letter-spacing: 0.14em;
+        }
+      }
     `}</style>
   );
 }
@@ -842,23 +929,14 @@ export function ImpactMetrics() {
   }, [inView]);
 
   return (
-    <div
-      className="relative st-section"
-      style={{
-        ...stSectionStyle,
-        height: "auto",
-        maxHeight: "none",
-        justifyContent: "flex-start",
-        overflow: "visible",
-      }}
-    >
+    <div className="relative st-section st-metrics-fit" style={stSectionStyle}>
       <Process />
-      <div ref={ref} className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+      <div ref={ref} className="relative z-10 max-w-7xl mx-auto w-full st-metrics-wrap px-4 sm:px-6 lg:px-8">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.7, delay: 0.1 }}
-          className="text-center text-xl md:text-2xl lg:text-3xl font-semibold tracking-tight font-['Montserrat'] mb-5 md:mb-6"
+          className="st-metrics-title text-center text-xl md:text-2xl lg:text-3xl font-semibold tracking-tight font-['Montserrat'] mb-5 md:mb-6"
           style={{
             color: "#ffffff",
             letterSpacing: "-0.02em",
@@ -873,7 +951,7 @@ export function ImpactMetrics() {
           initial={{ opacity: 0, y: 10 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="flex items-center gap-4 mb-6 md:mb-7"
+          className="st-metrics-badge flex items-center gap-4 mb-6 md:mb-7"
         >
           <div
             className="flex-1 h-px"
@@ -886,7 +964,7 @@ export function ImpactMetrics() {
           />
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="st-metrics-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {stats.map((stat, i) => (
             <Card key={i} stat={stat} index={i} inView={inView} pulse={pulse} countsComplete={countsComplete} />
           ))}
@@ -897,7 +975,7 @@ export function ImpactMetrics() {
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
           transition={{ delay: 0.5, duration: 0.8 }}
-          className="flex items-center gap-4 mt-6 border-t border-white/10 pt-4"
+          className="st-metrics-foot flex items-center gap-4 mt-6 border-t border-white/10 pt-4"
         >
           <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(255,255,255,0.28), transparent)` }} />
           <span className="text-[10px] tracking-[0.3em] uppercase text-white/28">

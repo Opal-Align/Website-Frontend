@@ -541,7 +541,7 @@ function FslStyles() {
         .fsl-node.active .fsl-sn-name { font-size: 12.5px; }
 
         .fsl-cards-only {
-          padding: 12px 14px;
+          padding: 8px 12px;
         }
         .fsl-cards-only .fsl-bottom {
           flex-direction: column;
@@ -560,34 +560,54 @@ function FslStyles() {
           margin: 0;
           flex: 1;
           min-height: 0;
-          border-top: none;
-          border-bottom: none;
-          padding: 0;
+          border: none !important;
+          border-top: none !important;
+          border-bottom: none !important;
+          padding: 0 !important;
         }
         .fsl-cards-only .fsl-col-mobile .fsl-steps {
           width: 100%;
           max-width: none;
           flex: 1;
           min-height: 0;
-          gap: clamp(6px, 1.2vh, 10px);
-          justify-content: space-evenly;
+          gap: 6px;
+          justify-content: stretch;
           align-items: stretch;
         }
+        /* Inactive rows stay compact; active grows enough for full copy */
         .fsl-cards-only .fsl-col-mobile .fsl-card {
           width: 100%;
           max-width: none;
-          flex: 1 1 0;
+          flex: 0.72 1 0;
           min-height: 0;
           display: flex;
           flex-direction: column;
           justify-content: center;
         }
+        .fsl-cards-only .fsl-col-mobile .fsl-card.active {
+          flex: 2.1 1 0;
+          justify-content: center;
+        }
         .fsl-cards-only .fsl-col-mobile .fsl-card-header {
-          padding: clamp(10px, 1.6vh, 14px) 16px;
+          padding: 8px 12px 6px;
+          flex-shrink: 0;
+        }
+        .fsl-cards-only .fsl-col-mobile .fsl-card.active .fsl-card-header {
+          padding-bottom: 4px;
+        }
+        .fsl-cards-only .fsl-col-mobile .fsl-sc-title {
+          font-size: 13.5px;
         }
         .fsl-cards-only .fsl-col-mobile .fsl-card.active .fsl-card-body {
-          max-height: 140px;
-          padding: 0 16px 12px;
+          max-height: none;
+          flex: 0 1 auto;
+          padding: 0 12px 10px;
+          overflow: visible;
+        }
+        .fsl-cards-only .fsl-col-mobile .fsl-card-body p {
+          font-size: 11.5px;
+          line-height: 1.45;
+          padding-top: 6px;
         }
       }
     `}</style>
