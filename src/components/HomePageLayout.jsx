@@ -72,6 +72,13 @@ export default function HomePageLayout() {
     // cannot chain Stats → LogoStream → Testimonials in one go.
     let snapLockUntil = 0;
     let pendingSnapTop = null;
+    // Wheel mute window (also used by snapTo to kill iOS synthetic wheels)
+    let wheelIgnoreUntil = 0;
+    let wheelQuietTimer = null;
+    // Finger activity — phones synthesize `wheel` from touch; while a finger
+    // session is recent, only the touch handler may advance sections.
+    let lastTouchAt = 0;
+    const TOUCH_WHEEL_MUTE_MS = 1500;
 
     const snapTo = (top) => {
       // No-op guard: if we're already at (or within 1px of) the target, the
@@ -86,7 +93,13 @@ export default function HomePageLayout() {
       pendingSnapTop = top;
       // Block a second section change while this animation runs + a short beat
       // after it settles (stops Stats → LogoStream → Testimonials chaining).
-      snapLockUntil = Date.now() + 900;
+      const lockMs = 1000;
+      snapLockUntil = Date.now() + lockMs;
+      // Phones also emit synthetic `wheel` events from the same finger fling —
+      // swallow those so touch + wheel can't each advance one section.
+      wheelIgnoreUntil = Date.now() + lockMs;
+      clearTimeout(wheelQuietTimer);
+      wheelQuietTimer = setTimeout(() => { wheelIgnoreUntil = 0; }, lockMs);
       clearTimers();
       window.scrollTo({ top, behavior: "smooth" });
 
@@ -99,7 +112,7 @@ export default function HomePageLayout() {
           pendingSnapTop = null;
         }
         busy = false;
-      }, 900);
+      }, lockMs);
     };
 
     // Released shortly AFTER the smooth scroll truly settles, so trailing
@@ -212,11 +225,16 @@ export default function HomePageLayout() {
     };
 
     // ── Wheel ──
-    // Trackpad flings deliver many wheel events; after one snap, ignore the
-    // rest until the user pauses so a long scroll can't chain sections.
-    let wheelIgnoreUntil = 0;
-    let wheelQuietTimer = null;
+    // Desktop/trackpad only for advancing. On phones, the same finger swipe
+    // also synthesizes wheel events — if we handle both, one gesture advances
+    // two sections (Stats → LogoStream → Testimonials).
     const onWheel = (e) => {
+      // Mute all wheel while a finger gesture is in play / just finished
+      if (Date.now() - lastTouchAt < TOUCH_WHEEL_MUTE_MS) {
+        e.preventDefault();
+        return;
+      }
+
       const points = snapPoints();
       if (!points.length) return;
       const y = window.scrollY;
@@ -237,10 +255,9 @@ export default function HomePageLayout() {
       if (result === "snap" || result === "locked") {
         e.preventDefault();
         if (result === "snap") {
-          // Swallow trailing fling events
-          wheelIgnoreUntil = Date.now() + 900;
+          wheelIgnoreUntil = Date.now() + 1000;
           clearTimeout(wheelQuietTimer);
-          wheelQuietTimer = setTimeout(() => { wheelIgnoreUntil = 0; }, 900);
+          wheelQuietTimer = setTimeout(() => { wheelIgnoreUntil = 0; }, 1000);
         }
       }
     };
@@ -261,14 +278,20 @@ export default function HomePageLayout() {
     let internalForGesture = -1; // gestureId locked to in-card scroll only
 
     const onTouchStart = (e) => {
+      lastTouchAt = Date.now();
       // New finger-down = new gesture. Previous snap/internal locks end here.
       gestureId += 1;
       touchStartY = e.touches[0].clientY;
       touchLastY = touchStartY;
       touchMode = null;
+      // Still inside post-snap cooldown → don't allow another advance yet
+      if (Date.now() < snapLockUntil) {
+        snappedForGesture = gestureId;
+      }
     };
 
     const onTouchMove = (e) => {
+      lastTouchAt = Date.now();
       const points = snapPoints();
       if (!points.length) return;
       const y = window.scrollY;
@@ -298,7 +321,9 @@ export default function HomePageLayout() {
         if (direction > 0 && Math.abs(dyTotal) >= 48) {
           e.preventDefault();
           const result = step(1);
-          if (result === "snap") snappedForGesture = gestureId;
+          if (result === "snap" || result === "locked") {
+            snappedForGesture = gestureId;
+          }
         }
         return;
       }
@@ -343,6 +368,7 @@ export default function HomePageLayout() {
     // Do not clear snap/internal locks here — touchcancel fires on iOS
     // during scrollTo and would otherwise allow a second section advance.
     const onTouchEnd = () => {
+      lastTouchAt = Date.now();
       touchMode = null;
     };
 
