@@ -43,6 +43,10 @@ export default function HomePageLayout() {
   const stackRef = useRef(null);
   const sectionRefs = useRef([]);
   const isMobile = useIsMobile();
+  // Scroll effect stays on [] so desktop listeners never rebind; touch can
+  // still read the latest breakpoint via this ref.
+  const isMobileRef = useRef(isMobile);
+  isMobileRef.current = isMobile;
 
   // Truncate ref slots when switching breakpoint so snapPoints doesn't
   // keep phantom entries. Does not rebind scroll listeners.
@@ -249,8 +253,12 @@ export default function HomePageLayout() {
     // also synthesizes wheel events — if we handle both, one gesture advances
     // two sections (Stats → LogoStream → Testimonials).
     const onWheel = (e) => {
-      // Mute all wheel while a finger gesture is in play / just finished
-      if (Date.now() - lastTouchAt < TOUCH_WHEEL_MUTE_MS) {
+      // Mobile only: swallow synthetic wheel after a finger swipe so touch +
+      // wheel can't each advance a section. Desktop/trackpad stays free.
+      if (
+        isMobileRef.current &&
+        Date.now() - lastTouchAt < TOUCH_WHEEL_MUTE_MS
+      ) {
         e.preventDefault();
         return;
       }
@@ -338,11 +346,15 @@ export default function HomePageLayout() {
 
       // Hero exit → snap onto first card (one shot)
       if (y < firstP - 4) {
-        if (direction > 0 && Math.abs(dyTotal) >= 48) {
-          e.preventDefault();
-          const result = step(1);
-          if (result === "snap" || result === "locked") {
-            snappedForGesture = gestureId;
+        if (direction > 0 && y >= firstP - slideH - 4) {
+          // Mobile: hold native scroll in the takeover zone (same as wheel).
+          if (isMobileRef.current) e.preventDefault();
+          if (Math.abs(dyTotal) >= 48) {
+            e.preventDefault();
+            const result = step(1);
+            if (result === "snap" || result === "locked") {
+              snappedForGesture = gestureId;
+            }
           }
         }
         return;
@@ -363,6 +375,16 @@ export default function HomePageLayout() {
         ) {
           touchMode = "internal";
           internalForGesture = gestureId;
+        } else if (!info.scrollable && isMobileRef.current) {
+          // Mobile one-shot card: block window scroll immediately so sticky
+          // snap points stay aligned, then advance once (matches desktop wheel).
+          // Desktop touch / wheel paths are unchanged.
+          e.preventDefault();
+          if (Math.abs(dyTotal) >= 48) {
+            touchMode = "snap";
+          } else {
+            return;
+          }
         } else if (Math.abs(dyTotal) >= 48) {
           touchMode = "snap";
         } else {
@@ -536,7 +558,7 @@ export default function HomePageLayout() {
               <div className="home-slide" ref={setSectionRef(4)} data-card-scroll="none" style={{ ["--slide-z"]: 5, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
                 <ImpactNarrative />
               </div>
-              <div className="home-slide" ref={setSectionRef(5)} style={{ ["--slide-z"]: 6, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+              <div className="home-slide" ref={setSectionRef(5)} data-card-scroll="none" style={{ ["--slide-z"]: 6, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
                 <ImpactMetrics />
               </div>
               <div className="home-slide" ref={setSectionRef(6)} data-card-scroll="none" style={{ ["--slide-z"]: 7, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
