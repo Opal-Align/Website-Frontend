@@ -14,8 +14,9 @@ import FiveStepLoop, {
 import { NAV_HEIGHT } from "./Navbar/navigationConfig";
 
 /* ─── Stacked-card scroll experience ───────────────────────────────────────
-   Desktop: Loop + Impact stay as single full-viewport cards.
-   Mobile:  those two are split into two cards each so one swipe = one card. ─ */
+   Scroll controller unchanged from 2e84e8a.
+   Desktop: full FiveStepLoop + Processes.
+   Mobile:  Loop → orbit + cards; Impact → narrative + metrics. ─ */
 const SLIDE_BG = "#07080D";
 const OVERFLOW_EPS = 48;
 const MOBILE_BP = 767;
@@ -43,9 +44,14 @@ export default function HomePageLayout() {
   const sectionRefs = useRef([]);
   const isMobile = useIsMobile();
 
+  // Truncate ref slots when switching breakpoint so snapPoints doesn't
+  // keep phantom entries. Does not rebind scroll listeners.
   useEffect(() => {
-    sectionRefs.current = [];
+    const n = isMobile ? 8 : 6;
+    sectionRefs.current = sectionRefs.current.slice(0, n);
+  }, [isMobile]);
 
+  useEffect(() => {
     let busy = false;            // true while a programmatic snap is in flight
     let releaseTimer = null;
     let fallbackTimer = null;
@@ -143,21 +149,24 @@ export default function HomePageLayout() {
       releaseTimer = setTimeout(() => { busy = false; }, 160);
     };
 
-    // Card scrollability. When every slide is one-viewport (data-card-scroll
-    // = "none"), every gesture advances exactly one section — same as desktop.
+    // Card scrollability for the active .home-slide.
+    // Platform / Problem are always one-viewport snaps (never "internal").
+    // Stats (#impact) and other tall cards may scroll inside first.
+    const ONE_SHOT_IDS = new Set(["platform", "problem"]);
     const cardScrollInfo = (el) => {
       if (!el) return { scrollable: false, atTop: true, atBottom: true };
       if (el.dataset.cardScroll === "none") {
         return { scrollable: false, atTop: true, atBottom: true };
       }
-      // Mobile stack is entirely one-shot now
-      if (isMobile) {
+      const idEl = el.querySelector("[id]");
+      if (idEl && ONE_SHOT_IDS.has(idEl.id)) {
         return { scrollable: false, atTop: true, atBottom: true };
       }
       const maxScroll = el.scrollHeight - el.clientHeight;
       if (maxScroll <= OVERFLOW_EPS) {
         return { scrollable: false, atTop: true, atBottom: true };
       }
+      // Phantom overflow: metrics say tall but scrollTop can't move
       const before = el.scrollTop;
       el.scrollTop = before + 1;
       const canDown = el.scrollTop > before;
@@ -273,24 +282,30 @@ export default function HomePageLayout() {
       }
     };
 
-    // ── Touch: one finger gesture = one section (same as desktop wheel) ──
-    // Snap on finger-up so a long fling cannot chain multiple sections.
-    // Native page scroll is blocked inside the stack while a gesture is active.
+    // ── Touch (one finger gesture = one action) ──────────────────────────
+    // • Platform / one-viewport cards → one swipe = one section snap
+    // • Stats (tall) → this swipe only scrolls inside the card; lift finger,
+    //   swipe again at the edge → next section. Never multi-skip.
+    //
+    // Important: iOS often fires `touchcancel` when window.scrollTo runs.
+    // We must NOT clear the snap lock on cancel/end — only on a NEW
+    // touchstart — or a long swipe will chain into the next section.
     let touchStartY = 0;
     let touchLastY = 0;
+    let touchMode = null;       // null | "internal" | "snap"
     let gestureId = 0;
-    let snappedForGesture = -1;
-    let touchArmed = false; // true once we're inside the stack zone
-
-    const TOUCH_SNAP_PX = 36;
+    let snappedForGesture = -1; // gestureId that already snapped once
+    let internalForGesture = -1; // gestureId locked to in-card scroll only
 
     const onTouchStart = (e) => {
       lastTouchAt = Date.now();
+      // New finger-down = new gesture. Previous snap/internal locks end here.
       gestureId += 1;
       touchStartY = e.touches[0].clientY;
       touchLastY = touchStartY;
-      touchArmed = false;
-      if (Date.now() < snapLockUntil || busy) {
+      touchMode = null;
+      // Still inside post-snap cooldown → don't allow another advance yet
+      if (Date.now() < snapLockUntil) {
         snappedForGesture = gestureId;
       }
     };
@@ -304,28 +319,77 @@ export default function HomePageLayout() {
       const lastP = points[points.length - 1];
       const slideH = Math.max(1, window.innerHeight - NAV_HEIGHT);
 
-      // Outside stack (deep hero / footer) → allow native scroll
       if (y < firstP - slideH - 4) return;
       if (y > lastP + 4) return;
 
-      touchArmed = true;
-      touchLastY = e.touches[0].clientY;
-      // Hold the page still in the stack; snap happens once on finger-up.
+      // Already snapped this finger-down — swallow everything until lift
+      if (busy || snappedForGesture === gestureId || Date.now() < snapLockUntil) {
+        e.preventDefault();
+        return;
+      }
+
+      const yNow = e.touches[0].clientY;
+      const dyTotal = touchStartY - yNow;
+      const dyFrame = touchLastY - yNow;
+      touchLastY = yNow;
+
+      if (Math.abs(dyTotal) < 10) return;
+      const direction = dyTotal > 0 ? 1 : -1;
+
+      // Hero exit → snap onto first card (one shot)
+      if (y < firstP - 4) {
+        if (direction > 0 && Math.abs(dyTotal) >= 48) {
+          e.preventDefault();
+          const result = step(1);
+          if (result === "snap" || result === "locked") {
+            snappedForGesture = gestureId;
+          }
+        }
+        return;
+      }
+
+      const index = nearestIndex(points, y);
+      const activeEl = sectionRefs.current[index];
+      const info = cardScrollInfo(activeEl);
+
+      // Lock gesture intent once — never flip from internal → snap mid-swipe
+      // (reaching the end of Stats mid-gesture must NOT load the next section)
+      if (!touchMode) {
+        if (internalForGesture === gestureId) {
+          touchMode = "internal";
+        } else if (
+          info.scrollable &&
+          ((direction > 0 && !info.atBottom) || (direction < 0 && !info.atTop))
+        ) {
+          touchMode = "internal";
+          internalForGesture = gestureId;
+        } else if (Math.abs(dyTotal) >= 48) {
+          touchMode = "snap";
+        } else {
+          return;
+        }
+      }
+
+      if (touchMode === "internal") {
+        e.preventDefault();
+        if (activeEl) activeEl.scrollTop += dyFrame;
+        // Stay internal for the rest of this gesture, even at the edge.
+        return;
+      }
+
+      // snap mode — fire step exactly once for this finger-down
       e.preventDefault();
-    };
-
-    const onTouchEnd = () => {
-      lastTouchAt = Date.now();
-      if (!touchArmed) return;
-      if (busy || snappedForGesture === gestureId || Date.now() < snapLockUntil) return;
-
-      const dy = touchStartY - touchLastY;
-      if (Math.abs(dy) < TOUCH_SNAP_PX) return;
-
-      const result = step(dy > 0 ? 1 : -1);
+      const result = step(direction);
       if (result === "snap" || result === "locked") {
         snappedForGesture = gestureId;
       }
+    };
+
+    // Do not clear snap/internal locks here — touchcancel fires on iOS
+    // during scrollTo and would otherwise allow a second section advance.
+    const onTouchEnd = () => {
+      lastTouchAt = Date.now();
+      touchMode = null;
     };
 
     // ── Keyboard ──
@@ -373,7 +437,7 @@ export default function HomePageLayout() {
       clearTimers();
       clearTimeout(wheelQuietTimer);
     };
-  }, [isMobile]);
+  }, []);
 
   const setSectionRef = (i) => (el) => { sectionRefs.current[i] = el; };
 
@@ -400,7 +464,7 @@ export default function HomePageLayout() {
             radial-gradient(ellipse at 82% 70%, rgba(34,211,238,0.06) 0%, transparent 42%);
         }
 
-        /* ── Sticky overlay cards ──
+        /* ── Sticky overlay cards (identical on mobile + desktop) ──
               Fixed to one viewport below the navbar. Content taller than the
               card scrolls INSIDE it; the controller advances to the next card
               only once you reach the edge. ── */
@@ -443,7 +507,7 @@ export default function HomePageLayout() {
           <div className="home-glow-inner" />
         </div>
 
-        {/* ── Section stack: desktop = full Loop/Impact; mobile = split ── */}
+        {/* ── Section stack: desktop full Loop/Impact; mobile split ── */}
         <div
           key={isMobile ? "mobile" : "desktop"}
           ref={stackRef}
@@ -472,28 +536,28 @@ export default function HomePageLayout() {
               <div className="home-slide" ref={setSectionRef(4)} data-card-scroll="none" style={{ ["--slide-z"]: 5, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
                 <ImpactNarrative />
               </div>
-              <div className="home-slide" ref={setSectionRef(5)} data-card-scroll="none" style={{ ["--slide-z"]: 6, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+              <div className="home-slide" ref={setSectionRef(5)} style={{ ["--slide-z"]: 6, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
                 <ImpactMetrics />
               </div>
               <div className="home-slide" ref={setSectionRef(6)} data-card-scroll="none" style={{ ["--slide-z"]: 7, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
                 <LogoStream />
               </div>
-              <div className="home-slide" ref={setSectionRef(7)} data-card-scroll="none" style={{ ["--slide-z"]: 8, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+              <div className="home-slide" ref={setSectionRef(7)} style={{ ["--slide-z"]: 8, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
                 <TestimonialSection />
               </div>
             </>
           ) : (
             <>
-              <div className="home-slide" ref={setSectionRef(2)} data-card-scroll="none" style={{ ["--slide-z"]: 3, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+              <div className="home-slide" ref={setSectionRef(2)} style={{ ["--slide-z"]: 3, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
                 <FiveStepLoop />
               </div>
-              <div className="home-slide" ref={setSectionRef(3)} data-card-scroll="none" style={{ ["--slide-z"]: 4, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+              <div className="home-slide" ref={setSectionRef(3)} data-card-scroll="auto" style={{ ["--slide-z"]: 4, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
                 <Processes />
               </div>
               <div className="home-slide" ref={setSectionRef(4)} data-card-scroll="none" style={{ ["--slide-z"]: 5, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
                 <LogoStream />
               </div>
-              <div className="home-slide" ref={setSectionRef(5)} data-card-scroll="none" style={{ ["--slide-z"]: 6, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+              <div className="home-slide" ref={setSectionRef(5)} style={{ ["--slide-z"]: 6, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
                 <TestimonialSection />
               </div>
             </>
