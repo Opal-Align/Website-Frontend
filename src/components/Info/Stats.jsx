@@ -886,11 +886,15 @@ export default function Processes() {
         }
 
         @media (max-width: 600px) {
+          /* Tall on mobile — home-slide scrolls this content; keep overflow
+             clipped to the section box so only .home-slide is the scrollport. */
           .st-section {
             height: auto !important;
             min-height: calc(100svh - var(--page-nav-h, 80px)) !important;
             max-height: none !important;
-            overflow: visible !important;
+            overflow: hidden !important;
+            justify-content: flex-start !important;
+            padding: 28px 0 48px !important;
           }
           .st-header { margin-bottom: 20px; padding: 0 14px; }
           .st-heading { gap: 8px; }

@@ -620,18 +620,19 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
 
         @media (max-width: 600px) {
           .pf-section-inner {
-            height: calc(100svh - var(--pf-nav-h, var(--page-nav-h, 80px)));
-            min-height: calc(100svh - var(--pf-nav-h, var(--page-nav-h, 80px)));
-            max-height: calc(100svh - var(--pf-nav-h, var(--page-nav-h, 80px)));
+            height: 100%;
+            min-height: 0;
+            max-height: 100%;
             overflow: hidden;
-            padding-bottom: 32px;
+            padding-bottom: 16px;
           }
           .pf-body {
-            flex: unset;
+            flex: 1 1 auto;
+            min-height: 0;
             padding: 0 16px;
           }
           .pf-header {
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             padding: 0 14px;
           }
           .pf-heading { gap: 8px; }
@@ -650,29 +651,31 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
           /* ── Hide the 4-tab icon row on mobile ── */
           .pf-tabs { display: none !important; }
 
-          /* ── Card fills remaining space ── */
+          /* ── Card fills remaining flex space (never exceeds the viewport card) ── */
           .pf-tile {
-            flex: unset;
-            min-height: unset;
+            flex: 1 1 auto;
+            min-height: 0;
             max-height: none;
-            height: calc(100svh - var(--pf-nav-h, var(--page-nav-h, 80px)) - 160px);
+            height: auto;
           }
           .pf-card-content {
             height: 100%;
             justify-content: flex-start;
-            padding: 32px 20px 28px;
-            gap: 16px;
+            padding: 24px 20px 20px;
+            gap: 12px;
+            overflow: hidden;
           }
           .pf-card-icon { display: flex; }
           .pf-card-autoplay {
             margin-top: auto;
             padding-top: 8px;
+            flex-shrink: 0;
           }
 
           /* ── Large centered icon in card ── */
           .pf-card-icon img {
-            width: 84px !important;
-            height: 84px !important;
+            width: 72px !important;
+            height: 72px !important;
           }
 
           /* ── Service name label below big icon ── */
@@ -687,12 +690,12 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
           }
 
           .pf-card-title {
-            font-size: clamp(17px, 4.8vw, 21px);
+            font-size: clamp(16px, 4.5vw, 20px);
             line-height: 1.38;
           }
           .pf-card-feature {
-            font-size: clamp(13px, 3.6vw, 15px);
-            line-height: 1.5;
+            font-size: clamp(12px, 3.4vw, 14px);
+            line-height: 1.45;
             width: 100%;
             max-width: 290px;
           }
@@ -707,6 +710,7 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
             align-items: center;
             justify-content: center;
             padding-top: 4px;
+            flex-shrink: 0;
           }
           .pf-dot {
             appearance: none; -webkit-appearance: none;
@@ -741,12 +745,10 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
         style={{
           position: "relative",
           scrollMarginTop: "var(--page-nav-h, 80px)",
-          // Match the working sections: the DIRECT child of the .home-slide card
-          // must be exactly one viewport tall and clip its own overflow, so the
-          // card never reports stray overflow and the scroll controller always
-          // snaps to the next section instead of getting stuck scrolling inside.
-          height: `calc(100svh - ${navbarHeight}px)`,
-          maxHeight: `calc(100svh - ${navbarHeight}px)`,
+          // Fill the parent .home-slide exactly (avoids svh vs mobile
+          // toolbar mismatch that created phantom overflow on phones).
+          height: "100%",
+          maxHeight: "100%",
           overflow: "hidden",
           boxSizing: "border-box",
         }}

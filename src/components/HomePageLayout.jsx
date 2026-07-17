@@ -37,19 +37,21 @@ export default function HomePageLayout() {
     let fallbackTimer = null;
 
     // Absolute document Y for each card's top, flush under the navbar.
-    // Sticky siblings often report identical/unstable offsetTop (your logs
-    // showed points[0] === points[1]), which collapses the next snap into a
-    // no-op. Every .home-slide is fixed to one viewport slot, so build
-    // targets from index × slide height instead.
+    // Prefer measured card heights (mobile URL-bar / svh vs innerHeight can
+    // diverge). Fall back to index × viewport slot when a card isn't ready.
     const snapPoints = () => {
       const container = stackRef.current;
       if (!container) return [];
       const containerTop =
         container.getBoundingClientRect().top + window.scrollY;
       const slideH = Math.max(1, window.innerHeight - NAV_HEIGHT);
-      return sectionRefs.current.map((_, i) =>
-        Math.max(0, containerTop + i * slideH - NAV_HEIGHT),
-      );
+      let acc = 0;
+      return sectionRefs.current.map((el) => {
+        const point = Math.max(0, containerTop + acc - NAV_HEIGHT);
+        const h = el && el.offsetHeight > 0 ? el.offsetHeight : slideH;
+        acc += h;
+        return point;
+      });
     };
 
     const nearestIndex = (points, y) => {
@@ -89,6 +91,41 @@ export default function HomePageLayout() {
       releaseTimer = setTimeout(() => { busy = false; }, 140);
     };
 
+    // Card scrollability for the active .home-slide.
+    // Platform / Problem are always one-viewport snaps (never "internal").
+    // Stats (#impact) and other tall cards may scroll inside first.
+    const ONE_SHOT_IDS = new Set(["platform", "problem"]);
+    const cardScrollInfo = (el) => {
+      if (!el) return { scrollable: false, atTop: true, atBottom: true };
+      if (el.dataset.cardScroll === "none") {
+        return { scrollable: false, atTop: true, atBottom: true };
+      }
+      const idEl = el.querySelector("[id]");
+      if (idEl && ONE_SHOT_IDS.has(idEl.id)) {
+        return { scrollable: false, atTop: true, atBottom: true };
+      }
+      const maxScroll = el.scrollHeight - el.clientHeight;
+      if (maxScroll <= OVERFLOW_EPS) {
+        return { scrollable: false, atTop: true, atBottom: true };
+      }
+      // Phantom overflow: metrics say tall but scrollTop can't move
+      const before = el.scrollTop;
+      el.scrollTop = before + 1;
+      const canDown = el.scrollTop > before;
+      el.scrollTop = before > 0 ? before - 1 : before;
+      const canUp = before > 0 && el.scrollTop < before;
+      el.scrollTop = before;
+      if (!canDown && !canUp) {
+        return { scrollable: false, atTop: true, atBottom: true };
+      }
+      const EDGE = 8;
+      return {
+        scrollable: true,
+        atTop: el.scrollTop <= EDGE,
+        atBottom: el.scrollTop >= maxScroll - EDGE,
+      };
+    };
+
     // Decide + perform a step. Returns:
     //   "snap"     → we scrolled to a neighbour / boundary (block native)
     //   "internal" → let the card scroll its own overflow (allow native)
@@ -104,10 +141,6 @@ export default function HomePageLayout() {
       if (y > lastP + 4) return "outside";   // footer zone
 
       // Hero → first card: same controlled snap as every other section change.
-      // Free native scroll here used to land the cursor on a half-mounted
-      // ProblemWordMap sticky card, which ate wheel events and jammed.
-      // Only take over in the last viewport of the hero so ScrollHero's
-      // scroll-driven animation still runs for the rest of its 200vh.
       if (y < firstP - 4) {
         if (direction > 0 && y >= firstP - slideH - 4) {
           const incoming = sectionRefs.current[0];
@@ -120,32 +153,12 @@ export default function HomePageLayout() {
 
       const index = nearestIndex(points, y);
       const activeEl = sectionRefs.current[index];
+      const info = cardScrollInfo(activeEl);
 
-      // Tall card → scroll through its own content before advancing.
-      // Guard against phantom overflow: some sections report scrollHeight >
-      // clientHeight (absolute children, rounding) while scrollTop cannot
-      // actually move — that used to jam the controller in "internal" forever.
-      if (activeEl) {
-        const { scrollTop, scrollHeight, clientHeight } = activeEl;
-        const maxScroll = scrollHeight - clientHeight;
-        if (maxScroll > OVERFLOW_EPS) {
-          const EDGE_EPS = 4;
-          const atBottom = scrollTop >= maxScroll - EDGE_EPS;
-          const atTop = scrollTop <= EDGE_EPS;
-          if (direction > 0 && !atBottom) {
-            const before = activeEl.scrollTop;
-            activeEl.scrollTop = before + 1;
-            const canScroll = activeEl.scrollTop > before;
-            activeEl.scrollTop = before;
-            if (canScroll) return "internal";
-          } else if (direction < 0 && !atTop) {
-            const before = activeEl.scrollTop;
-            activeEl.scrollTop = before - 1;
-            const canScroll = activeEl.scrollTop < before;
-            activeEl.scrollTop = before;
-            if (canScroll) return "internal";
-          }
-        }
+      // Tall card (e.g. Stats) → scroll inside before advancing.
+      if (info.scrollable) {
+        if (direction > 0 && !info.atBottom) return "internal";
+        if (direction < 0 && !info.atTop) return "internal";
       }
 
       const target = index + direction;
@@ -171,6 +184,10 @@ export default function HomePageLayout() {
     };
 
     // ── Wheel ──
+    // Trackpad flings deliver many wheel events; after one snap, ignore the
+    // rest until the user pauses so a long scroll can't chain sections.
+    let wheelIgnoreUntil = 0;
+    let wheelQuietTimer = null;
     const onWheel = (e) => {
       const points = snapPoints();
       if (!points.length) return;
@@ -179,23 +196,48 @@ export default function HomePageLayout() {
       const lastP = points[points.length - 1];
       const slideH = Math.max(1, window.innerHeight - NAV_HEIGHT);
 
-      // Deep hero: leave ScrollHero's native scroll-driven animation alone.
-      // Hero-exit + stack: take control so the handoff snaps cleanly.
       if (y < firstP - slideH - 4) return;
       if (y > lastP + 4) return;
 
-      if (busy) { e.preventDefault(); return; }
+      if (busy || Date.now() < wheelIgnoreUntil) {
+        e.preventDefault();
+        return;
+      }
       if (Math.abs(e.deltaY) < 4) return;
 
       const result = step(e.deltaY > 0 ? 1 : -1);
-      // Only block native scroll when we actually snap; allow hero-up /
-      // internal card scroll to use the browser's native path.
-      if (result === "snap") e.preventDefault();
+      if (result === "snap") {
+        e.preventDefault();
+        // Swallow trailing fling events (~half a second)
+        wheelIgnoreUntil = Date.now() + 520;
+        clearTimeout(wheelQuietTimer);
+        wheelQuietTimer = setTimeout(() => { wheelIgnoreUntil = 0; }, 520);
+      }
     };
 
-    // ── Touch ──
+    // ── Touch (one finger gesture = one action) ──────────────────────────
+    // • Platform / one-viewport cards → one swipe = one section snap
+    // • Stats (tall) → this swipe only scrolls inside the card; lift finger,
+    //   swipe again at the edge → next section. Never multi-skip.
+    //
+    // Important: iOS often fires `touchcancel` when window.scrollTo runs.
+    // We must NOT clear the snap lock on cancel/end — only on a NEW
+    // touchstart — or a long swipe will chain into the next section.
     let touchStartY = 0;
-    const onTouchStart = (e) => { touchStartY = e.touches[0].clientY; };
+    let touchLastY = 0;
+    let touchMode = null;       // null | "internal" | "snap"
+    let gestureId = 0;
+    let snappedForGesture = -1; // gestureId that already snapped once
+    let internalForGesture = -1; // gestureId locked to in-card scroll only
+
+    const onTouchStart = (e) => {
+      // New finger-down = new gesture. Previous snap/internal locks end here.
+      gestureId += 1;
+      touchStartY = e.touches[0].clientY;
+      touchLastY = touchStartY;
+      touchMode = null;
+    };
+
     const onTouchMove = (e) => {
       const points = snapPoints();
       if (!points.length) return;
@@ -207,15 +249,69 @@ export default function HomePageLayout() {
       if (y < firstP - slideH - 4) return;
       if (y > lastP + 4) return;
 
-      if (busy) { e.preventDefault(); return; }
-      const dy = touchStartY - e.touches[0].clientY;
-      if (Math.abs(dy) < 40) return;
-
-      const result = step(dy > 0 ? 1 : -1);
-      if (result === "snap") {
+      // Already snapped this finger-down — swallow everything until lift
+      if (busy || snappedForGesture === gestureId) {
         e.preventDefault();
-        touchStartY = e.touches[0].clientY;
+        return;
       }
+
+      const yNow = e.touches[0].clientY;
+      const dyTotal = touchStartY - yNow;
+      const dyFrame = touchLastY - yNow;
+      touchLastY = yNow;
+
+      if (Math.abs(dyTotal) < 10) return;
+      const direction = dyTotal > 0 ? 1 : -1;
+
+      // Hero exit → snap onto first card (one shot)
+      if (y < firstP - 4) {
+        if (direction > 0 && Math.abs(dyTotal) >= 48) {
+          e.preventDefault();
+          const result = step(1);
+          if (result === "snap") snappedForGesture = gestureId;
+        }
+        return;
+      }
+
+      const index = nearestIndex(points, y);
+      const activeEl = sectionRefs.current[index];
+      const info = cardScrollInfo(activeEl);
+
+      // Lock gesture intent once — never flip from internal → snap mid-swipe
+      // (reaching the end of Stats mid-gesture must NOT load the next section)
+      if (!touchMode) {
+        if (internalForGesture === gestureId) {
+          touchMode = "internal";
+        } else if (
+          info.scrollable &&
+          ((direction > 0 && !info.atBottom) || (direction < 0 && !info.atTop))
+        ) {
+          touchMode = "internal";
+          internalForGesture = gestureId;
+        } else if (Math.abs(dyTotal) >= 48) {
+          touchMode = "snap";
+        } else {
+          return;
+        }
+      }
+
+      if (touchMode === "internal") {
+        e.preventDefault();
+        if (activeEl) activeEl.scrollTop += dyFrame;
+        // Stay internal for the rest of this gesture, even at the edge.
+        return;
+      }
+
+      // snap mode — fire step exactly once for this finger-down
+      e.preventDefault();
+      const result = step(direction);
+      if (result === "snap") snappedForGesture = gestureId;
+    };
+
+    // Do not clear snap/internal locks here — touchcancel fires on iOS
+    // during scrollTo and would otherwise allow a second section advance.
+    const onTouchEnd = () => {
+      touchMode = null;
     };
 
     // ── Keyboard ──
@@ -247,6 +343,8 @@ export default function HomePageLayout() {
     window.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    window.addEventListener("touchcancel", onTouchEnd, { passive: true });
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("scrollend", onScrollEnd);
 
@@ -254,9 +352,12 @@ export default function HomePageLayout() {
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchEnd);
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("scrollend", onScrollEnd);
       clearTimers();
+      clearTimeout(wheelQuietTimer);
     };
   }, []);
 
@@ -301,6 +402,7 @@ export default function HomePageLayout() {
           overflow-x: hidden;
           overscroll-behavior: contain;
           -webkit-overflow-scrolling: touch;
+          touch-action: pan-y;
           scrollbar-width: none;
           scroll-margin-top: ${NAV_HEIGHT}px;
           clip-path: inset(0 0 0 0 round 14px 14px 0 0);
@@ -308,6 +410,11 @@ export default function HomePageLayout() {
                       0 -6px 28px 0 rgba(0,0,0,0.6);
         }
         .home-slide::-webkit-scrollbar { display: none; }
+
+        /* One-viewport cards (Platform, Problem): never nest-scroll on mobile */
+        .home-slide[data-card-scroll="none"] {
+          overflow-y: hidden;
+        }
 
         @media (max-width: 767px) {
           .home-slide { clip-path: inset(0 0 0 0 round 10px 10px 0 0); }
@@ -332,12 +439,12 @@ export default function HomePageLayout() {
           }}
         >
           {/* 1 — The Problem */}
-          <div className="home-slide" ref={setSectionRef(0)} style={{ ["--slide-z"]: 1, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+          <div className="home-slide" ref={setSectionRef(0)} data-card-scroll="none" style={{ ["--slide-z"]: 1, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
             <ProblemWordMap />
           </div>
 
           {/* 2 — Modules */}
-          <div className="home-slide" ref={setSectionRef(1)} style={{ ["--slide-z"]: 2, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+          <div className="home-slide" ref={setSectionRef(1)} data-card-scroll="none" style={{ ["--slide-z"]: 2, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
             <PlatformSection navbarHeight={NAV_HEIGHT} />
           </div>
 
@@ -346,13 +453,13 @@ export default function HomePageLayout() {
             <FiveStepLoop />
           </div>
 
-          {/* 4 — Impact / Stats */}
-          <div className="home-slide" ref={setSectionRef(3)} style={{ ["--slide-z"]: 4, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+          {/* 4 — Impact / Stats (tall on mobile — scroll inside, then next swipe advances) */}
+          <div className="home-slide" ref={setSectionRef(3)} data-card-scroll="auto" style={{ ["--slide-z"]: 4, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
             <Processes />
           </div>
 
           {/* 5 — The Stack */}
-          <div className="home-slide" ref={setSectionRef(4)} style={{ ["--slide-z"]: 5, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+          <div className="home-slide" ref={setSectionRef(4)} data-card-scroll="none" style={{ ["--slide-z"]: 5, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
             <LogoStream />
           </div>
 
