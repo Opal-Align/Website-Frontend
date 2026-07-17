@@ -494,9 +494,9 @@ export default function ProblemWordMap() {
         }
         .pwm-map-wrap {
           position: relative; width: 100%;
-          flex: 1 1 auto; min-height: 300px;
+          flex: 1 1 auto; min-height: 0;
           margin: clamp(1.25rem, 2.5vh, 2rem) 0 0;
-          overflow: visible;
+          overflow: hidden;
         }
         .pwm-word {
           position: absolute;
@@ -520,23 +520,32 @@ export default function ProblemWordMap() {
             --pwm-nav-h: var(--page-nav-h, 80px);
             height: calc(100svh - var(--pwm-nav-h));
             min-height: calc(100svh - var(--pwm-nav-h));
-            max-height: none;
-            overflow-x: clip;
-            overflow-y: hidden;
+            max-height: calc(100svh - var(--pwm-nav-h));
+            overflow: hidden;
           }
           .pwm-inner { padding: 1.25rem 1rem 1rem; }
           .pwm-header { margin-bottom: 16px; padding: 0 14px; }
           .pwm-heading { gap: 8px; }
           .pwm-hl-bold { font-size: clamp(22px, 6.8vw, 30px); }
           .pwm-hl-muted { font-size: clamp(14px, 4.2vw, 18px); color: rgba(255,255,255,0.52); }
-          .pwm-map-wrap { min-height: 280px; margin-top: 1rem; overflow: visible; }
+          .pwm-map-wrap { min-height: 0; margin-top: 1rem; overflow: hidden; }
         }
         @media (prefers-reduced-motion: reduce) {
           .pwm-word { transition: none !important; }
         }
       `}</style>
 
-      <section id="problem" className="pwm-section" ref={sectionRef}>
+      <section
+        id="problem"
+        className="pwm-section"
+        ref={sectionRef}
+        style={{
+          // Keep this card exactly one viewport tall so .home-slide never
+          // reports spurious overflow and the snap controller can advance.
+          boxSizing: "border-box",
+          overflow: "hidden",
+        }}
+      >
         <div className="pwm-inner">
 
           <div className="pwm-header">

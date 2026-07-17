@@ -1,6 +1,6 @@
 import { useState } from "react";
 // eslint-disable-next-line no-unused-vars
-import { motion, useScroll, useSpring } from "framer-motion";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import NavigationOverlay from "./NavigationOverlay";
 import { NAVBAR_LINKS, goToTarget } from "./navigationConfig";
@@ -62,13 +62,6 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 120,
-    damping: 30,
-    mass: 0.4,
-  });
-
   const handleNav = (target) => goToTarget(target, navigate);
 
   return (
@@ -88,18 +81,6 @@ export default function Navbar() {
           borderBottom: "1px solid rgba(255,255,255,0.06)",
         }}
       >
-        {/* ───────── Scroll progress (page-wide) ───────── */}
-        <motion.div
-          aria-hidden
-          className="absolute left-0 right-0 bottom-0 h-[2px] origin-left"
-          style={{
-            scaleX,
-            transformOrigin: "0% 50%",
-            backgroundColor: "#FFFFFF",
-            boxShadow: "0 0 12px rgba(255,255,255,0.35)",
-          }}
-        />
-
         {/* ───────── LARGE SCREENS (lg+) ───────── */}
         <div className="hidden lg:flex items-center justify-between gap-6">
           <div className="flex items-center gap-5">

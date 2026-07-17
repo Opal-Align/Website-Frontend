@@ -622,8 +622,8 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
           .pf-section-inner {
             height: calc(100svh - var(--pf-nav-h, var(--page-nav-h, 80px)));
             min-height: calc(100svh - var(--pf-nav-h, var(--page-nav-h, 80px)));
-            max-height: none;
-            overflow: visible;
+            max-height: calc(100svh - var(--pf-nav-h, var(--page-nav-h, 80px)));
+            overflow: hidden;
             padding-bottom: 32px;
           }
           .pf-body {
@@ -738,7 +738,18 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
       <section
         ref={sectionRef}
         id="platform"
-        style={{ position: "relative", scrollMarginTop: "var(--page-nav-h, 80px)" }}
+        style={{
+          position: "relative",
+          scrollMarginTop: "var(--page-nav-h, 80px)",
+          // Match the working sections: the DIRECT child of the .home-slide card
+          // must be exactly one viewport tall and clip its own overflow, so the
+          // card never reports stray overflow and the scroll controller always
+          // snaps to the next section instead of getting stuck scrolling inside.
+          height: `calc(100svh - ${navbarHeight}px)`,
+          maxHeight: `calc(100svh - ${navbarHeight}px)`,
+          overflow: "hidden",
+          boxSizing: "border-box",
+        }}
       >
         <div
           className="pf-section-inner"
