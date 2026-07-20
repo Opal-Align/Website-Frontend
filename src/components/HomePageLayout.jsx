@@ -2,9 +2,14 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import Navbar from "./Navbar/Navbar";
 import ScrollHero from "./HomeHero/ScrollHero";
 import { LoopSessionProvider } from "./Info/LoopSession.jsx";
+import FiveStepLoop, {
+  FiveStepLoopOrbit,
+  FiveStepLoopCards,
+} from "./Info/FiveStepLoop.jsx";
 import { NAV_HEIGHT } from "./Navbar/navigationConfig";
 
-/* Below-fold sections — code-split so first paint only pays for hero + nav */
+/* Below-fold sections — code-split so first paint only pays for hero + nav.
+   FiveStepLoop stays eager: lazy chunks were blanking the page on iPhone. */
 const Footer = lazy(() => import("./Footer"));
 const LogoStream = lazy(() => import("./LogoStream/LogoStream"));
 const Processes = lazy(() => import("./Info/Stats.jsx"));
@@ -17,13 +22,6 @@ const ImpactMetrics = lazy(() =>
 const TestimonialSection = lazy(() => import("./Info/Testimonial"));
 const ProblemWordMap = lazy(() => import("./Info/ProblemWordMap.jsx"));
 const PlatformSection = lazy(() => import("./Info/PlatformSection.jsx"));
-const FiveStepLoop = lazy(() => import("./Info/FiveStepLoop.jsx"));
-const FiveStepLoopOrbit = lazy(() =>
-  import("./Info/FiveStepLoop.jsx").then((m) => ({ default: m.FiveStepLoopOrbit })),
-);
-const FiveStepLoopCards = lazy(() =>
-  import("./Info/FiveStepLoop.jsx").then((m) => ({ default: m.FiveStepLoopCards })),
-);
 
 /* ─── Stacked-card scroll experience ───────────────────────────────────────
    Scroll controller unchanged from 2e84e8a.
@@ -632,14 +630,10 @@ export default function HomePageLayout() {
             <>
               <LoopSessionProvider zoneActive={loopZoneActive}>
                 <div className="home-slide" ref={setSectionRef(2)} data-card-scroll="none" style={{ ["--slide-z"]: 3, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-                  <Suspense fallback={<SlideFallback />}>
-                    <FiveStepLoopOrbit />
-                  </Suspense>
+                  <FiveStepLoopOrbit />
                 </div>
                 <div className="home-slide" ref={setSectionRef(3)} data-card-scroll="none" style={{ ["--slide-z"]: 4, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-                  <Suspense fallback={<SlideFallback />}>
-                    <FiveStepLoopCards />
-                  </Suspense>
+                  <FiveStepLoopCards />
                 </div>
               </LoopSessionProvider>
               <div className="home-slide" ref={setSectionRef(4)} data-card-scroll="none" style={{ ["--slide-z"]: 5, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
@@ -667,9 +661,7 @@ export default function HomePageLayout() {
             <>
               <LoopSessionProvider zoneActive={loopZoneActive}>
                 <div className="home-slide" ref={setSectionRef(2)} style={{ ["--slide-z"]: 3, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-                  <Suspense fallback={<SlideFallback />}>
-                    <FiveStepLoop />
-                  </Suspense>
+                  <FiveStepLoop />
                 </div>
               </LoopSessionProvider>
               <div className="home-slide" ref={setSectionRef(3)} data-card-scroll="auto" style={{ ["--slide-z"]: 4, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>

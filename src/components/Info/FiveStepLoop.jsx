@@ -97,6 +97,7 @@ function useOrbitalCanvas({
   const rafRef         = useRef(null);
   const dimsRef        = useRef({ W: 0, H: 0, cx: 0, cy: 0, stepR: 0 });
   const zoneActiveRef  = useRef(zoneActive);
+  const frameFnRef     = useRef(null);
 
   const [nodeXY, setNodeXY] = useState(Array(N).fill({ left: "50%", top: "50%" }));
 
@@ -163,13 +164,16 @@ function useOrbitalCanvas({
     if (!canvas || !container) return;
     const rect = container.getBoundingClientRect();
     const W = rect.width, H = rect.height;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width  = W * dpr;
-    canvas.height = H * dpr;
+    if (W < 1 || H < 1) return;
+    // Cap DPR — full retina canvases OOM older iPhones with sticky Orbit mounted
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width  = Math.floor(W * dpr);
+    canvas.height = Math.floor(H * dpr);
     canvas.style.width  = W + "px";
     canvas.style.height = H + "px";
     const ctx = canvas.getContext("2d");
-    ctx.scale(dpr, dpr);
+    if (!ctx) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const cx = W / 2, cy = H / 2;
     const stepR = calcOrbitRadius(W, H);
     dimsRef.current = { W, H, cx, cy, stepR };
@@ -203,7 +207,25 @@ function useOrbitalCanvas({
     function frame(ts) {
       const ctx = canvas.getContext("2d");
       const { W, H, cx, cy, stepR } = dimsRef.current;
-      if (W === 0) { rafRef.current = requestAnimationFrame(frame); return; }
+      if (!ctx || W === 0) {
+        if (!zoneActiveRef.current) {
+          rafRef.current = null;
+          return;
+        }
+        rafRef.current = requestAnimationFrame(frame);
+        return;
+      }
+
+      const paused = !zoneActiveRef.current;
+      if (paused) {
+        startTimeRef.current = ts - elapsedForIdentify();
+      }
+      const elapsed = paused
+        ? elapsedForIdentify()
+        : (ts - startTimeRef.current) % ORBIT_DURATION;
+      if (!startTimeRef.current) startTimeRef.current = ts - elapsedForIdentify();
+      const scanDeg = STEP_ANGLES[0] + (elapsed / ORBIT_DURATION) * 360;
+      const TRAIL   = 110;
 
       ctx.clearRect(0, 0, W, H);
 
@@ -233,18 +255,6 @@ function useOrbitalCanvas({
         ctx.lineWidth   = i === ai ? 1 : 0.5;
         ctx.setLineDash([3, 5]); ctx.stroke(); ctx.setLineDash([]);
       }
-
-      /* scan angle — freeze on Identify while the loop zone is off-screen */
-      if (!startTimeRef.current) startTimeRef.current = ts - elapsedForIdentify();
-      const paused = !zoneActiveRef.current;
-      if (paused) {
-        startTimeRef.current = ts - elapsedForIdentify();
-      }
-      const elapsed = paused
-        ? elapsedForIdentify()
-        : (ts - startTimeRef.current) % ORBIT_DURATION;
-      const scanDeg = STEP_ANGLES[0] + (elapsed / ORBIT_DURATION) * 360;
-      const TRAIL   = 110;
 
       /* filled radar wedge */
       ctx.beginPath();
@@ -306,9 +316,16 @@ function useOrbitalCanvas({
         });
       }
 
+      /* Off-zone: draw one frozen Identify frame, then stop RAF (iPhone battery/GPU). */
+      if (paused) {
+        rafRef.current = null;
+        return;
+      }
       rafRef.current = requestAnimationFrame(frame);
     }
 
+    frameFnRef.current = frame;
+    // One frame now: animates if in zone, else draws Identify once and stops.
     rafRef.current = requestAnimationFrame(frame);
     const container = containerRef.current;
     const ro = container ? new ResizeObserver(resize) : null;
@@ -316,12 +333,25 @@ function useOrbitalCanvas({
     window.addEventListener("resize", resize);
     return () => {
       cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+      frameFnRef.current = null;
       clearTimeout(manualTimerRef.current);
       ro?.disconnect();
       window.removeEventListener("resize", resize);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resize, activateStep]);
+
+  /* Resume orbit animation when user re-enters the loop zone */
+  useEffect(() => {
+    zoneActiveRef.current = zoneActive;
+    if (!zoneActive) return;
+    if (rafRef.current != null) return;
+    const frame = frameFnRef.current;
+    if (!frame) return;
+    startTimeRef.current = performance.now() - elapsedForIdentify();
+    rafRef.current = requestAnimationFrame(frame);
+  }, [zoneActive]);
 
   return { nodeXY, userActivate };
 }
