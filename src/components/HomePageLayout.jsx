@@ -1,11 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import Navbar from "./Navbar/Navbar";
 import ScrollHero from "./HomeHero/ScrollHero";
-import { LoopSessionProvider } from "./Info/LoopSession.jsx";
-import FiveStepLoop, {
-  FiveStepLoopOrbit,
-  FiveStepLoopCards,
-} from "./Info/FiveStepLoop.jsx";
+import FiveStepLoop from "./Info/FiveStepLoop.jsx";
 import { NAV_HEIGHT } from "./Navbar/navigationConfig";
 
 /* Below-fold sections — code-split so first paint only pays for hero + nav.
@@ -76,58 +72,8 @@ export default function HomePageLayout() {
   // Truncate ref slots when switching breakpoint so snapPoints doesn't
   // keep phantom entries. Does not rebind scroll listeners.
   useEffect(() => {
-    const n = isMobile ? 8 : 6;
+    const n = isMobile ? 7 : 6;
     sectionRefs.current = sectionRefs.current.slice(0, n);
-  }, [isMobile]);
-
-  /* Loop zone: mobile Orbit+Cards (2–3) count as one session; desktop Loop (2).
-     Nearest snap index — sticky cards stay "in view", so useInView is unreliable. */
-  const [loopZoneActive, setLoopZoneActive] = useState(false);
-  const isMobileZoneRef = useRef(isMobile);
-  isMobileZoneRef.current = isMobile;
-
-  useEffect(() => {
-    const nearestIndex = (points, y) => {
-      let idx = 0, best = Infinity;
-      points.forEach((p, i) => {
-        const d = Math.abs(p - y);
-        if (d < best) { best = d; idx = i; }
-      });
-      return idx;
-    };
-
-    const snapPoints = () => {
-      const container = stackRef.current;
-      if (!container) return [];
-      const containerTop =
-        container.getBoundingClientRect().top + window.scrollY;
-      const slideH = Math.max(1, window.innerHeight - NAV_HEIGHT);
-      let acc = 0;
-      return sectionRefs.current.map((el) => {
-        const point = Math.max(0, containerTop + acc - NAV_HEIGHT);
-        const h = el && el.offsetHeight > 0 ? el.offsetHeight : slideH;
-        acc += h;
-        return point;
-      });
-    };
-
-    const updateZone = () => {
-      const points = snapPoints();
-      if (!points.length) return;
-      const idx = nearestIndex(points, window.scrollY);
-      const inZone = isMobileZoneRef.current
-        ? idx === 2 || idx === 3
-        : idx === 2;
-      setLoopZoneActive((prev) => (prev === inZone ? prev : inZone));
-    };
-
-    updateZone();
-    window.addEventListener("scroll", updateZone, { passive: true });
-    window.addEventListener("resize", updateZone);
-    return () => {
-      window.removeEventListener("scroll", updateZone);
-      window.removeEventListener("resize", updateZone);
-    };
   }, [isMobile]);
 
   useEffect(() => {
@@ -626,32 +572,28 @@ export default function HomePageLayout() {
             </Suspense>
           </div>
 
+          <div className="home-slide" ref={setSectionRef(2)} data-card-scroll="none" style={{ ["--slide-z"]: 3, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+            <FiveStepLoop />
+          </div>
+
           {isMobile ? (
             <>
-              <LoopSessionProvider zoneActive={loopZoneActive}>
-                <div className="home-slide" ref={setSectionRef(2)} data-card-scroll="none" style={{ ["--slide-z"]: 3, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-                  <FiveStepLoopOrbit />
-                </div>
-                <div className="home-slide" ref={setSectionRef(3)} data-card-scroll="none" style={{ ["--slide-z"]: 4, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-                  <FiveStepLoopCards />
-                </div>
-              </LoopSessionProvider>
-              <div className="home-slide" ref={setSectionRef(4)} data-card-scroll="none" style={{ ["--slide-z"]: 5, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+              <div className="home-slide" ref={setSectionRef(3)} data-card-scroll="none" style={{ ["--slide-z"]: 4, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
                 <Suspense fallback={<SlideFallback />}>
                   <ImpactNarrative />
                 </Suspense>
               </div>
-              <div className="home-slide" ref={setSectionRef(5)} data-card-scroll="none" style={{ ["--slide-z"]: 6, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+              <div className="home-slide" ref={setSectionRef(4)} data-card-scroll="none" style={{ ["--slide-z"]: 5, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
                 <Suspense fallback={<SlideFallback />}>
                   <ImpactMetrics />
                 </Suspense>
               </div>
-              <div className="home-slide" ref={setSectionRef(6)} data-card-scroll="none" style={{ ["--slide-z"]: 7, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+              <div className="home-slide" ref={setSectionRef(5)} data-card-scroll="none" style={{ ["--slide-z"]: 6, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
                 <Suspense fallback={<SlideFallback />}>
                   <LogoStream />
                 </Suspense>
               </div>
-              <div className="home-slide" ref={setSectionRef(7)} style={{ ["--slide-z"]: 8, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+              <div className="home-slide" ref={setSectionRef(6)} style={{ ["--slide-z"]: 7, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
                 <Suspense fallback={<SlideFallback />}>
                   <TestimonialSection />
                 </Suspense>
@@ -659,11 +601,6 @@ export default function HomePageLayout() {
             </>
           ) : (
             <>
-              <LoopSessionProvider zoneActive={loopZoneActive}>
-                <div className="home-slide" ref={setSectionRef(2)} style={{ ["--slide-z"]: 3, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-                  <FiveStepLoop />
-                </div>
-              </LoopSessionProvider>
               <div className="home-slide" ref={setSectionRef(3)} data-card-scroll="auto" style={{ ["--slide-z"]: 4, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
                 <Suspense fallback={<SlideFallback />}>
                   <Processes />
