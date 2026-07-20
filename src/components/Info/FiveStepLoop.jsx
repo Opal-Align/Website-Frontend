@@ -8,12 +8,6 @@ import {
 } from "react";
 import opalLogo from "../../assets/OPAL.svg";
 import opalGosLogo from "../../assets/opal-gos.svg";
-import {
-  IDENTIFY_IDX,
-  useLoopSession,
-} from "./LoopSession.jsx";
-/* Re-export so existing named imports keep working if any remain */
-export { LoopSessionProvider } from "./LoopSession.jsx";
 
 const OPAL_LOGO_RATIO = 3520 / 1214;
 const OPAL_GOS_LOGO_RATIO = 1;
@@ -71,49 +65,20 @@ function polarToXY(r, deg, cx, cy) {
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 }
 
-/** Elapsed ms so the scan arm sits on Identify's angle. */
-function elapsedForIdentify() {
-  let delta = STEP_ANGLES[IDENTIFY_IDX] - STEP_ANGLES[0];
-  if (delta < 0) delta += 360;
-  return (delta / 360) * ORBIT_DURATION;
-}
 
 /* ─── Orbital canvas hook ─────────────────────────────────────────── */
-function useOrbitalCanvas({
-  canvasRef,
-  containerRef,
-  setActive,
-  active = IDENTIFY_IDX,
-  zoneActive = true,
-  resetEpoch = 0,
-}) {
+function useOrbitalCanvas({ canvasRef, containerRef, setActive }) {
   const sparklesRef    = useRef([]);
   const starsRef       = useRef([]);
   const startTimeRef   = useRef(null);
   const manualRef      = useRef(false);
   const manualTimerRef = useRef(null);
   const lastActRef     = useRef(-1);
-  const activeIdxRef   = useRef(IDENTIFY_IDX);
+  const activeIdxRef   = useRef(0);
   const rafRef         = useRef(null);
   const dimsRef        = useRef({ W: 0, H: 0, cx: 0, cy: 0, stepR: 0 });
-  const zoneActiveRef  = useRef(zoneActive);
-  const frameFnRef     = useRef(null);
 
   const [nodeXY, setNodeXY] = useState(Array(N).fill({ left: "50%", top: "50%" }));
-
-  useEffect(() => { zoneActiveRef.current = zoneActive; }, [zoneActive]);
-
-  /* Cards (or shared session) can change active without going through userActivate */
-  useEffect(() => {
-    if (active === activeIdxRef.current) return;
-    activeIdxRef.current = active;
-    lastActRef.current = active;
-    manualRef.current = true;
-    clearTimeout(manualTimerRef.current);
-    manualTimerRef.current = setTimeout(() => {
-      manualRef.current = false;
-    }, MANUAL_PAUSE);
-  }, [active]);
 
   const spawnSparkles = useCallback((x, y) => {
     for (let i = 0; i < 18; i++) {
@@ -147,33 +112,19 @@ function useOrbitalCanvas({
     manualTimerRef.current = setTimeout(() => { manualRef.current = false; }, MANUAL_PAUSE);
   }, [activateStep]);
 
-  /* Snap scan + highlight back to Identify after leaving the loop zone. */
-  useEffect(() => {
-    if (resetEpoch === 0) return;
-    clearTimeout(manualTimerRef.current);
-    manualRef.current = false;
-    lastActRef.current = -1;
-    activeIdxRef.current = IDENTIFY_IDX;
-    startTimeRef.current = performance.now() - elapsedForIdentify();
-    setActive(IDENTIFY_IDX);
-  }, [resetEpoch, setActive]);
-
   const resize = useCallback(() => {
     const canvas    = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return;
     const rect = container.getBoundingClientRect();
     const W = rect.width, H = rect.height;
-    if (W < 1 || H < 1) return;
-    // Cap DPR — full retina canvases OOM older iPhones with sticky Orbit mounted
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width  = Math.floor(W * dpr);
-    canvas.height = Math.floor(H * dpr);
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
     canvas.style.width  = W + "px";
     canvas.style.height = H + "px";
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.scale(dpr, dpr);
     const cx = W / 2, cy = H / 2;
     const stepR = calcOrbitRadius(W, H);
     dimsRef.current = { W, H, cx, cy, stepR };
@@ -199,31 +150,14 @@ function useOrbitalCanvas({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Start on Identify rather than Calibrate
-    startTimeRef.current = performance.now() - elapsedForIdentify();
-    lastActRef.current = -1;
-    activateStep(IDENTIFY_IDX);
-
     function frame(ts) {
       const ctx = canvas.getContext("2d");
       const { W, H, cx, cy, stepR } = dimsRef.current;
-      if (!ctx || W === 0) {
-        if (!zoneActiveRef.current) {
-          rafRef.current = null;
-          return;
-        }
-        rafRef.current = requestAnimationFrame(frame);
-        return;
-      }
+      if (W === 0) { rafRef.current = requestAnimationFrame(frame); return; }
 
-      const paused = !zoneActiveRef.current;
-      if (paused) {
-        startTimeRef.current = ts - elapsedForIdentify();
-      }
-      const elapsed = paused
-        ? elapsedForIdentify()
-        : (ts - startTimeRef.current) % ORBIT_DURATION;
-      if (!startTimeRef.current) startTimeRef.current = ts - elapsedForIdentify();
+      /* scan angle */
+      if (!startTimeRef.current) startTimeRef.current = ts;
+      const elapsed = (ts - startTimeRef.current) % ORBIT_DURATION;
       const scanDeg = STEP_ANGLES[0] + (elapsed / ORBIT_DURATION) * 360;
       const TRAIL   = 110;
 
@@ -305,8 +239,8 @@ function useOrbitalCanvas({
         s.x += s.vx; s.y += s.vy; s.vx *= 0.93; s.vy *= 0.93; s.life -= s.decay;
       }
 
-      /* auto-activate by proximity — only while loop zone is on-screen */
-      if (!manualRef.current && zoneActiveRef.current) {
+      /* auto-activate by proximity */
+      if (!manualRef.current) {
         const norm = ((scanDeg % 360) + 360) % 360;
         STEP_ANGLES.forEach((deg, i) => {
           const sn = ((deg % 360) + 360) % 360;
@@ -316,16 +250,9 @@ function useOrbitalCanvas({
         });
       }
 
-      /* Off-zone: draw one frozen Identify frame, then stop RAF (iPhone battery/GPU). */
-      if (paused) {
-        rafRef.current = null;
-        return;
-      }
       rafRef.current = requestAnimationFrame(frame);
     }
 
-    frameFnRef.current = frame;
-    // One frame now: animates if in zone, else draws Identify once and stops.
     rafRef.current = requestAnimationFrame(frame);
     const container = containerRef.current;
     const ro = container ? new ResizeObserver(resize) : null;
@@ -333,25 +260,12 @@ function useOrbitalCanvas({
     window.addEventListener("resize", resize);
     return () => {
       cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-      frameFnRef.current = null;
       clearTimeout(manualTimerRef.current);
       ro?.disconnect();
       window.removeEventListener("resize", resize);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resize, activateStep]);
-
-  /* Resume orbit animation when user re-enters the loop zone */
-  useEffect(() => {
-    zoneActiveRef.current = zoneActive;
-    if (!zoneActive) return;
-    if (rafRef.current != null) return;
-    const frame = frameFnRef.current;
-    if (!frame) return;
-    startTimeRef.current = performance.now() - elapsedForIdentify();
-    rafRef.current = requestAnimationFrame(frame);
-  }, [zoneActive]);
 
   return { nodeXY, userActivate };
 }
@@ -706,14 +620,14 @@ function FslStyles() {
 
 /** Slide 1 — heading + orbital loop (nav #loop) */
 export function FiveStepLoopOrbit() {
-  const { active, setActive, zoneActive, resetEpoch } = useLoopSession(true);
+  const [active, setActive] = useState(0);
   const [orbitDim, setOrbitDim] = useState(560);
   const canvasRef    = useRef(null);
   const containerRef = useRef(null);
   const stageRef     = useRef(null);
 
   const { nodeXY, userActivate } = useOrbitalCanvas({
-    canvasRef, containerRef, setActive, active, zoneActive, resetEpoch,
+    canvasRef, containerRef, setActive,
   });
 
   useEffect(() => {
@@ -793,7 +707,7 @@ export function FiveStepLoopOrbit() {
 
 /** Slide 2 — step detail cards */
 export function FiveStepLoopCards() {
-  const { active, setActive } = useLoopSession(true);
+  const [active, setActive] = useState(0);
 
   const renderStepCard = (step, globalIdx) => (
     <div
@@ -838,7 +752,7 @@ export function FiveStepLoopCards() {
 
 /** Desktop — full loop: header + orbit + step cards in one viewport */
 export default function FiveStepLoop() {
-  const { active, setActive, zoneActive, resetEpoch } = useLoopSession(true);
+  const [active, setActive] = useState(0);
   const [orbitDim, setOrbitDim] = useState(560);
   const canvasRef    = useRef(null);
   const containerRef = useRef(null);
@@ -846,9 +760,7 @@ export default function FiveStepLoop() {
   const leftColRef   = useRef(null);
 
   const { nodeXY, userActivate } = useOrbitalCanvas({
-    canvasRef, containerRef, setActive, active,
-    zoneActive,
-    resetEpoch,
+    canvasRef, containerRef, setActive,
   });
 
   useEffect(() => {
