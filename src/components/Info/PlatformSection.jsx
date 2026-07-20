@@ -45,10 +45,11 @@ const EASE         = [0.22, 1, 0.36, 1];
 
 /* Vertical headline ticker — same language as LogoStream tagline, on Y */
 const HEADLINE_LINES = [
-  "FOLLOW-UPS SENT",
-  "WORKFLOWS AUTOMATED",
-  "GAPS IDENTIFIED",
-  "CONTINUOUS RECOVERY",
+  "leakages identified",
+  "workflows automated",
+  "correspondence throttled",
+  "exceptions managed",
+  "continuous recovery",
 ];
 
 const headlineVariants = {
@@ -787,7 +788,7 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
                 animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.75, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
               >
-                One Guided Operating System.
+                The Guided Operating System.
               </motion.span>
               <HeadlineTicker active={inView} />
             </div>

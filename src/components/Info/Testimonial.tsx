@@ -98,9 +98,9 @@ function TypewriterQuote({
   return (
     <>
       <span className="sr-only">{text}</span>
-      <p
+        <p
         aria-hidden
-        className="leading-relaxed text-[15px] sm:text-base md:text-[17px] min-h-32 sm:min-h-36 md:min-h-40"
+        className="leading-relaxed text-[16px] sm:text-lg md:text-[19px] min-h-[88px] sm:min-h-36 md:min-h-40"
         style={{ color: "rgba(244,248,255,0.88)" }}
       >
         {visible}
@@ -332,7 +332,7 @@ const TestimonialSection = () => {
               />
 
               <div
-                className="relative z-10 p-6 sm:p-8 md:p-10 flex flex-col gap-4 md:gap-5"
+                className="tm-card relative z-10 p-4 sm:p-8 md:p-10 flex flex-col gap-3 md:gap-5"
                 style={{
                   borderRadius: 28,
                   background:
@@ -347,19 +347,28 @@ const TestimonialSection = () => {
                     style={{
                       ...gradientText,
                       fontFamily: "'Bebas Neue', 'Montserrat', sans-serif",
-                      fontSize: "clamp(44px, 10vw, 72px)",
+                      fontSize: "clamp(32px, 8vw, 72px)",
                     }}
                   >
                     “
                   </span>
-                  <div className="relative mt-1 shrink-0">
-                    <div
-                      className="w-[7px] h-[7px] rounded-full"
-                      style={{
-                        backgroundImage: OPAL_LIGHT_GRADIENT,
-                        boxShadow: "0 0 14px 4px rgba(255,255,255,0.45)",
-                      }}
-                    />
+                  <div className="flex items-center gap-2 mt-1 shrink-0">
+                    <span
+                      aria-hidden
+                      className="tm-mobile-counter hidden text-[10px] tracking-[0.22em] uppercase"
+                      style={{ color: "rgba(244,248,255,0.42)" }}
+                    >
+                      {String(active + 1).padStart(2, "0")} / {String(testimonials.length).padStart(2, "0")}
+                    </span>
+                    <div className="relative">
+                      <div
+                        className="w-[7px] h-[7px] rounded-full"
+                        style={{
+                          backgroundImage: OPAL_LIGHT_GRADIENT,
+                          boxShadow: "0 0 14px 4px rgba(255,255,255,0.45)",
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -383,21 +392,49 @@ const TestimonialSection = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: inView ? 1 : 0 }}
                   transition={{ delay: reduced ? 0 : 0.35, duration: 0.5 }}
+                  className="flex items-center gap-3"
                 >
-                  <p
-                    className="font-semibold tracking-tight text-base sm:text-[17px]"
-                    style={{ color: "rgba(255,255,255,0.95)" }}
+                  <div
+                    className="tm-avatar shrink-0 flex items-center justify-center rounded-full"
+                    aria-hidden
+                    style={{
+                      width: 34,
+                      height: 34,
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.14)",
+                    }}
                   >
-                    {item.name}
-                  </p>
-                  {(item.role || item.company) && (
-                    <p
-                      className="text-[12px] sm:text-[13px] mt-1"
-                      style={{ color: "rgba(244,248,255,0.55)" }}
+                    <span
+                      style={{
+                        ...gradientText,
+                        fontFamily: "'Bebas Neue', 'Montserrat', sans-serif",
+                        fontSize: 14,
+                        letterSpacing: 0.5,
+                      }}
                     >
-                      {[item.role, item.company].filter(Boolean).join(" · ")}
+                      {item.name
+                        .split(" ")
+                        .map((w) => w[0])
+                        .join("")
+                        .slice(0, 2)}
+                    </span>
+                  </div>
+                  <div>
+                    <p
+                      className="font-semibold tracking-tight text-[13px] sm:text-[17px]"
+                      style={{ color: "rgba(255,255,255,0.95)" }}
+                    >
+                      {item.name}
                     </p>
-                  )}
+                    {(item.role || item.company) && (
+                      <p
+                        className="text-[12px] sm:text-[13px] mt-0.5"
+                        style={{ color: "rgba(244,248,255,0.55)" }}
+                      >
+                        {[item.role, item.company].filter(Boolean).join(" · ")}
+                      </p>
+                    )}
+                  </div>
                 </motion.div>
               </div>
             </motion.div>
@@ -518,28 +555,54 @@ const TestimonialSection = () => {
         }
 
         @media (max-width: 600px) {
+          /* Fill the home-slide so content can be vertically centered */
           .tm-section {
-            height: auto;
-            min-height: 0;
+            height: 100%;
+            min-height: 100%;
             max-height: none;
           }
           .tm-inner {
-            flex: unset;
+            flex: 1;
             min-height: 0;
-            padding-top: 20px;
-            padding-bottom: 28px;
+            justify-content: center;
+            padding-top: 18px;
+            padding-bottom: 18px;
+            padding-left: 16px;
+            padding-right: 16px;
           }
           .tm-stage {
-            flex: unset;
-            justify-content: flex-start;
+            flex: none;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 0;
+          }
+          .tm-card {
+            padding: 22px 16px !important;
+            min-height: 260px;
+            justify-content: space-between !important;
+          }
+          .tm-mobile-counter {
+            display: inline-block;
           }
           .tm-progress {
-            gap: 16px;
+            gap: 12px;
+            margin-top: 8px !important;
           }
-          .tm-header { margin-bottom: 12px; padding: 0 14px; }
+          .tm-header {
+            margin-bottom: 14px;
+            padding: 0 4px;
+          }
           .tm-heading { gap: 8px; }
-          .tm-hl-bold { font-size: clamp(22px, 6.8vw, 30px); }
-          .tm-hl-muted { font-size: clamp(14px, 4.2vw, 18px); color: rgba(255,255,255,0.52); }
+          .tm-hl-bold {
+            font-size: clamp(21px, 6.2vw, 26px);
+            letter-spacing: -0.02em;
+          }
+          .tm-hl-muted {
+            font-size: clamp(11px, 3vw, 13px);
+            color: rgba(255,255,255,0.45);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+          }
         }
       `}</style>
     </section>

@@ -1,10 +1,60 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import NavigationOverlay from "./NavigationOverlay";
-import { NAVBAR_LINKS, goToTarget } from "./navigationConfig";
+import { NAVBAR_LINKS, NAV_HEIGHT, goToTarget } from "./navigationConfig";
 import opalGosLogo from "../../assets/opal-gos.svg";
+
+const SECTION_IDS = ["problem", "platform", "loop", "impact", "stack", "testimonials"];
+
+/**
+ * Watches window scroll and returns the key of the section currently snapped
+ * into view. Reads the DOM directly — no props or context needed.
+ * Uses the same snap-point math as the scroll controller so the active state
+ * always matches the visible card, even on the FiveStepLoopCards slide which
+ * has no id of its own (we walk backwards to find the nearest keyed slide).
+ */
+function useActiveSection() {
+  const [active, setActive] = useState(null);
+
+  useEffect(() => {
+    const update = () => {
+      const slides = [...document.querySelectorAll(".home-slide")];
+      if (!slides.length) { setActive(null); return; }
+
+      const container = slides[0].parentElement;
+      const containerDocTop = container.getBoundingClientRect().top + window.scrollY;
+      const slideH = Math.max(1, window.innerHeight - NAV_HEIGHT);
+
+      // Hero zone — nothing highlighted
+      if (window.scrollY < containerDocTop - NAV_HEIGHT - slideH * 0.4) {
+        setActive((prev) => (prev === null ? prev : null));
+        return;
+      }
+
+      const idx = Math.min(
+        Math.max(0, Math.round((window.scrollY - containerDocTop + NAV_HEIGHT) / slideH)),
+        slides.length - 1,
+      );
+
+      // Walk backwards from current slide to find the nearest one with a known id
+      let found = null;
+      for (let i = idx; i >= 0; i--) {
+        found = SECTION_IDS.find((id) => slides[i].querySelector(`#${id}`)) ?? null;
+        if (found) break;
+      }
+
+      setActive((prev) => (prev === found ? prev : found));
+    };
+
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
+
+  return active;
+}
 
 const NAVY = "#08060C";
 const OPAL_LIGHT_GRADIENT =
@@ -19,7 +69,7 @@ const gradientText = {
  *  - default: subtle white border, white text, lilac border on hover
  *  - accent  (last CTA, e.g. "Contact"): gradient ring + gradient text
  */
-function NavButton({ label, target, accent = false, onClick }) {
+function NavButton({ label, target, accent = false, isActive = false, onClick }) {
   if (accent) {
     return (
       <motion.button
@@ -28,7 +78,6 @@ function NavButton({ label, target, accent = false, onClick }) {
         onClick={() => onClick(target)}
         className="px-5 py-2 rounded-full text-[11px] tracking-[0.18em] uppercase whitespace-nowrap cursor-pointer transition-shadow"
         style={{
-          // gradient ring via padding-box / border-box trick
           background: `
             linear-gradient(${NAVY}, ${NAVY}) padding-box,
             ${OPAL_LIGHT_GRADIENT} border-box
@@ -48,10 +97,18 @@ function NavButton({ label, target, accent = false, onClick }) {
       whileTap={{ scale: 0.96 }}
       onClick={() => onClick(target)}
       className="px-5 py-2 rounded-full border text-[11px] tracking-[0.18em] uppercase whitespace-nowrap cursor-pointer transition-colors"
-      style={{
-        borderColor: "rgba(255,255,255,0.18)",
-        color: "rgba(255,255,255,0.78)",
-      }}
+      style={
+        isActive
+          ? {
+              background: "rgba(255,255,255,0.09)",
+              borderColor: "rgba(255,255,255,0.48)",
+              color: "#fff",
+            }
+          : {
+              borderColor: "rgba(255,255,255,0.18)",
+              color: "rgba(255,255,255,0.78)",
+            }
+      }
     >
       {label}
     </motion.button>
@@ -61,8 +118,13 @@ function NavButton({ label, target, accent = false, onClick }) {
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const activeKey = useActiveSection();
 
-  const handleNav = (target) => goToTarget(target, navigate);
+  const handleNav = useCallback(
+    (target) => goToTarget(target, navigate),
+    [navigate],
+  );
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
 
   return (
     <>
@@ -103,6 +165,7 @@ export default function Navbar() {
                 key={item.key}
                 label={item.label}
                 target={item.target}
+                isActive={activeKey === item.key}
                 onClick={handleNav}
               />
             ))}
@@ -115,6 +178,7 @@ export default function Navbar() {
                 label={item.label}
                 target={item.target}
                 accent={Boolean(item.accent)}
+                isActive={!item.accent && activeKey === item.key}
                 onClick={handleNav}
               />
             ))}
@@ -165,7 +229,8 @@ export default function Navbar() {
 
       <NavigationOverlay
         isOpen={menuOpen}
-        onClose={() => setMenuOpen(false)}
+        onClose={closeMenu}
+        activeKey={activeKey}
       />
     </>
   );

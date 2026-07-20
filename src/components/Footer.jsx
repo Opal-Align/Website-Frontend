@@ -6,6 +6,7 @@ import { MdCall, MdEmail } from "react-icons/md";
 import instagramIcon from "../assets/instagram.svg";
 import linkedinIcon from "../assets/linkedin.svg";
 import opalLogo from "../assets/OPALgos GreyWhite Website.png";
+import { goToTarget, NAV_TARGET } from "./Navbar/navigationConfig";
 
 const OPAL_GRADIENT =
   "linear-gradient(120deg, #FFFFFF 0%, #F8FAFC 30%, #F3F4F6 65%, #FFFFFF 100%)";
@@ -64,7 +65,7 @@ function Typewriter({ text, started, delay = 0, speed = 30, className = "", styl
     <span className={className} style={style}>
       {displayed}
       {began && displayed.length < text.length && (
-        <span className="inline-block w-[2px] h-[1em] bg-white/70 ml-0.5 animate-pulse align-middle" />
+        <span className="inline-block w-0.5 h-[1em] bg-white/70 ml-0.5 animate-pulse align-middle" />
       )}
     </span>
   );
@@ -88,11 +89,20 @@ export default function Footer() {
   const [isRevealed, setIsRevealed] = useState(false);
   const touchStartY = useRef(0);
   const dismissedAtBottomRef = useRef(false);
+  const overlayRef = useRef(null);
+  // Keep a stable ref to closeOverlay so the non-passive listeners can call
+  // the latest version without being re-registered on every render.
+  const closeOverlayRef = useRef(null);
 
   const closeOverlay = () => {
     dismissedAtBottomRef.current = true;
     setIsRevealed(false);
+    // Footer can only open from Testimonials — always snap back there on close
+    requestAnimationFrame(() => {
+      goToTarget(NAV_TARGET.testimonials, () => {});
+    });
   };
+  closeOverlayRef.current = closeOverlay;
 
   const mobileRef = useRef(null);
   const mobileInView = useInView(mobileRef, { once: true, margin: "-80px" });
@@ -132,32 +142,59 @@ export default function Footer() {
     return () => { document.body.style.overflow = ""; };
   }, [isRevealed, isDesktop]);
 
-  /* ── Dismiss handlers exposed to the overlay div ── */
-  const onOverlayWheel = (e) => {
-    // Scroll up (negative deltaY) = user wants to go back → close overlay
-    if (e.deltaY < 0) closeOverlay();
-  };
+  /* ── Non-passive wheel + touch listeners on the overlay element.
+     React's synthetic onWheel/onTouchMove are passive — calling
+     preventDefault() inside them is silently ignored, so the events would
+     still bubble up and trigger the snap controller behind the overlay.
+     Native listeners with { passive: false } fix this. ── */
+  useEffect(() => {
+    const el = overlayRef.current;
+    if (!el) return;
 
-  const onOverlayTouchStart = (e) => {
-    touchStartY.current = e.touches[0].clientY;
-  };
+    let t0 = 0;
 
-  const onOverlayTouchMove = (e) => {
-    const dy = e.touches[0].clientY - touchStartY.current;
-    // Swipe down (positive dy) = close
-    if (dy > 60) closeOverlay();
-  };
+    const onWheel = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.deltaY < 0) closeOverlayRef.current?.();
+    };
+
+    const onTouchStart = (e) => {
+      t0 = e.touches[0].clientY;
+    };
+
+    const onTouchMove = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.touches[0].clientY - t0 > 60) closeOverlayRef.current?.();
+    };
+
+    el.addEventListener("wheel",      onWheel,      { passive: false });
+    el.addEventListener("touchstart", onTouchStart, { passive: true  });
+    el.addEventListener("touchmove",  onTouchMove,  { passive: false });
+
+    return () => {
+      el.removeEventListener("wheel",      onWheel);
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove",  onTouchMove);
+    };
+  }, [isRevealed]); // re-attach when overlay mounts/unmounts
 
   const typewriterStarted = isDesktop ? isRevealed : mobileInView;
   const headerVisible = typewriterStarted;
 
+  /* Timings follow the visual, top-to-bottom reveal order of the new
+     "end-credits" layout: heading → CTA copy → button → contact row. */
   const s = isDesktop
-    ? { phone: { d: 600, sp: 35 }, email: { d: 900, sp: 35 }, follow: { d: 500, sp: 50 }, insta: { d: 800, sp: 40 }, linked: { d: 1000, sp: 40 }, cta1: { d: 600, sp: 25 }, cta2: { d: 1200, sp: 25 }, btn: 1.8 }
-    : { phone: { d: 800, sp: 55 }, email: { d: 1600, sp: 55 }, follow: { d: 2400, sp: 70 }, insta: { d: 3200, sp: 60 }, linked: { d: 3800, sp: 60 }, cta1: { d: 4400, sp: 40 }, cta2: { d: 5800, sp: 40 }, btn: 7.0 };
+    ? { cta1: { d: 500, sp: 25 }, cta2: { d: 900, sp: 25 }, btn: 1.3, phone: { d: 1600, sp: 30 }, email: { d: 1900, sp: 30 }, follow: { d: 2300, sp: 45 }, insta: { d: 2600, sp: 35 }, linked: { d: 2800, sp: 35 } }
+    : { cta1: { d: 800, sp: 35 }, cta2: { d: 1500, sp: 35 }, btn: 2.3, phone: { d: 2900, sp: 45 }, email: { d: 3300, sp: 45 }, follow: { d: 3900, sp: 60 }, insta: { d: 4300, sp: 50 }, linked: { d: 4600, sp: 50 } };
 
-  /* ─── Expandable content only (no bottom bar here) ─── */
+  /* ─── Expandable content only (no bottom bar here) ───
+     "End of the movie" credits layout: everything centred in a single
+     column, revealed top to bottom — title, message, action, then the
+     ways to reach us. */
   const footerContent = (
-    <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-16 py-12 md:py-20">
+    <div className="ft-credits w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-16 py-10 md:py-14 flex flex-col items-center text-center">
       {/* Hidden SVG gradient defs — makes fill="url(#opalIconGrad)" work for react-icons */}
       <svg width="0" height="0" style={{ position: "absolute", overflow: "hidden" }} aria-hidden>
         <defs>
@@ -180,146 +217,121 @@ export default function Footer() {
           >
             YOUR NEXT STEP
           </motion.span>
-          <motion.span
-            className="ft-hl-muted"
-            initial={{ opacity: 0, y: 8 }}
-            animate={headerVisible ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.7, delay: 0.32, ease: [0.16, 1, 0.3, 1] }}
-          >
-            See what your queue looks like
-          </motion.span>
+          
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12 lg:gap-20 items-start">
-
-        {/* Left: Phone & Email */}
-        <div className="space-y-6 md:space-y-8">
-          <div className="space-y-3 md:space-y-4">
-            <a
-              href="tel:8779966725"
-              className="flex items-center gap-3 text-base md:text-lg transition-opacity hover:opacity-75"
-            >
-              <MdCall
-                className="w-5 h-5 md:w-6 md:h-6 shrink-0"
-                style={{ color: "#fff" }}
-              />
-              <Typewriter
-                text="877-996-6725 (OPAL)"
-                started={typewriterStarted}
-                delay={s.phone.d}
-                speed={s.phone.sp}
-                style={gradientText}
-              />
-            </a>
-            <a
-              href="mailto:info@opalgos.com"
-              className="flex items-center gap-3 text-base md:text-lg transition-opacity hover:opacity-75"
-            >
-              <MdEmail
-                className="w-5 h-5 md:w-6 md:h-6 shrink-0"
-                style={{ color: "#fff" }}
-              />
-              <Typewriter
-                text="info@opalgos.com"
-                started={typewriterStarted}
-                delay={s.email.d}
-                speed={s.email.sp}
-                style={gradientText}
-              />
-            </a>
-          </div>
-        </div>
-
-        {/* Center: Social Media */}
-        <div className="space-y-4">
+      {/* CTA copy */}
+      <div className="ft-cta-copy space-y-2">
+        <h2 className="text-base md:text-lg font-medium">
           <Typewriter
-            text="FOLLOW US"
+            text="Demo availability is limited."
             started={typewriterStarted}
-            delay={s.follow.d}
-            speed={s.follow.sp}
-            className="text-xs tracking-[0.2em] uppercase block"
-            style={{ ...gradientText, opacity: 0.55 }}
+            delay={s.cta1.d}
+            speed={s.cta1.sp}
+            style={gradientText}
           />
-          <div className="space-y-3">
-            <a
-              href="https://www.instagram.com/opal_gos/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 text-base md:text-lg transition-opacity hover:opacity-75"
-            >
-              <span style={gradientMaskIcon(instagramIcon, "1.25rem")} className="md:w-6 md:h-6" />
-              <Typewriter
-                text="Instagram"
-                started={typewriterStarted}
-                delay={s.insta.d}
-                speed={s.insta.sp}
-                style={gradientText}
-              />
-            </a>
-            <a
-              href="https://www.linkedin.com/company/opal-gos/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 text-base md:text-lg transition-opacity hover:opacity-75"
-            >
-              <span style={gradientMaskIcon(linkedinIcon, "1.25rem")} className="md:w-6 md:h-6" />
-              <Typewriter
-                text="LinkedIn"
-                started={typewriterStarted}
-                delay={s.linked.d}
-                speed={s.linked.sp}
-                style={gradientText}
-              />
-            </a>
-          </div>
-        </div>
+        </h2>
+        <p className="text-xs md:text-sm">
+          <Typewriter
+            text="Request your invitation now before slots fill up."
+            started={typewriterStarted}
+            delay={s.cta2.d}
+            speed={s.cta2.sp}
+            style={{ ...gradientText, opacity: 0.6 }}
+          />
+        </p>
+      </div>
 
-        {/* Right: Contact CTA */}
-        <div className="space-y-6 md:space-y-8">
-          <div className="space-y-2">
-            <h2 className="text-base md:text-lg font-medium">
-              <Typewriter
-                text="Due to high demand, DEMO availability is limited."
-                started={typewriterStarted}
-                delay={s.cta1.d}
-                speed={s.cta1.sp}
-                style={gradientText}
-              />
-            </h2>
-            <p className="text-xs md:text-sm">
-              <Typewriter
-                text="Request your invitation now before slots fill up."
-                started={typewriterStarted}
-                delay={s.cta2.d}
-                speed={s.cta2.sp}
-                style={{ ...gradientText, opacity: 0.6 }}
-              />
-            </p>
-          </div>
+      {/* Join button */}
+      <Link to="/contact-us" className="ft-join">
+        <motion.button
+          className="px-7 md:px-9 py-3 rounded-full flex items-center justify-center gap-3 transition-all cursor-pointer"
+          style={{
+            border: "1px solid transparent",
+            background: `linear-gradient(#000, #000) padding-box, ${OPAL_GRADIENT} border-box`,
+          }}
+          whileHover={{ opacity: 0.8 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: typewriterStarted ? 1 : 0 }}
+          transition={{ delay: typewriterStarted ? s.btn : 0, duration: 0.5 }}
+        >
+          <span style={gradientText}>Join Today</span>
+          <span className="flex gap-1.5">
+            <span className="w-2 h-2 rounded-full" style={{ background: OPAL_GRADIENT }} />
+            <span className="w-2 h-2 rounded-full" style={{ background: OPAL_GRADIENT }} />
+          </span>
+        </motion.button>
+      </Link>
 
-          <Link to="/contact-us">
-            <motion.button
-              className="w-full md:w-auto px-6 md:px-8 py-3 rounded-full flex items-center justify-center md:justify-start gap-3 transition-all cursor-pointer"
-              style={{
-                border: "1px solid transparent",
-                background: `linear-gradient(#000, #000) padding-box, ${OPAL_GRADIENT} border-box`,
-              }}
-              whileHover={{ opacity: 0.8 }}
-              whileTap={{ scale: 0.95 }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: typewriterStarted ? 1 : 0 }}
-              transition={{ delay: typewriterStarted ? s.btn : 0, duration: 0.5 }}
-            >
-              <span style={gradientText}>Join Today</span>
-              <span className="flex gap-1.5">
-                <span className="w-2 h-2 rounded-full" style={{ background: OPAL_GRADIENT }} />
-                <span className="w-2 h-2 rounded-full" style={{ background: OPAL_GRADIENT }} />
-              </span>
-            </motion.button>
-          </Link>
-        </div>
+      {/* Contact row — the credits' fine print */}
+      <div className="ft-contact-row">
+        <a
+          href="tel:8779966725"
+          className="flex items-center gap-2.5 text-sm md:text-base transition-opacity hover:opacity-75"
+        >
+          <MdCall className="w-4 h-4 md:w-5 md:h-5 shrink-0" style={{ color: "#fff" }} />
+          <Typewriter
+            text="877-996-6725 (OPAL)"
+            started={typewriterStarted}
+            delay={s.phone.d}
+            speed={s.phone.sp}
+            style={gradientText}
+          />
+        </a>
 
+        <span className="ft-dot" aria-hidden />
+
+        <a
+          href="mailto:info@opalgos.com"
+          className="flex items-center gap-2.5 text-sm md:text-base transition-opacity hover:opacity-75"
+        >
+          <MdEmail className="w-4 h-4 md:w-5 md:h-5 shrink-0" style={{ color: "#fff" }} />
+          <Typewriter
+            text="info@opalgos.com"
+            started={typewriterStarted}
+            delay={s.email.d}
+            speed={s.email.sp}
+            style={gradientText}
+          />
+        </a>
+
+        <span className="ft-dot" aria-hidden />
+
+        <a
+          href="https://www.instagram.com/opal_gos/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2.5 text-sm md:text-base transition-opacity hover:opacity-75"
+        >
+          <span style={gradientMaskIcon(instagramIcon, "1.05rem")} />
+          <Typewriter
+            text="Instagram"
+            started={typewriterStarted}
+            delay={s.insta.d}
+            speed={s.insta.sp}
+            style={gradientText}
+          />
+        </a>
+
+        <span className="ft-dot" aria-hidden />
+
+        <a
+          href="https://www.linkedin.com/company/opal-gos/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2.5 text-sm md:text-base transition-opacity hover:opacity-75"
+        >
+          <span style={gradientMaskIcon(linkedinIcon, "1.05rem")} />
+          <Typewriter
+            text="LinkedIn"
+            started={typewriterStarted}
+            delay={s.linked.d}
+            speed={s.linked.sp}
+            style={gradientText}
+          />
+        </a>
       </div>
     </div>
   );
@@ -383,7 +395,7 @@ export default function Footer() {
           .ft-header {
             text-align: center;
             flex-shrink: 0;
-            margin-bottom: clamp(24px, 3.5vh, 40px);
+            margin-bottom: clamp(20px, 3vh, 32px);
             width: 100%;
             padding: 0 clamp(16px, 3vw, 52px);
             box-sizing: border-box;
@@ -413,11 +425,22 @@ export default function Footer() {
             color: rgba(255,255,255,0.48);
             line-height: 1.14;
           }
+          .ft-cta-copy { margin-bottom: clamp(20px, 3vh, 32px); max-width: 34rem; }
+          .ft-join { margin-bottom: clamp(28px, 4.5vh, 48px); }
+          .ft-contact-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: clamp(14px, 2vh, 18px);
+          }
+          .ft-dot { display: none; }
           @media (max-width: 600px) {
             .ft-header { margin-bottom: 20px; padding: 0 14px; }
             .ft-heading { gap: 8px; }
             .ft-hl-bold { font-size: clamp(22px, 6.8vw, 30px); }
             .ft-hl-muted { font-size: clamp(14px, 4.2vw, 18px); color: rgba(255,255,255,0.52); }
+            .ft-cta-copy { margin-bottom: 22px; }
+            .ft-join { margin-bottom: 30px; }
           }
         `}</style>
         <div ref={mobileRef}>
@@ -446,7 +469,7 @@ export default function Footer() {
         .ft-header {
           text-align: center;
           flex-shrink: 0;
-          margin-bottom: clamp(24px, 3.5vh, 40px);
+          margin-bottom: clamp(20px, 3vh, 32px);
           width: 100%;
           padding: 0 clamp(16px, 3vw, 52px);
           box-sizing: border-box;
@@ -476,6 +499,22 @@ export default function Footer() {
           color: rgba(255,255,255,0.48);
           line-height: 1.14;
         }
+        .ft-cta-copy { margin-bottom: clamp(24px, 3.5vh, 36px); max-width: 34rem; }
+        .ft-join { margin-bottom: clamp(36px, 5.5vh, 56px); }
+        .ft-contact-row {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: center;
+          gap: clamp(18px, 2.4vw, 40px);
+        }
+        .ft-dot {
+          width: 3px;
+          height: 3px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.3);
+          display: inline-block;
+        }
         @media (max-width: 600px) {
           .ft-header { margin-bottom: 20px; padding: 0 14px; }
           .ft-heading { gap: 8px; }
@@ -489,15 +528,13 @@ export default function Footer() {
       <AnimatePresence>
         {isRevealed && (
           <motion.div
+            ref={overlayRef}
             key="footer-overlay"
             className="fixed inset-0 z-200 flex flex-col overflow-hidden"
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ duration: 0.72, ease: [0.23, 1, 0.32, 1] }}
-            onWheel={onOverlayWheel}
-            onTouchStart={onOverlayTouchStart}
-            onTouchMove={onOverlayTouchMove}
           >
             {/* Video background */}
             <div className="absolute inset-0">
@@ -530,9 +567,10 @@ export default function Footer() {
               </button>
             </div>
 
-            {/* Footer content — centred vertically in remaining space */}
+            {/* Footer content — centred vertically in remaining space, nudged
+                up slightly so it doesn't feel dead-centre like a modal */}
             <motion.div
-              className="relative z-10 flex flex-col flex-1 justify-center"
+              className="relative z-10 flex flex-col flex-1 justify-center pb-[4vh]"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}

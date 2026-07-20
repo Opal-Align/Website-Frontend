@@ -4,53 +4,57 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { OVERLAY_NAV_ITEMS, goToTarget } from "./navigationConfig";
 
-const NavigationOverlay = ({ isOpen, onClose }) => {
+const NavigationOverlay = ({ isOpen, onClose, activeKey }) => {
   const navigate = useNavigate();
   const scrollPositionRef = useRef(0);
 
+  // Body-scroll lock is fully symmetric: lock + save position on open, and
+  // restore ONLY in cleanup (i.e. on a real open→closed transition). This must
+  // never run while closed, or an unrelated re-render would scroll to top.
   useEffect(() => {
-    if (isOpen) {
-      scrollPositionRef.current =
-        window.scrollY ||
-        window.pageYOffset ||
-        document.documentElement.scrollTop;
+    if (!isOpen) return;
 
-      document.body.style.overflow = "hidden";
-      document.body.style.position = "fixed";
-      document.body.style.top = `-${scrollPositionRef.current}px`;
-      document.body.style.width = "100%";
+    scrollPositionRef.current =
+      window.scrollY ||
+      window.pageYOffset ||
+      document.documentElement.scrollTop;
 
-      const preventScroll = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-      };
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollPositionRef.current}px`;
+    document.body.style.width = "100%";
 
-      window.addEventListener("scroll", preventScroll, { passive: false });
-      window.addEventListener("wheel", preventScroll, { passive: false });
-      window.addEventListener("touchmove", preventScroll, { passive: false });
+    const preventScroll = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    };
 
-      const onKey = (e) => {
-        if (e.key === "Escape") onClose();
-      };
-      window.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", preventScroll, { passive: false });
+    window.addEventListener("wheel", preventScroll, { passive: false });
+    window.addEventListener("touchmove", preventScroll, { passive: false });
 
-      return () => {
-        window.removeEventListener("scroll", preventScroll);
-        window.removeEventListener("wheel", preventScroll);
-        window.removeEventListener("touchmove", preventScroll);
-        window.removeEventListener("keydown", onKey);
-      };
-    } else {
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+
+    return () => {
+      window.removeEventListener("scroll", preventScroll);
+      window.removeEventListener("wheel", preventScroll);
+      window.removeEventListener("touchmove", preventScroll);
+      window.removeEventListener("keydown", onKey);
+
       document.body.style.overflow = "";
       document.body.style.position = "";
       document.body.style.top = "";
       document.body.style.width = "";
 
+      const restoreY = scrollPositionRef.current;
       setTimeout(() => {
-        window.scrollTo(0, scrollPositionRef.current);
+        window.scrollTo(0, restoreY);
       }, 0);
-    }
+    };
   }, [isOpen, onClose]);
 
   const handleItemClick = (target) => {
@@ -140,9 +144,9 @@ const NavigationOverlay = ({ isOpen, onClose }) => {
                     delay: 0.2 + index * 0.1,
                     ease: "easeOut",
                   }}
-                  className={`text-white/60 hover:text-white text-4xl md:text-6xl lg:text-7xl font-bold transition-colors cursor-pointer bg-transparent border-none ${
+                  className={`hover:text-white text-4xl md:text-6xl lg:text-7xl font-bold transition-colors cursor-pointer bg-transparent border-none ${
                     item.key === "contact" ? "block md:hidden" : ""
-                  }`}
+                  } ${item.key === activeKey ? "text-white" : "text-white/60"}`}
                   whileHover={{ scale: 1.05 }}
                 >
                   {item.label}

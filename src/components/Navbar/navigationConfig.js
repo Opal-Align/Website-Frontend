@@ -4,7 +4,7 @@
  *
  * Homepage section map (top → bottom):
  *   #problem      → Info/ProblemWordMap.jsx
- *   #platform     → Info/PlatformSection.jsx   (Modules — four services)
+ *   #platform     → Info/PlatformSection.jsx   (platform — four services)
  *   #loop         → Info/FiveStepLoop.jsx      (The Platform — gOS loop)
  *   #impact       → Info/Stats.jsx
  *   #stack        → LogoStream/LogoStream.jsx
@@ -35,8 +35,8 @@ export const NAV_TARGET = {
 export const OVERLAY_NAV_ITEMS = [
   { key: "home", label: "Home", target: NAV_TARGET.home },
   { key: "problem", label: "The Problem", target: NAV_TARGET.problem },
-  { key: "modules", label: "Modules", target: NAV_TARGET.platform },
-  { key: "loop", label: "The Platform", target: NAV_TARGET.loop },
+  { key: "platform", label: "Te Platform", target: NAV_TARGET.platform },
+  { key: "loop", label: "The gOS Loop", target: NAV_TARGET.loop },
   { key: "impact", label: "Impact", target: NAV_TARGET.impact },
   { key: "stack", label: "The Stack", target: NAV_TARGET.stack },
   { key: "testimonials", label: "Testimonials", target: NAV_TARGET.testimonials },
@@ -47,8 +47,8 @@ export const OVERLAY_NAV_ITEMS = [
 export const NAVBAR_LINKS = {
   left: [
     { key: "problem", label: "The Problem", target: NAV_TARGET.problem },   // 1
-    { key: "modules", label: "Modules",     target: NAV_TARGET.platform },  // 2
-    { key: "loop",    label: "The Platform",target: NAV_TARGET.loop },      // 3
+    { key: "platform", label: "The Platform",     target: NAV_TARGET.platform },  // 2
+    { key: "loop",    label: "The gos Loop",target: NAV_TARGET.loop },      // 3
   ],
   right: [
     { key: "impact",        label: "Impact",       target: NAV_TARGET.impact },        // 4
