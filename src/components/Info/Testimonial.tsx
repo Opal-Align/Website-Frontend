@@ -295,7 +295,7 @@ const TestimonialSection = () => {
               animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
               transition={{ duration: 0.85, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
             >
-              Voices from our Partners
+              VOICES FROM OUR PARTNERS
             </motion.span>
           </div>
         </div>
@@ -472,7 +472,6 @@ const TestimonialSection = () => {
       </div>
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
         .tm-section {
           --tm-nav-h: var(--page-nav-h, 80px);

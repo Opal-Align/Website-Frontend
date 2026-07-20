@@ -343,6 +343,8 @@ export default function ScrollHero() {
                   filter: "drop-shadow(0 8px 30px rgba(255,255,255,0.18))",
                   transition: "filter 0.3s ease",
                 }}
+                fetchPriority="high"
+                decoding="async"
                 draggable={false}
               />
             </div>

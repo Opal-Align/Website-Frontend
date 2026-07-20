@@ -45,10 +45,10 @@ const EASE         = [0.22, 1, 0.36, 1];
 
 /* Vertical headline ticker — same language as LogoStream tagline, on Y */
 const HEADLINE_LINES = [
-  "Follow-Ups Sent",
-  "Workflows Automated",
-  "Gaps Identified",
-  "Continuous recovery",
+  "FOLLOW-UPS SENT",
+  "WORKFLOWS AUTOMATED",
+  "GAPS IDENTIFIED",
+  "CONTINUOUS RECOVERY",
 ];
 
 const headlineVariants = {
@@ -212,7 +212,7 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
   const [phase,        setPhase]        = useState("idle"); // "idle" | "out" | "in"
   const [tileHovered,  setTileHovered]  = useState(false);
 
-  const inView = useInView(sectionRef, { once: true, margin: "-8% 0px" });
+  const inView = useInView(sectionRef, { once: false, margin: "-8% 0px" });
 
   const stopBurst = useCallback(() => {
     if (burstRafRef.current) { cancelAnimationFrame(burstRafRef.current); burstRafRef.current = null; }
@@ -315,6 +315,19 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
     if (barRef.current) barRef.current.style.width = pct;
   }, []);
 
+  /* Leave view → pause & reset to Schedule so re-entry never feels mid-loop. */
+  useEffect(() => {
+    if (inView) return;
+    stopBurst();
+    elapsedRef.current = 0;
+    lastTsRef.current = null;
+    applyProgress(0);
+    displayIndexRef.current = 0;
+    setActiveIndex(0);
+    setDisplayIndex(0);
+    setPhase("idle");
+  }, [inView, stopBurst, applyProgress]);
+
   useEffect(() => {
     if (!inView) return;
 
@@ -358,7 +371,6 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
         .pf-section-inner {
           background: ${BG};
@@ -766,17 +778,18 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
                 animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               >
-                The platform
+                The Platform
               </motion.span>
-              <HeadlineTicker active={inView} />
+              
               <motion.span
                 className="pf-hl-muted"
                 initial={{ opacity: 0, y: 12 }}
                 animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.75, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
               >
-                One guided operating system.
+                One Guided Operating System.
               </motion.span>
+              <HeadlineTicker active={inView} />
             </div>
           </div>
 

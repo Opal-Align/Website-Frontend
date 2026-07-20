@@ -1,17 +1,29 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import Navbar from "./Navbar/Navbar";
-import Footer from "./Footer";
-import LogoStream from "./LogoStream/LogoStream";
-import Processes, { ImpactNarrative, ImpactMetrics } from "./Info/Stats.jsx";
-import TestimonialSection from "./Info/Testimonial";
 import ScrollHero from "./HomeHero/ScrollHero";
-import ProblemWordMap from "./Info/ProblemWordMap.jsx";
-import PlatformSection from "./Info/PlatformSection.jsx";
-import FiveStepLoop, {
-  FiveStepLoopOrbit,
-  FiveStepLoopCards,
-} from "./Info/FiveStepLoop.jsx";
+import { LoopSessionProvider } from "./Info/LoopSession.jsx";
 import { NAV_HEIGHT } from "./Navbar/navigationConfig";
+
+/* Below-fold sections — code-split so first paint only pays for hero + nav */
+const Footer = lazy(() => import("./Footer"));
+const LogoStream = lazy(() => import("./LogoStream/LogoStream"));
+const Processes = lazy(() => import("./Info/Stats.jsx"));
+const ImpactNarrative = lazy(() =>
+  import("./Info/Stats.jsx").then((m) => ({ default: m.ImpactNarrative })),
+);
+const ImpactMetrics = lazy(() =>
+  import("./Info/Stats.jsx").then((m) => ({ default: m.ImpactMetrics })),
+);
+const TestimonialSection = lazy(() => import("./Info/Testimonial"));
+const ProblemWordMap = lazy(() => import("./Info/ProblemWordMap.jsx"));
+const PlatformSection = lazy(() => import("./Info/PlatformSection.jsx"));
+const FiveStepLoop = lazy(() => import("./Info/FiveStepLoop.jsx"));
+const FiveStepLoopOrbit = lazy(() =>
+  import("./Info/FiveStepLoop.jsx").then((m) => ({ default: m.FiveStepLoopOrbit })),
+);
+const FiveStepLoopCards = lazy(() =>
+  import("./Info/FiveStepLoop.jsx").then((m) => ({ default: m.FiveStepLoopCards })),
+);
 
 /* ─── Stacked-card scroll experience ───────────────────────────────────────
    Scroll controller unchanged from 2e84e8a.
@@ -20,6 +32,21 @@ import { NAV_HEIGHT } from "./Navbar/navigationConfig";
 const SLIDE_BG = "#07080D";
 const OVERFLOW_EPS = 48;
 const MOBILE_BP = 767;
+
+/** Empty slide shell while a lazy section loads — keeps snap heights stable */
+function SlideFallback() {
+  return (
+    <div
+      aria-hidden
+      style={{
+        width: "100%",
+        height: "100%",
+        minHeight: "100%",
+        background: SLIDE_BG,
+      }}
+    />
+  );
+}
 
 function useIsMobile(breakpoint = MOBILE_BP) {
   const [isMobile, setIsMobile] = useState(() =>
@@ -53,6 +80,56 @@ export default function HomePageLayout() {
   useEffect(() => {
     const n = isMobile ? 8 : 6;
     sectionRefs.current = sectionRefs.current.slice(0, n);
+  }, [isMobile]);
+
+  /* Loop zone: mobile Orbit+Cards (2–3) count as one session; desktop Loop (2).
+     Nearest snap index — sticky cards stay "in view", so useInView is unreliable. */
+  const [loopZoneActive, setLoopZoneActive] = useState(false);
+  const isMobileZoneRef = useRef(isMobile);
+  isMobileZoneRef.current = isMobile;
+
+  useEffect(() => {
+    const nearestIndex = (points, y) => {
+      let idx = 0, best = Infinity;
+      points.forEach((p, i) => {
+        const d = Math.abs(p - y);
+        if (d < best) { best = d; idx = i; }
+      });
+      return idx;
+    };
+
+    const snapPoints = () => {
+      const container = stackRef.current;
+      if (!container) return [];
+      const containerTop =
+        container.getBoundingClientRect().top + window.scrollY;
+      const slideH = Math.max(1, window.innerHeight - NAV_HEIGHT);
+      let acc = 0;
+      return sectionRefs.current.map((el) => {
+        const point = Math.max(0, containerTop + acc - NAV_HEIGHT);
+        const h = el && el.offsetHeight > 0 ? el.offsetHeight : slideH;
+        acc += h;
+        return point;
+      });
+    };
+
+    const updateZone = () => {
+      const points = snapPoints();
+      if (!points.length) return;
+      const idx = nearestIndex(points, window.scrollY);
+      const inZone = isMobileZoneRef.current
+        ? idx === 2 || idx === 3
+        : idx === 2;
+      setLoopZoneActive((prev) => (prev === inZone ? prev : inZone));
+    };
+
+    updateZone();
+    window.addEventListener("scroll", updateZone, { passive: true });
+    window.addEventListener("resize", updateZone);
+    return () => {
+      window.removeEventListener("scroll", updateZone);
+      window.removeEventListener("resize", updateZone);
+    };
   }, [isMobile]);
 
   useEffect(() => {
@@ -540,54 +617,84 @@ export default function HomePageLayout() {
           }}
         >
           <div className="home-slide" ref={setSectionRef(0)} data-card-scroll="none" style={{ ["--slide-z"]: 1, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-            <ProblemWordMap />
+            <Suspense fallback={<SlideFallback />}>
+              <ProblemWordMap />
+            </Suspense>
           </div>
 
           <div className="home-slide" ref={setSectionRef(1)} data-card-scroll="none" style={{ ["--slide-z"]: 2, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-            <PlatformSection navbarHeight={NAV_HEIGHT} />
+            <Suspense fallback={<SlideFallback />}>
+              <PlatformSection navbarHeight={NAV_HEIGHT} />
+            </Suspense>
           </div>
 
           {isMobile ? (
             <>
-              <div className="home-slide" ref={setSectionRef(2)} data-card-scroll="none" style={{ ["--slide-z"]: 3, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-                <FiveStepLoopOrbit />
-              </div>
-              <div className="home-slide" ref={setSectionRef(3)} data-card-scroll="none" style={{ ["--slide-z"]: 4, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-                <FiveStepLoopCards />
-              </div>
+              <LoopSessionProvider zoneActive={loopZoneActive}>
+                <div className="home-slide" ref={setSectionRef(2)} data-card-scroll="none" style={{ ["--slide-z"]: 3, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+                  <Suspense fallback={<SlideFallback />}>
+                    <FiveStepLoopOrbit />
+                  </Suspense>
+                </div>
+                <div className="home-slide" ref={setSectionRef(3)} data-card-scroll="none" style={{ ["--slide-z"]: 4, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+                  <Suspense fallback={<SlideFallback />}>
+                    <FiveStepLoopCards />
+                  </Suspense>
+                </div>
+              </LoopSessionProvider>
               <div className="home-slide" ref={setSectionRef(4)} data-card-scroll="none" style={{ ["--slide-z"]: 5, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-                <ImpactNarrative />
+                <Suspense fallback={<SlideFallback />}>
+                  <ImpactNarrative />
+                </Suspense>
               </div>
               <div className="home-slide" ref={setSectionRef(5)} data-card-scroll="none" style={{ ["--slide-z"]: 6, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-                <ImpactMetrics />
+                <Suspense fallback={<SlideFallback />}>
+                  <ImpactMetrics />
+                </Suspense>
               </div>
               <div className="home-slide" ref={setSectionRef(6)} data-card-scroll="none" style={{ ["--slide-z"]: 7, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-                <LogoStream />
+                <Suspense fallback={<SlideFallback />}>
+                  <LogoStream />
+                </Suspense>
               </div>
               <div className="home-slide" ref={setSectionRef(7)} style={{ ["--slide-z"]: 8, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-                <TestimonialSection />
+                <Suspense fallback={<SlideFallback />}>
+                  <TestimonialSection />
+                </Suspense>
               </div>
             </>
           ) : (
             <>
-              <div className="home-slide" ref={setSectionRef(2)} style={{ ["--slide-z"]: 3, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-                <FiveStepLoop />
-              </div>
+              <LoopSessionProvider zoneActive={loopZoneActive}>
+                <div className="home-slide" ref={setSectionRef(2)} style={{ ["--slide-z"]: 3, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+                  <Suspense fallback={<SlideFallback />}>
+                    <FiveStepLoop />
+                  </Suspense>
+                </div>
+              </LoopSessionProvider>
               <div className="home-slide" ref={setSectionRef(3)} data-card-scroll="auto" style={{ ["--slide-z"]: 4, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-                <Processes />
+                <Suspense fallback={<SlideFallback />}>
+                  <Processes />
+                </Suspense>
               </div>
               <div className="home-slide" ref={setSectionRef(4)} data-card-scroll="none" style={{ ["--slide-z"]: 5, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-                <LogoStream />
+                <Suspense fallback={<SlideFallback />}>
+                  <LogoStream />
+                </Suspense>
               </div>
               <div className="home-slide" ref={setSectionRef(5)} style={{ ["--slide-z"]: 6, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-                <TestimonialSection />
+                <Suspense fallback={<SlideFallback />}>
+                  <TestimonialSection />
+                </Suspense>
               </div>
             </>
           )}
         </div>
       </div>
 
-      <Footer />
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
     </div>
   );
 }

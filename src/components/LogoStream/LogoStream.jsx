@@ -1,27 +1,20 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
+// eslint-disable-next-line no-unused-vars
 import { motion, useInView, AnimatePresence } from "framer-motion";
-import Carestack from "../../assets/Carestack.svg";
-import Cloud9 from "../../assets/Cloud 9.svg";
-import Curve from "../../assets/Curve.svg";
-import Denticon from "../../assets/Denticon.svg";
-import Dentimax from "../../assets/Dentimax.svg";
-import Dentrix from "../../assets/dentrix.svg";
-import DentrixAscend from "../../assets/DentrixAscend.svg";
-import Dolphin from "../../assets/dolphin.svg";
-import Eaglesoft from "../../assets/Eaglesoft.svg";
-import OpenDental from "../../assets/Open Dental.svg";
 
-const ALL_LOGOS = [
-  Carestack,
-  Cloud9,
-  Curve,
-  Denticon,
-  Dentimax,
-  Dentrix,
-  DentrixAscend,
-  Dolphin,
-  Eaglesoft,
-  OpenDental,
+// Dynamic imports — partner SVGs (~2MB+) stay out of the initial bundle
+// until the Stack section is near the viewport.
+const LOGO_LOADERS = [
+  () => import("../../assets/Carestack.svg"),
+  () => import("../../assets/Cloud 9.svg"),
+  () => import("../../assets/Curve.svg"),
+  () => import("../../assets/Denticon.svg"),
+  () => import("../../assets/Dentimax.svg"),
+  () => import("../../assets/dentrix.svg"),
+  () => import("../../assets/DentrixAscend.svg"),
+  () => import("../../assets/dolphin.svg"),
+  () => import("../../assets/Eaglesoft.svg"),
+  () => import("../../assets/Open Dental.svg"),
 ];
 
 // Every column is padded out to the same unique-logo count before it's
@@ -32,12 +25,29 @@ const ALL_LOGOS = [
 // in the logo list, so they feel varied but none of them "run out" early.
 const UNIQUE_PER_COLUMN = 7;
 
-function buildColumnLogos(startIndex) {
+function buildColumnLogos(allLogos, startIndex) {
   const list = [];
   for (let i = 0; i < UNIQUE_PER_COLUMN; i++) {
-    list.push(ALL_LOGOS[(startIndex + i) % ALL_LOGOS.length]);
+    list.push(allLogos[(startIndex + i) % allLogos.length]);
   }
   return list;
+}
+
+function usePartnerLogos(enabled) {
+  const [logos, setLogos] = useState(null);
+
+  useEffect(() => {
+    if (!enabled || logos) return;
+    let cancelled = false;
+    Promise.all(LOGO_LOADERS.map((load) => load())).then((mods) => {
+      if (!cancelled) setLogos(mods.map((m) => m.default));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [enabled, logos]);
+
+  return logos;
 }
 
 // px/second — kept constant across columns so every column scrolls at the
@@ -47,13 +57,13 @@ const PX_PER_SECOND = 26;
 const CARD_HEIGHT_PX = 112; // approx card height + gap, used only to size duration
 const TRACK_DURATION = Math.round((UNIQUE_PER_COLUMN * CARD_HEIGHT_PX) / PX_PER_SECOND);
 
-const COLUMNS = [
-  { logos: buildColumnLogos(0), direction: "up" },
-  { logos: buildColumnLogos(3), direction: "down" },
-  { logos: buildColumnLogos(6), direction: "up" },
-  { logos: buildColumnLogos(2), direction: "down" },
-  { logos: buildColumnLogos(5), direction: "up" },
-  { logos: buildColumnLogos(8), direction: "down" },
+const COLUMN_META = [
+  { start: 0, direction: "up" },
+  { start: 3, direction: "down" },
+  { start: 6, direction: "up" },
+  { start: 2, direction: "down" },
+  { start: 5, direction: "up" },
+  { start: 8, direction: "down" },
 ];
 
 // How many columns show at each breakpoint. Hidden columns are simply not
@@ -193,7 +203,18 @@ function LogoCard({ logo }) {
 
 export default function LogoStream() {
   const sectionRef = useRef(null);
+  // Prefetch logos well before the slide is focused (sticky stack).
+  const nearView = useInView(sectionRef, { once: true, margin: "600px 0px" });
   const inView = useInView(sectionRef, { once: true, margin: "-80px" });
+  const logos = usePartnerLogos(nearView);
+
+  const columns = useMemo(() => {
+    if (!logos) return null;
+    return COLUMN_META.map((meta) => ({
+      logos: buildColumnLogos(logos, meta.start),
+      direction: meta.direction,
+    }));
+  }, [logos]);
 
   return (
     <div
@@ -230,20 +251,26 @@ export default function LogoStream() {
         </header>
 
         <div className="ls-columns flex gap-4 md:gap-5">
-          {COLUMNS.map((col, i) => (
-            <Column
-              key={i}
-              logos={col.logos}
-              direction={col.direction}
-              visibility={COLUMN_VISIBILITY[i]}
-            />
-          ))}
+          {columns
+            ? columns.map((col, i) => (
+                <Column
+                  key={i}
+                  logos={col.logos}
+                  direction={col.direction}
+                  visibility={COLUMN_VISIBILITY[i]}
+                />
+              ))
+            : COLUMN_VISIBILITY.map((visibility, i) => (
+                <div
+                  key={i}
+                  className={`${visibility} relative flex-1 min-w-0 h-full`}
+                  aria-hidden
+                />
+              ))}
         </div>
       </div>
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-
         .ls-section {
           --ls-nav-h: var(--page-nav-h, 80px);
           height: calc(100svh - var(--ls-nav-h));

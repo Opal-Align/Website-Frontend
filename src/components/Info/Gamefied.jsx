@@ -473,7 +473,6 @@ export default function SpaceRacer() {
   return (
     <div style={{ position: "absolute", inset: 0, fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400&family=Bebas+Neue&display=swap');
 
         @keyframes craftFloat {
           0%, 100% { transform: translateY(0px); }

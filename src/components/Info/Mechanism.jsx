@@ -411,7 +411,6 @@ export default function MechanismSection() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap');
 
         /* Mobile: single column stack — header → orbit → cards */
         .ms-layout-mobile  { display: flex; flex-direction: column; gap: clamp(20px, 4vh, 36px); }

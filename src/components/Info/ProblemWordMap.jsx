@@ -442,7 +442,6 @@ export default function ProblemWordMap() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap');
 
         .pwm-section {
           --pwm-nav-h: var(--page-nav-h, 80px);
@@ -556,7 +555,7 @@ export default function ProblemWordMap() {
                 animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               >
-                The structural problem
+                The Structural Problem
               </motion.span>
               <motion.span
                 className="pwm-hl-bold"
@@ -564,7 +563,7 @@ export default function ProblemWordMap() {
                 animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
                 transition={{ duration: 0.85, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
               >
-                The gaps you can't see.
+                THE GAPS YOU CAN'T SEE.
               </motion.span>
               <motion.span
                 className="pwm-hl-muted"
@@ -572,7 +571,7 @@ export default function ProblemWordMap() {
                 animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.75, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
               >
-                The revenue you're losing.
+                The Revenue You're Losing.
               </motion.span>
             </div>
           </div>

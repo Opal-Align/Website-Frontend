@@ -93,6 +93,8 @@ export default function Navbar() {
                 src={opalGosLogo}
                 alt="OPAL gOS"
                 className="nav-logo-glow h-7 w-auto select-none"
+                fetchPriority="high"
+                decoding="async"
                 draggable={false}
               />
             </button>
@@ -130,6 +132,8 @@ export default function Navbar() {
               src={opalGosLogo}
               alt="OPAL gOS"
               className="nav-logo-glow h-7 w-auto select-none"
+              fetchPriority="high"
+              decoding="async"
               draggable={false}
             />
           </button>
