@@ -1,7 +1,10 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import Navbar from "./Navbar/Navbar";
 import ScrollHero from "./HomeHero/ScrollHero";
-import FiveStepLoop from "./Info/FiveStepLoop.jsx";
+import FiveStepLoop, {
+  FiveStepLoopOrbit,
+  FiveStepLoopCards,
+} from "./Info/FiveStepLoop.jsx";
 import { NAV_HEIGHT } from "./Navbar/navigationConfig";
 
 /* Below-fold sections — code-split so first paint only pays for hero + nav.
@@ -72,7 +75,7 @@ export default function HomePageLayout() {
   // Truncate ref slots when switching breakpoint so snapPoints doesn't
   // keep phantom entries. Does not rebind scroll listeners.
   useEffect(() => {
-    const n = isMobile ? 7 : 6;
+    const n = isMobile ? 8 : 6;
     sectionRefs.current = sectionRefs.current.slice(0, n);
   }, [isMobile]);
 
@@ -572,28 +575,30 @@ export default function HomePageLayout() {
             </Suspense>
           </div>
 
-          <div className="home-slide" ref={setSectionRef(2)} data-card-scroll="none" style={{ ["--slide-z"]: 3, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
-            <FiveStepLoop />
-          </div>
-
           {isMobile ? (
             <>
+              <div className="home-slide" ref={setSectionRef(2)} data-card-scroll="none" style={{ ["--slide-z"]: 3, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+                <FiveStepLoopOrbit />
+              </div>
               <div className="home-slide" ref={setSectionRef(3)} data-card-scroll="none" style={{ ["--slide-z"]: 4, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+                <FiveStepLoopCards />
+              </div>
+              <div className="home-slide" ref={setSectionRef(4)} data-card-scroll="none" style={{ ["--slide-z"]: 5, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
                 <Suspense fallback={<SlideFallback />}>
                   <ImpactNarrative />
                 </Suspense>
               </div>
-              <div className="home-slide" ref={setSectionRef(4)} data-card-scroll="none" style={{ ["--slide-z"]: 5, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+              <div className="home-slide" ref={setSectionRef(5)} data-card-scroll="none" style={{ ["--slide-z"]: 6, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
                 <Suspense fallback={<SlideFallback />}>
                   <ImpactMetrics />
                 </Suspense>
               </div>
-              <div className="home-slide" ref={setSectionRef(5)} data-card-scroll="none" style={{ ["--slide-z"]: 6, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+              <div className="home-slide" ref={setSectionRef(6)} data-card-scroll="none" style={{ ["--slide-z"]: 7, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
                 <Suspense fallback={<SlideFallback />}>
                   <LogoStream />
                 </Suspense>
               </div>
-              <div className="home-slide" ref={setSectionRef(6)} style={{ ["--slide-z"]: 7, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+              <div className="home-slide" ref={setSectionRef(7)} style={{ ["--slide-z"]: 8, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
                 <Suspense fallback={<SlideFallback />}>
                   <TestimonialSection />
                 </Suspense>
@@ -601,6 +606,9 @@ export default function HomePageLayout() {
             </>
           ) : (
             <>
+              <div className="home-slide" ref={setSectionRef(2)} style={{ ["--slide-z"]: 3, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+                <FiveStepLoop />
+              </div>
               <div className="home-slide" ref={setSectionRef(3)} data-card-scroll="auto" style={{ ["--slide-z"]: 4, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
                 <Suspense fallback={<SlideFallback />}>
                   <Processes />
