@@ -221,11 +221,11 @@ export default function LogoStream() {
       id="stack"
       ref={sectionRef}
       className="ls-section relative w-full"
-      style={{ background: "#07080D", scrollMarginTop: "var(--page-nav-h, 80px)" }}
+      style={{ background: "#0a0a0a", scrollMarginTop: "var(--page-nav-h, 80px)" }}
     >
       {/* Edge fades, top & bottom, so columns appear to scroll into the void */}
-      <div className="pointer-events-none absolute top-0 left-0 w-full h-16 md:h-24 z-10" style={{ background: "linear-gradient(to bottom, #07080D, transparent)" }} />
-      <div className="pointer-events-none absolute bottom-0 left-0 w-full h-16 md:h-24 z-10" style={{ background: "linear-gradient(to top, #07080D, transparent)" }} />
+      <div className="pointer-events-none absolute top-0 left-0 w-full h-16 md:h-24 z-10" style={{ background: "linear-gradient(to bottom, #0a0a0a, transparent)" }} />
+      <div className="pointer-events-none absolute bottom-0 left-0 w-full h-16 md:h-24 z-10" style={{ background: "linear-gradient(to top, #0a0a0a, transparent)" }} />
 
       <div className="ls-inner relative mx-auto max-w-6xl px-4 sm:px-6">
         <header className="ls-header">
@@ -319,11 +319,11 @@ export default function LogoStream() {
         .ls-hl-bold {
           display: block;
           width: 100%;
-          font-size: clamp(26px, 4.2vw, 44px);
-          font-weight: 800;
-          letter-spacing: -0.03em;
-          color: #fff;
-          line-height: 1.06;
+          font-size: var(--page-hl-bold-size);
+          font-weight: var(--page-hl-bold-weight);
+          letter-spacing: var(--page-hl-bold-tracking);
+          color: var(--page-hl-bold-color);
+          line-height: var(--page-hl-bold-lh);
           white-space: nowrap;
         }
 
@@ -345,11 +345,11 @@ export default function LogoStream() {
           width: 100%;
         }
         .ls-tagline-prefix {
-          font-size: clamp(17px, 2.6vw, 26px);
-          font-weight: 600;
-          letter-spacing: -0.02em;
-          color: rgba(255,255,255,0.48);
-          line-height: 1.14;
+          font-size: var(--page-hl-muted-size);
+          font-weight: var(--page-hl-muted-weight);
+          letter-spacing: var(--page-hl-muted-tracking);
+          color: var(--page-hl-muted-color);
+          line-height: var(--page-hl-muted-lh);
           white-space: nowrap;
           flex-shrink: 0;
         }
@@ -365,10 +365,10 @@ export default function LogoStream() {
           visibility: hidden;
           pointer-events: none;
           white-space: nowrap;
-          font-size: clamp(17px, 2.6vw, 26px);
+          font-size: var(--page-hl-muted-size);
           font-weight: 700;
-          letter-spacing: -0.02em;
-          line-height: 1.14;
+          letter-spacing: var(--page-hl-muted-tracking);
+          line-height: var(--page-hl-muted-lh);
           padding: 0 4px;
         }
         /* Overlay that fills the rotating box and clips the sliding spans */
@@ -384,11 +384,11 @@ export default function LogoStream() {
         .ls-tagline-line {
           position: absolute;
           white-space: nowrap;
-          font-size: clamp(17px, 2.6vw, 26px);
+          font-size: var(--page-hl-muted-size);
           font-weight: 700;
-          letter-spacing: -0.02em;
-          color: #fff;
-          line-height: 1.14;
+          letter-spacing: var(--page-hl-muted-tracking);
+          color: var(--page-hl-bold-color);
+          line-height: var(--page-hl-muted-lh);
         }
 
         @media (max-width: 600px) {
@@ -401,7 +401,6 @@ export default function LogoStream() {
           .ls-columns { min-height: 320px; height: 380px; }
           .ls-header { margin-bottom: 24px; padding: 0 14px; }
           .ls-heading { gap: 8px; width: 100%; }
-          .ls-hl-bold { font-size: clamp(22px, 6.8vw, 30px); }
           .ls-tagline-wrap { max-width: 100%; }
           /* On mobile, wrap so rotating part drops to its own centred line */
           .ls-tagline-row {
@@ -409,9 +408,7 @@ export default function LogoStream() {
             row-gap: 2px;
             justify-content: center;
           }
-          .ls-tagline-prefix { font-size: clamp(12px, 3.4vw, 16px); white-space: nowrap; }
-          .ls-tagline-sizer,
-          .ls-tagline-line { font-size: clamp(12px, 3.4vw, 16px); }
+          .ls-tagline-prefix { white-space: nowrap; }
         }
 
         @media (prefers-reduced-motion: reduce) {

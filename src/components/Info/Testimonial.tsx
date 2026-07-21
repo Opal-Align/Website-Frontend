@@ -33,7 +33,7 @@ const testimonials: Testimonial[] = [
   },
 ];
 
-const NAVY = "#07080D";
+const NAVY = "#0a0a0a";
 const OPAL_LIGHT_GRADIENT =
   "linear-gradient(120deg, #FFFFFF 0%, #F8FAFC 30%, #F3F4F6 65%, #FFFFFF 100%)";
 const gradientText: React.CSSProperties = {
@@ -260,7 +260,7 @@ const TestimonialSection = () => {
       id="testimonials"
       className="tm-section relative flex flex-col overflow-hidden"
       style={{
-        backgroundColor: "transparent",
+        backgroundColor: "#0a0a0a",
         scrollMarginTop: "var(--page-nav-h, 80px)",
       }}
     >
@@ -538,20 +538,20 @@ const TestimonialSection = () => {
 
         .tm-hl-bold {
           display: block;
-          font-size: clamp(26px, 4.2vw, 44px);
-          font-weight: 800;
-          letter-spacing: -0.03em;
-          color: #fff;
-          line-height: 1.06;
+          font-size: var(--page-hl-bold-size);
+          font-weight: var(--page-hl-bold-weight);
+          letter-spacing: var(--page-hl-bold-tracking);
+          color: var(--page-hl-bold-color);
+          line-height: var(--page-hl-bold-lh);
         }
 
         .tm-hl-muted {
           display: block;
-          font-size: clamp(17px, 2.6vw, 26px);
-          font-weight: 600;
-          letter-spacing: -0.02em;
-          color: rgba(255,255,255,0.48);
-          line-height: 1.14;
+          font-size: var(--page-hl-muted-size);
+          font-weight: var(--page-hl-muted-weight);
+          letter-spacing: var(--page-hl-muted-tracking);
+          color: var(--page-hl-muted-color);
+          line-height: var(--page-hl-muted-lh);
         }
 
         @media (max-width: 600px) {
@@ -593,16 +593,6 @@ const TestimonialSection = () => {
             padding: 0 4px;
           }
           .tm-heading { gap: 8px; }
-          .tm-hl-bold {
-            font-size: clamp(21px, 6.2vw, 26px);
-            letter-spacing: -0.02em;
-          }
-          .tm-hl-muted {
-            font-size: clamp(11px, 3vw, 13px);
-            color: rgba(255,255,255,0.45);
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-          }
         }
       `}</style>
     </section>

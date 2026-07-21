@@ -45,11 +45,11 @@ const EASE         = [0.22, 1, 0.36, 1];
 
 /* Vertical headline ticker — same language as LogoStream tagline, on Y */
 const HEADLINE_LINES = [
-  "leakages identified",
-  "workflows automated",
-  "correspondence throttled",
-  "exceptions managed",
-  "continuous recovery",
+  "Leakages Identified",
+  "Workflows Automated",
+  "Correspondence Throttled",
+  "Exceptions Managed",
+  "Continuous Recovery",
 ];
 
 const headlineVariants = {
@@ -105,7 +105,7 @@ function HeadlineTicker({ active }) {
 const OPAL_LIGHT_GRADIENT =
   "linear-gradient(120deg, #FFFFFF 0%, #F8FAFC 30%, #F3F4F6 65%, #FFFFFF 100%)";
 const OPAL_SOFT_GLOW = "rgba(255,255,255,0.28)";
-const BG = "#0a0a0a";
+const BG = "#0a0a0a"; // matches --page-bg / ProblemWordMap
 const ICON_BOX = 140; // px — square icon tile
 const ICON_INNER = 70; // px — icon asset size
 const CARD_ICON_INNER = 60;
@@ -403,22 +403,25 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
           align-items: center;
           gap: clamp(8px, 1.2vh, 14px);
         }
-        .pf-hl-bold {
-          display: block;
-          font-size: clamp(22px, 3.4vw, 42px);
-          font-weight: 800;
-          letter-spacing: -0.03em;
-          color: rgba(255,255,255,0.48);
-          line-height: 1.06;
-          white-space: nowrap;
-        }
+        /* Main title — matches ProblemWordMap .hl-bold */
         .pf-hl-muted {
           display: block;
-          font-size: clamp(32px, 5vw, 60px);
-          font-weight: 700;
-          letter-spacing: -0.025em;
-          color: #fff;
-          line-height: 1.08;
+          font-size: var(--page-hl-bold-size);
+          font-weight: var(--page-hl-bold-weight);
+          letter-spacing: var(--page-hl-bold-tracking);
+          color: var(--page-hl-bold-color);
+          line-height: var(--page-hl-bold-lh);
+          text-transform: uppercase;
+        }
+        /* Rotating subheader — matches ProblemWordMap .hl-muted */
+        .pf-hl-bold {
+          display: block;
+          font-size: var(--page-hl-muted-size);
+          font-weight: var(--page-hl-muted-weight);
+          letter-spacing: var(--page-hl-muted-tracking);
+          color: var(--page-hl-muted-color);
+          line-height: var(--page-hl-muted-lh);
+          white-space: nowrap;
         }
 
         /* Vertical ticker (LogoStream tagline, on Y — scrolls upward) */
@@ -427,7 +430,7 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
           max-width: min(1100px, 100%);
           margin: 0 auto;
           overflow: hidden;
-          height: clamp(44px, 6vh, 60px);
+          height: clamp(32px, 4.2vh, 40px);
           padding: 0 8px;
           box-sizing: border-box;
           display: flex;
@@ -651,19 +654,14 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
           }
           .pf-heading { gap: 14px; }   /* was 8px — more gap between subheader and header */
           .pf-hl-bold {
-            font-size: clamp(18px, 5.2vw, 24px);
             white-space: nowrap;
           }
           .pf-headline-ticker {
-            height: clamp(36px, 8.5vw, 46px);
+            height: clamp(28px, 6.5vw, 36px);
             max-width: 100%;
             padding: 0 4px;
           }
           .pf-headline-line { padding: 0 4px; }
-          .pf-hl-muted {
-            font-size: clamp(26px, 7.5vw, 34px);
-            color: #fff;
-          }
 
           /* ── Hide the 4-tab icon row on mobile ── */
           .pf-tabs { display: none !important; }

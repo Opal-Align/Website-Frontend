@@ -207,65 +207,59 @@ export default function Footer() {
         </defs>
       </svg>
 
-      <div className="ft-header">
-        <div className="ft-heading">
-          <motion.span
-            className="ft-hl-bold"
-            initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
-            animate={headerVisible ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
-            transition={{ duration: 0.85, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
-          >
-            YOUR NEXT STEP
-          </motion.span>
-          
+      <div className="ft-main">
+        <div className="ft-header">
+          <div className="ft-heading">
+            <motion.span
+              className="ft-hl-bold"
+              initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
+              animate={headerVisible ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+              transition={{ duration: 0.85, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+            >
+              YOUR NEXT STEP
+            </motion.span>
+            
+          </div>
         </div>
+
+        {/* CTA copy */}
+        <div className="ft-cta-copy space-y-2">
+          
+          <p className="text-xs md:text-sm">
+            <Typewriter
+              text="Request your invitation now before slots fill up."
+              started={typewriterStarted}
+              delay={s.cta2.d}
+              speed={s.cta2.sp}
+              style={{ ...gradientText, opacity: 0.6 }}
+            />
+          </p>
+        </div>
+
+        {/* Join button */}
+        <Link to="/contact-us" className="ft-join">
+          <motion.button
+            className="px-7 md:px-9 py-3 rounded-full flex items-center justify-center gap-3 transition-all cursor-pointer"
+            style={{
+              border: "1px solid transparent",
+              background: `linear-gradient(#000, #000) padding-box, ${OPAL_GRADIENT} border-box`,
+            }}
+            whileHover={{ opacity: 0.8 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: typewriterStarted ? 1 : 0 }}
+            transition={{ delay: typewriterStarted ? s.btn : 0, duration: 0.5 }}
+          >
+            <span style={gradientText}>Join Today</span>
+            <span className="flex gap-1.5">
+              <span className="w-2 h-2 rounded-full" style={{ background: OPAL_GRADIENT }} />
+              <span className="w-2 h-2 rounded-full" style={{ background: OPAL_GRADIENT }} />
+            </span>
+          </motion.button>
+        </Link>
       </div>
 
-      {/* CTA copy */}
-      <div className="ft-cta-copy space-y-2">
-        <h2 className="text-base md:text-lg font-medium">
-          <Typewriter
-            text="Demo availability is limited."
-            started={typewriterStarted}
-            delay={s.cta1.d}
-            speed={s.cta1.sp}
-            style={gradientText}
-          />
-        </h2>
-        <p className="text-xs md:text-sm">
-          <Typewriter
-            text="Request your invitation now before slots fill up."
-            started={typewriterStarted}
-            delay={s.cta2.d}
-            speed={s.cta2.sp}
-            style={{ ...gradientText, opacity: 0.6 }}
-          />
-        </p>
-      </div>
-
-      {/* Join button */}
-      <Link to="/contact-us" className="ft-join">
-        <motion.button
-          className="px-7 md:px-9 py-3 rounded-full flex items-center justify-center gap-3 transition-all cursor-pointer"
-          style={{
-            border: "1px solid transparent",
-            background: `linear-gradient(#000, #000) padding-box, ${OPAL_GRADIENT} border-box`,
-          }}
-          whileHover={{ opacity: 0.8 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: typewriterStarted ? 1 : 0 }}
-          transition={{ delay: typewriterStarted ? s.btn : 0, duration: 0.5 }}
-        >
-          <span style={gradientText}>Join Today</span>
-          <span className="flex gap-1.5">
-            <span className="w-2 h-2 rounded-full" style={{ background: OPAL_GRADIENT }} />
-            <span className="w-2 h-2 rounded-full" style={{ background: OPAL_GRADIENT }} />
-          </span>
-        </motion.button>
-      </Link>
-
-      {/* Contact row — the credits' fine print */}
+      {/* Contact row — pinned to the lower edge of the footer */}
       <div className="ft-contact-row">
         <a
           href="tel:8779966725"
@@ -392,6 +386,23 @@ export default function Footer() {
       <>
         <style>{`
 
+          .ft-credits {
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-sizing: border-box;
+          }
+          .ft-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+          }
           .ft-header {
             text-align: center;
             flex-shrink: 0;
@@ -411,36 +422,37 @@ export default function Footer() {
           }
           .ft-hl-bold {
             display: block;
-            font-size: clamp(26px, 4.2vw, 44px);
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            color: #fff;
-            line-height: 1.06;
+            font-size: var(--page-hl-bold-size);
+            font-weight: var(--page-hl-bold-weight);
+            letter-spacing: var(--page-hl-bold-tracking);
+            color: var(--page-hl-bold-color);
+            line-height: var(--page-hl-bold-lh);
           }
           .ft-hl-muted {
             display: block;
-            font-size: clamp(17px, 2.6vw, 26px);
-            font-weight: 600;
-            letter-spacing: -0.02em;
-            color: rgba(255,255,255,0.48);
-            line-height: 1.14;
+            font-size: var(--page-hl-muted-size);
+            font-weight: var(--page-hl-muted-weight);
+            letter-spacing: var(--page-hl-muted-tracking);
+            color: var(--page-hl-muted-color);
+            line-height: var(--page-hl-muted-lh);
           }
           .ft-cta-copy { margin-bottom: clamp(20px, 3vh, 32px); max-width: 34rem; }
-          .ft-join { margin-bottom: clamp(28px, 4.5vh, 48px); }
+          .ft-join { margin-bottom: 0; }
           .ft-contact-row {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: clamp(14px, 2vh, 18px);
+            flex-shrink: 0;
+            margin-top: auto;
+            padding-top: clamp(28px, 5vh, 48px);
+            padding-bottom: clamp(8px, 1.5vh, 16px);
           }
           .ft-dot { display: none; }
           @media (max-width: 600px) {
             .ft-header { margin-bottom: 20px; padding: 0 14px; }
             .ft-heading { gap: 8px; }
-            .ft-hl-bold { font-size: clamp(22px, 6.8vw, 30px); }
-            .ft-hl-muted { font-size: clamp(14px, 4.2vw, 18px); color: rgba(255,255,255,0.52); }
             .ft-cta-copy { margin-bottom: 22px; }
-            .ft-join { margin-bottom: 30px; }
           }
         `}</style>
         <div ref={mobileRef}>
@@ -451,7 +463,7 @@ export default function Footer() {
             </video>
             <div className="absolute inset-0 bg-black/65" />
           </div>
-          <div className="relative z-10 flex flex-col justify-between min-h-[50vh]">
+          <div className="relative z-10 flex flex-col flex-1 min-h-[50vh]">
             {footerContent}
           </div>
         </footer>
@@ -466,6 +478,23 @@ export default function Footer() {
     <>
       <style>{`
 
+        .ft-credits {
+          flex: 1;
+          min-height: 0;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          box-sizing: border-box;
+        }
+        .ft-main {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+        }
         .ft-header {
           text-align: center;
           flex-shrink: 0;
@@ -485,28 +514,32 @@ export default function Footer() {
         }
         .ft-hl-bold {
           display: block;
-          font-size: clamp(26px, 4.2vw, 44px);
-          font-weight: 800;
-          letter-spacing: -0.03em;
-          color: #fff;
-          line-height: 1.06;
+          font-size: var(--page-hl-bold-size);
+          font-weight: var(--page-hl-bold-weight);
+          letter-spacing: var(--page-hl-bold-tracking);
+          color: var(--page-hl-bold-color);
+          line-height: var(--page-hl-bold-lh);
         }
         .ft-hl-muted {
           display: block;
-          font-size: clamp(17px, 2.6vw, 26px);
-          font-weight: 600;
-          letter-spacing: -0.02em;
-          color: rgba(255,255,255,0.48);
-          line-height: 1.14;
+          font-size: var(--page-hl-muted-size);
+          font-weight: var(--page-hl-muted-weight);
+          letter-spacing: var(--page-hl-muted-tracking);
+          color: var(--page-hl-muted-color);
+          line-height: var(--page-hl-muted-lh);
         }
         .ft-cta-copy { margin-bottom: clamp(24px, 3.5vh, 36px); max-width: 34rem; }
-        .ft-join { margin-bottom: clamp(36px, 5.5vh, 56px); }
+        .ft-join { margin-bottom: 0; }
         .ft-contact-row {
           display: flex;
           flex-wrap: wrap;
           align-items: center;
           justify-content: center;
           gap: clamp(18px, 2.4vw, 40px);
+          flex-shrink: 0;
+          margin-top: auto;
+          padding-top: clamp(32px, 6vh, 64px);
+          padding-bottom: clamp(12px, 2vh, 24px);
         }
         .ft-dot {
           width: 3px;
@@ -518,8 +551,6 @@ export default function Footer() {
         @media (max-width: 600px) {
           .ft-header { margin-bottom: 20px; padding: 0 14px; }
           .ft-heading { gap: 8px; }
-          .ft-hl-bold { font-size: clamp(22px, 6.8vw, 30px); }
-          .ft-hl-muted { font-size: clamp(14px, 4.2vw, 18px); color: rgba(255,255,255,0.52); }
         }
       `}</style>
       <div className="relative w-full">
@@ -567,10 +598,9 @@ export default function Footer() {
               </button>
             </div>
 
-            {/* Footer content — centred vertically in remaining space, nudged
-                up slightly so it doesn't feel dead-centre like a modal */}
+            {/* Footer content — headline/CTA centered; contact row pinned low */}
             <motion.div
-              className="relative z-10 flex flex-col flex-1 justify-center pb-[4vh]"
+              className="relative z-10 flex flex-col flex-1 min-h-0"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}

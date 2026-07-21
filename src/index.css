@@ -1,5 +1,29 @@
 @import "tailwindcss";
 
+/* ── Shared page heading system (source: ProblemWordMap) ─────────────── */
+:root {
+  --page-bg: #0a0a0a;
+  --page-font: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --page-hl-bold-size: clamp(26px, 4.2vw, 44px);
+  --page-hl-bold-weight: 800;
+  --page-hl-bold-tracking: -0.03em;
+  --page-hl-bold-color: #fff;
+  --page-hl-bold-lh: 1.06;
+  --page-hl-muted-size: clamp(17px, 2.6vw, 26px);
+  --page-hl-muted-weight: 600;
+  --page-hl-muted-tracking: -0.02em;
+  --page-hl-muted-color: rgba(255, 255, 255, 0.48);
+  --page-hl-muted-lh: 1.14;
+}
+
+@media (max-width: 600px) {
+  :root {
+    --page-hl-bold-size: clamp(22px, 6.8vw, 30px);
+    --page-hl-muted-size: clamp(14px, 4.2vw, 18px);
+    --page-hl-muted-color: rgba(255, 255, 255, 0.52);
+  }
+}
+
 html,
 body {
   overflow-x: clip;

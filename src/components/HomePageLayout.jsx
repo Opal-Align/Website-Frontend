@@ -26,7 +26,7 @@ const PlatformSection = lazy(() => import("./Info/PlatformSection.jsx"));
    Scroll controller unchanged from 2e84e8a.
    Desktop: full FiveStepLoop + Processes.
    Mobile:  Loop → orbit + cards; Impact → narrative + metrics. ─ */
-const SLIDE_BG = "#07080D";
+const SLIDE_BG = "#0a0a0a";
 const OVERFLOW_EPS = 48;
 const MOBILE_BP = 767;
 
@@ -499,7 +499,7 @@ export default function HomePageLayout() {
           inset: 0;
           z-index: 0;
           pointer-events: none;
-          background: #07080D;
+          background: #0a0a0a;
         }
         .home-glow-inner {
           position: sticky;

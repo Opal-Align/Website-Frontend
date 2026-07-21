@@ -1,7 +1,72 @@
 "use client";
 
 import { useRef, useEffect, useState, useCallback } from "react";
-import { useInView, motion } from "framer-motion";
+import { useInView, motion, AnimatePresence } from "framer-motion";
+
+/* ─── Rotating problem sentences (header ticker) ────────────────────────── */
+const PROBLEM_SENTENCES = [
+  "Your practice is leaking revenue. You just can't see where.",
+  "Your practice billed it. Your A/R aged it into oblivion.",
+  "Your practice isn't losing patients. It's losing touch with them.",
+  "Your practice has capacity. Your demand says otherwise.",
+];
+
+const sentenceVariants = {
+  enter: {
+    x: "-100%",
+    opacity: 0,
+    filter: "blur(8px)",
+  },
+  center: {
+    x: "0%",
+    opacity: 1,
+    filter: "blur(0px)",
+    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
+  },
+  exit: {
+    x: "100%",
+    opacity: 0,
+    filter: "blur(6px)",
+    transition: { duration: 0.45, ease: [0.55, 0, 0.78, 0] },
+  },
+};
+
+function ProblemSentenceTicker({ active }) {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    if (!active) return;
+    const timer = setInterval(() => {
+      setIndex((i) => (i + 1) % PROBLEM_SENTENCES.length);
+    }, 3600);
+    return () => clearInterval(timer);
+  }, [active]);
+
+  return (
+    <div className="pwm-ticker">
+      {/* Invisible sizers lock width/height to the tallest sentence */}
+      {PROBLEM_SENTENCES.map((line, i) => (
+        <span key={i} className="pwm-ticker-sizer" aria-hidden>
+          {line}
+        </span>
+      ))}
+      <div className="pwm-ticker-inner">
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.span
+            key={index}
+            className="pwm-ticker-line"
+            variants={sentenceVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+          >
+            {PROBLEM_SENTENCES[index]}
+          </motion.span>
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
 
 /* ─── Word pool ─────────────────────────────────────────────────────────── */
 const WORDS = [
@@ -446,7 +511,7 @@ export default function ProblemWordMap() {
         .pwm-section {
           --pwm-nav-h: var(--page-nav-h, 80px);
           scroll-margin-top: var(--pwm-nav-h);
-          background: #0a0a0a;
+          background: var(--page-bg, #0a0a0a);
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
           font-weight: 300; color: #fff;
           padding: 0;
@@ -477,19 +542,65 @@ export default function ProblemWordMap() {
         }
         .pwm-hl-bold {
           display: block;
-          font-size: clamp(26px, 4.2vw, 44px);
-          font-weight: 800;
-          letter-spacing: -0.03em;
-          color: #fff;
-          line-height: 1.06;
+          font-size: var(--page-hl-bold-size);
+          font-weight: var(--page-hl-bold-weight);
+          letter-spacing: var(--page-hl-bold-tracking);
+          color: var(--page-hl-bold-color);
+          line-height: var(--page-hl-bold-lh);
         }
         .pwm-hl-muted {
           display: block;
-          font-size: clamp(17px, 2.6vw, 26px);
+          font-size: var(--page-hl-muted-size);
+          font-weight: var(--page-hl-muted-weight);
+          letter-spacing: var(--page-hl-muted-tracking);
+          color: var(--page-hl-muted-color);
+          line-height: var(--page-hl-muted-lh);
+        }
+        .pwm-ticker-motion {
+          width: 100%;
+          align-self: stretch;
+        }
+        .pwm-ticker {
+          display: grid;
+          width: 100%;
+          max-width: min(780px, 100%);
+          margin: clamp(2px, 0.5vh, 6px) auto 0;
+          overflow: hidden;
+        }
+        .pwm-ticker-sizer {
+          grid-area: 1 / 1;
+          visibility: hidden;
+          pointer-events: none;
+          text-align: center;
+          font-size: clamp(15px, 2.1vw, 22px);
           font-weight: 600;
           letter-spacing: -0.02em;
-          color: rgba(255,255,255,0.48);
-          line-height: 1.14;
+          line-height: 1.25;
+          padding: 0 4px;
+        }
+        .pwm-ticker-inner {
+          grid-area: 1 / 1;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          -webkit-mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%);
+        }
+        .pwm-ticker-line {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          font-size: clamp(15px, 2.1vw, 22px);
+          font-weight: 600;
+          letter-spacing: -0.02em;
+          color: rgba(255,255,255,0.72);
+          line-height: 1.25;
+          padding: 0 4px;
         }
         .pwm-map-wrap {
           position: relative; width: 100%;
@@ -525,12 +636,14 @@ export default function ProblemWordMap() {
           .pwm-inner { padding: 1.25rem 1rem 1rem; }
           .pwm-header { margin-bottom: 16px; padding: 0 14px; }
           .pwm-heading { gap: 8px; }
-          .pwm-hl-bold { font-size: clamp(22px, 6.8vw, 30px); }
-          .pwm-hl-muted { font-size: clamp(14px, 4.2vw, 18px); color: rgba(255,255,255,0.52); }
+          .pwm-ticker { max-width: 100%; }
+          .pwm-ticker-sizer,
+          .pwm-ticker-line { font-size: clamp(13px, 3.6vw, 16px); }
           .pwm-map-wrap { min-height: 0; margin-top: 1rem; overflow: hidden; }
         }
         @media (prefers-reduced-motion: reduce) {
           .pwm-word { transition: none !important; }
+          .pwm-ticker-line { position: relative; }
         }
       `}</style>
 
@@ -565,14 +678,14 @@ export default function ProblemWordMap() {
               >
                 THE GAPS YOU CAN'T SEE.
               </motion.span>
-              <motion.span
-                className="pwm-hl-muted"
+              <motion.div
+                className="pwm-ticker-motion"
                 initial={{ opacity: 0, y: 12 }}
                 animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.75, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
               >
-                The Revenue You're Losing.
-              </motion.span>
+                <ProblemSentenceTicker active={inView} />
+              </motion.div>
             </div>
           </div>
 

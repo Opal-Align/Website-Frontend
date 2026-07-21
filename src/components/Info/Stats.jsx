@@ -40,58 +40,6 @@ const stats = [
   },
 ];
 
-function Process() {
-  const ref = useRef(null);
-  useEffect(() => {
-    const canvas = ref.current;
-    const ctx = canvas.getContext("2d");
-    let id;
-    let stars = [];
-
-    const resize = () => {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
-      stars = Array.from({ length: Math.floor((canvas.width * canvas.height) / 2800) }, () => ({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        r: Math.random() < 0.04 ? Math.random() * 1.5 + 0.8 : Math.random() * 0.6 + 0.1,
-        base: Math.random() * 0.6 + 0.1,
-        tw: Math.random() > 0.6,
-        ph: Math.random() * Math.PI * 2,
-        sp: Math.random() * 0.5 + 0.2,
-      }));
-    };
-
-    const draw = (t) => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for (const s of stars) {
-        let a = s.base;
-        if (s.tw) a = s.base * (0.35 + 0.65 * Math.sin(t * 0.001 * s.sp + s.ph));
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,255,255,${a})`;
-        ctx.fill();
-        if (s.r > 1.2) {
-          ctx.strokeStyle = `rgba(255,255,255,${a * 0.28})`;
-          ctx.lineWidth = 0.5;
-          ctx.beginPath();
-          ctx.moveTo(s.x - s.r * 3, s.y); ctx.lineTo(s.x + s.r * 3, s.y);
-          ctx.moveTo(s.x, s.y - s.r * 3); ctx.lineTo(s.x, s.y + s.r * 3);
-          ctx.stroke();
-        }
-      }
-      id = requestAnimationFrame(draw);
-    };
-
-    resize();
-    window.addEventListener("resize", resize);
-    id = requestAnimationFrame(draw);
-    return () => { cancelAnimationFrame(id); window.removeEventListener("resize", resize); };
-  }, []);
-
-  return <canvas ref={ref} className="absolute inset-0 w-full h-full pointer-events-none" />;
-}
-
 /* ─── Animated Strikethrough ─── */
 function AnimatedStrike({ children, inView }) {
   return (
@@ -755,7 +703,7 @@ function ClientBadge({ baseOpacity = 0.85, defaultActive = false }) {
 }
 
 const stSectionStyle = {
-  backgroundColor: "transparent",
+  backgroundColor: "#0a0a0a",
   height: "calc(100svh - var(--page-nav-h, 80px))",
   minHeight: "calc(100svh - var(--page-nav-h, 80px))",
   maxHeight: "calc(100svh - var(--page-nav-h, 80px))",
@@ -790,17 +738,16 @@ function StStyles() {
       }
       .st-hl-bold {
         display: block;
-        font-size: clamp(26px, 4.2vw, 44px);
-        font-weight: 800;
-        letter-spacing: -0.03em;
-        color: #fff;
-        line-height: 1.06;
+        font-size: var(--page-hl-bold-size);
+        font-weight: var(--page-hl-bold-weight);
+        letter-spacing: var(--page-hl-bold-tracking);
+        color: var(--page-hl-bold-color);
+        line-height: var(--page-hl-bold-lh);
         white-space: nowrap;
       }
       @media (max-width: 600px) {
         .st-section { padding: 24px 0 32px !important; }
         .st-header { margin-bottom: 16px; padding: 0 14px; }
-        .st-hl-bold { font-size: clamp(22px, 6.8vw, 30px); }
       }
 
       /* Mobile metrics — vertical stack, compact heights to fit one view */
@@ -911,7 +858,6 @@ export function ImpactNarrative() {
 
   return (
     <div id="impact" className="relative st-section" style={stSectionStyle}>
-      <Process />
       <div
         ref={ref}
         className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex flex-col items-center justify-center text-center"
@@ -924,7 +870,7 @@ export function ImpactNarrative() {
               animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
               transition={{ duration: 0.85, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
             >
-              gOS in Action
+              gOS loop in Action
             </motion.span>
           </div>
         </header>
@@ -968,7 +914,6 @@ export function ImpactMetrics() {
 
   return (
     <div className="relative st-section st-metrics-fit" style={stSectionStyle}>
-      <Process />
       <div ref={ref} className="relative z-10 max-w-7xl mx-auto w-full st-metrics-wrap px-4 sm:px-6 lg:px-8">
 
         {/* Top 2 stat cards */}
@@ -1037,7 +982,6 @@ export default function Processes() {
 
   return (
     <div id="impact" className="relative st-section" style={stSectionStyle}>
-      <Process />
       <div ref={ref} className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
 
         {/* 1. Heading — "gOS in Action" is now the section's single heading */}
@@ -1049,7 +993,7 @@ export default function Processes() {
               animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
               transition={{ duration: 0.85, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
             >
-              gOS in Action
+              gOS loop in Action
             </motion.span>
           </div>
         </header>
@@ -1085,9 +1029,9 @@ export default function Processes() {
           initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.75 }}
-          className="text-left mt-8 md:mt-10"
+          className="text-center mt-8 md:mt-10"
         >
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white/45 leading-tight">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white/45 leading-tight text-center">
             They sell{" "}
             <AnimatedStrike inView={inView}>ROI</AnimatedStrike>.<br />{" "}
             We deliver <InvisibleInk active={inView} autoRevealDelay={7.2}>Realtime Operational Impact</InvisibleInk>.

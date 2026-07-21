@@ -324,12 +324,11 @@ function FslStyles() {
       }
       .fsl-hl-hero {
         display: block;
-        font-size: clamp(20px, 3.2vw, 36px);
-        font-weight: 800;
-        color: #fff;
-        text-transform: uppercase;
-        letter-spacing: -0.03em;
-        line-height: 1;
+        font-size: var(--page-hl-bold-size);
+        font-weight: var(--page-hl-bold-weight);
+        color: var(--page-hl-bold-color);
+        letter-spacing: var(--page-hl-bold-tracking);
+        line-height: var(--page-hl-bold-lh);
         max-width: 720px;
         margin: 0 auto;
       }
@@ -535,7 +534,6 @@ function FslStyles() {
         .fsl-section {
           padding: 20px 16px;
         }
-        .fsl-hl-hero { font-size: clamp(22px, 7vw, 32px); }
         .fsl-brand-opal img {
           height: clamp(24px, 8vw, 38px);
           width: auto;
@@ -659,13 +657,8 @@ export function FiveStepLoopOrbit() {
             <img src={opalLogo} alt="OPAL" />
           </div>
           <span className="fsl-presents-text">presents</span>
-          <span className="fsl-hl-hero">The Guided Operating System</span>
-          <span className="fsl-presents-text fsl-ampersand">&</span>
-          <div className="fsl-loop-row">
-            <span className="fsl-loop-text">The</span>
-            <span className="fsl-logo-gos">gOS</span>
-            <span className="fsl-loop-text">Loop</span>
-          </div>
+          <span className="fsl-hl-hero">THE gOS LOOP</span>
+          
         </div>
 
         <div ref={stageRef} className="fsl-orbit-stage">
@@ -811,13 +804,8 @@ export default function FiveStepLoop() {
             <img src={opalLogo} alt="OPAL" />
           </div>
           <span className="fsl-presents-text">presents</span>
-          <span className="fsl-hl-hero">The Guided Operating System</span>
-          <span className="fsl-presents-text fsl-ampersand">&</span>
-          <div className="fsl-loop-row">
-            <span className="fsl-loop-text">The</span>
-            <span className="fsl-logo-gos">gOS</span>
-            <span className="fsl-loop-text">Loop</span>
-          </div>
+          <span className="fsl-hl-hero">THE gOS LOOP</span>
+          
         </div>
 
         <div ref={bottomRef} className="fsl-bottom">
