@@ -78,9 +78,9 @@ const COLUMN_VISIBILITY = [
 ];
 
 const TAGLINE_LINES = [
-  { prefix: "Your Practice Management Systems.", highlight: "Unchanged." },
-  { prefix: "Your Operations.", highlight: "Transformed." },
-  { prefix: "Integrated & Interoperable", highlight: "by Design." },
+  "Your Systems Unchanged.",
+  "Live in Days, not Weeks.",
+  "Losses Reversed.",
 ];
 
 const taglineVariants = {
@@ -114,33 +114,33 @@ function TaglineTicker({ active }) {
     return () => clearInterval(timer);
   }, [active]);
 
-  const { prefix, highlight } = TAGLINE_LINES[index];
-
   return (
     <div className="ls-tagline-wrap">
-      <div className="ls-tagline-ticker">
-        <div className="ls-tagline-inner">
-          <AnimatePresence mode="popLayout" initial={false}>
-            <motion.div
-              key={index}
-              className="ls-tagline-line"
-              variants={taglineVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-            >
-              <span className="ls-tagline-prefix">{prefix}</span>
-              <span className="ls-tagline-highlight">{highlight}</span>
-            </motion.div>
-          </AnimatePresence>
+      {/* Inline row: locked prefix + rotating end */}
+      <div className="ls-tagline-row">
+        <span className="ls-tagline-prefix">The impact on Day 1,&nbsp;</span>
+        <div className="ls-tagline-rotating">
+          {/* All phrases rendered invisibly so container is as wide as the widest one */}
+          {TAGLINE_LINES.map((line, i) => (
+            <span key={i} className="ls-tagline-sizer" aria-hidden>{line}</span>
+          ))}
+          <div className="ls-tagline-inner">
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.span
+                key={index}
+                className="ls-tagline-line"
+                variants={taglineVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+              >
+                {TAGLINE_LINES[index]}
+              </motion.span>
+            </AnimatePresence>
+          </div>
         </div>
       </div>
 
-      <div className="ls-tagline-dots" aria-hidden>
-        {TAGLINE_LINES.map((_, i) => (
-          <span key={i} className={`ls-tagline-dot${i === index ? " active" : ""}`} />
-        ))}
-      </div>
     </div>
   );
 }
@@ -236,7 +236,7 @@ export default function LogoStream() {
               animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
               transition={{ duration: 0.85, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
             >
-              THE STACK
+              PRACTICES TRANSFORMED
             </motion.span>
 
             <motion.div
@@ -337,20 +337,44 @@ export default function LogoStream() {
           max-width: min(960px, 100%);
           margin: clamp(4px, 0.8vh, 10px) auto 0;
         }
-        .ls-tagline-ticker {
-          position: relative;
-          overflow: hidden;
-          width: 100%;
-          min-height: clamp(32px, 3.8vh, 44px);
-          height: clamp(32px, 3.8vh, 44px);
+        /* Inline row: static prefix sits next to the clipped rotating box */
+        .ls-tagline-row {
           display: flex;
           align-items: center;
           justify-content: center;
-        }
-        .ls-tagline-inner {
-          position: relative;
           width: 100%;
-          height: 100%;
+        }
+        .ls-tagline-prefix {
+          font-size: clamp(17px, 2.6vw, 26px);
+          font-weight: 600;
+          letter-spacing: -0.02em;
+          color: rgba(255,255,255,0.48);
+          line-height: 1.14;
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
+        /* Clipping box — sizer sets the width/height, inner overlays absolutely */
+        .ls-tagline-rotating {
+          position: relative;
+          overflow: hidden;
+          display: inline-block;
+        }
+        /* Invisible sizer: drives the container's natural width + height */
+        .ls-tagline-sizer {
+          display: block;
+          visibility: hidden;
+          pointer-events: none;
+          white-space: nowrap;
+          font-size: clamp(17px, 2.6vw, 26px);
+          font-weight: 700;
+          letter-spacing: -0.02em;
+          line-height: 1.14;
+          padding: 0 4px;
+        }
+        /* Overlay that fills the rotating box and clips the sliding spans */
+        .ls-tagline-inner {
+          position: absolute;
+          inset: 0;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -359,48 +383,12 @@ export default function LogoStream() {
         }
         .ls-tagline-line {
           position: absolute;
-          left: 0;
-          right: 0;
-          display: flex;
-          align-items: baseline;
-          justify-content: center;
-          gap: 0.28em;
           white-space: nowrap;
-          width: 100%;
-          min-width: 100%;
-          padding: 0 8px;
-          box-sizing: border-box;
-        }
-        .ls-tagline-prefix {
           font-size: clamp(17px, 2.6vw, 26px);
-          font-weight: 600;
-          letter-spacing: -0.02em;
-          color: rgba(255,255,255,0.48);
-          line-height: 1.14;
-        }
-        .ls-tagline-highlight {
-          font-size: clamp(17px, 2.6vw, 26px);
-          font-weight: 600;
+          font-weight: 700;
           letter-spacing: -0.02em;
           color: #fff;
           line-height: 1.14;
-        }
-        .ls-tagline-dots {
-          display: flex;
-          gap: 6px;
-          justify-content: center;
-          margin-top: 12px;
-        }
-        .ls-tagline-dot {
-          width: 4px;
-          height: 4px;
-          border-radius: 50%;
-          background: rgba(255,255,255,0.18);
-          transition: background 0.3s ease, transform 0.3s ease;
-        }
-        .ls-tagline-dot.active {
-          background: rgba(255,255,255,0.55);
-          transform: scale(1.25);
         }
 
         @media (max-width: 600px) {
@@ -415,16 +403,15 @@ export default function LogoStream() {
           .ls-heading { gap: 8px; width: 100%; }
           .ls-hl-bold { font-size: clamp(22px, 6.8vw, 30px); }
           .ls-tagline-wrap { max-width: 100%; }
-          .ls-tagline-ticker {
-            min-height: clamp(28px, 5vw, 36px);
-            height: clamp(28px, 5vw, 36px);
+          /* On mobile, wrap so rotating part drops to its own centred line */
+          .ls-tagline-row {
+            flex-wrap: wrap;
+            row-gap: 2px;
+            justify-content: center;
           }
-          .ls-tagline-line { padding: 0 4px; }
-          .ls-tagline-prefix,
-          .ls-tagline-highlight {
-            font-size: clamp(12px, 3.4vw, 16px);
-          }
-          .ls-tagline-dots { margin-top: 10px; }
+          .ls-tagline-prefix { font-size: clamp(12px, 3.4vw, 16px); white-space: nowrap; }
+          .ls-tagline-sizer,
+          .ls-tagline-line { font-size: clamp(12px, 3.4vw, 16px); }
         }
 
         @media (prefers-reduced-motion: reduce) {

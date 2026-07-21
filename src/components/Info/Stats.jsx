@@ -111,172 +111,197 @@ function AnimatedStrike({ children, inView }) {
   );
 }
 
-/* ─── Invisible-Ink (iMessage-style) ─── */
-function InvisibleInk({ children, hideDelay = 2000 }) {
-  const containerRef = useRef(null);
-  const canvasRef = useRef(null);
-  const [revealed, setRevealed] = useState(false);
-  const particlesRef = useRef([]);
-  const rafRef = useRef(null);
-  const revealedRef = useRef(false);
-  const hideTimerRef = useRef(null);
-  const scatteringRef = useRef(false);
-
-  const initParticles = useCallback((w, h) => {
-    const count = Math.floor((w * h) / 18);
-    return Array.from({ length: count }, () => ({
-      x: Math.random() * w,
-      y: Math.random() * h,
-      r: Math.random() * 1.8 + 0.4,
-      a: Math.random() * 0.9 + 0.1,
-      vx: 0,
-      vy: 0,
-      sx: (Math.random() - 0.5) * 6,
-      sy: (Math.random() - 0.5) * 6,
-      phase: Math.random() * Math.PI * 2,
-      speed: Math.random() * 2 + 1,
-      fade: 1,
-    }));
-  }, []);
-
-  const startAnimation = useCallback(() => {
-    const canvas = canvasRef.current;
-    const container = containerRef.current;
-    if (!canvas || !container) return;
-    const ctx = canvas.getContext("2d");
-
-    cancelAnimationFrame(rafRef.current);
-
-    const draw = (t) => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const particles = particlesRef.current;
-      let alive = 0;
-
-      for (const p of particles) {
-        if (scatteringRef.current) {
-          p.x += p.sx;
-          p.y += p.sy;
-          p.fade -= 0.02;
-          if (p.fade <= 0) continue;
-        } else {
-          p.x += Math.sin(t * 0.003 * p.speed + p.phase) * 0.4;
-          p.y += Math.cos(t * 0.003 * p.speed + p.phase + 1) * 0.3;
-        }
-
-        alive++;
-        const flicker = scatteringRef.current
-          ? p.fade
-          : p.a * (0.4 + 0.6 * Math.abs(Math.sin(t * 0.002 * p.speed + p.phase)));
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,255,255,${flicker})`;
-        ctx.fill();
-      }
-
-      if (alive > 0) {
-        rafRef.current = requestAnimationFrame(draw);
-      }
-    };
-
-    rafRef.current = requestAnimationFrame(draw);
-  }, []);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    const canvas = canvasRef.current;
-    if (!container || !canvas) return;
-
-    const resize = () => {
-      const rect = container.getBoundingClientRect();
-      canvas.width = rect.width;
-      canvas.height = rect.height;
-      if (!revealedRef.current) {
-        particlesRef.current = initParticles(rect.width, rect.height);
-      }
-    };
-
-    resize();
-    window.addEventListener("resize", resize);
-    startAnimation();
-
-    return () => {
+/* ─── Invisible-Ink (iMessage-style) ───
+   Now supports an auto-reveal mode: pass `active` (tie to inView) and
+   `autoRevealDelay` (seconds) to reveal automatically once the section
+   is in view — timed to land right as the strikethrough finishes.
+   Reveal stays sticky (no auto-hide) until `active` goes false, at
+   which point it resets so it can replay next time it comes into view. */
+   function InvisibleInk({ children, hideDelay = 2000, active = true, autoRevealDelay = null }) {
+    const containerRef = useRef(null);
+    const canvasRef = useRef(null);
+    const [revealed, setRevealed] = useState(false);
+    const particlesRef = useRef([]);
+    const rafRef = useRef(null);
+    const revealedRef = useRef(false);
+    const hideTimerRef = useRef(null);
+    const autoTimerRef = useRef(null);
+    const scatteringRef = useRef(false);
+  
+    const initParticles = useCallback((w, h) => {
+      const count = Math.floor((w * h) / 18);
+      return Array.from({ length: count }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: Math.random() * 1.8 + 0.4,
+        a: Math.random() * 0.9 + 0.1,
+        vx: 0,
+        vy: 0,
+        sx: (Math.random() - 0.5) * 6,
+        sy: (Math.random() - 0.5) * 6,
+        phase: Math.random() * Math.PI * 2,
+        speed: Math.random() * 2 + 1,
+        fade: 1,
+      }));
+    }, []);
+  
+    const startAnimation = useCallback(() => {
+      const canvas = canvasRef.current;
+      const container = containerRef.current;
+      if (!canvas || !container) return;
+      const ctx = canvas.getContext("2d");
+  
       cancelAnimationFrame(rafRef.current);
-      clearTimeout(hideTimerRef.current);
-      window.removeEventListener("resize", resize);
-    };
-  }, [initParticles, startAnimation]);
-
-  const handleReveal = () => {
-    clearTimeout(hideTimerRef.current);
-    if (revealed) return;
-    scatteringRef.current = true;
-    setRevealed(true);
-    revealedRef.current = true;
-  };
-
-  const handleHide = () => {
-    hideTimerRef.current = setTimeout(() => {
+  
+      const draw = (t) => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const particles = particlesRef.current;
+        let alive = 0;
+  
+        for (const p of particles) {
+          if (scatteringRef.current) {
+            p.x += p.sx;
+            p.y += p.sy;
+            p.fade -= 0.02;
+            if (p.fade <= 0) continue;
+          } else {
+            p.x += Math.sin(t * 0.003 * p.speed + p.phase) * 0.4;
+            p.y += Math.cos(t * 0.003 * p.speed + p.phase + 1) * 0.3;
+          }
+  
+          alive++;
+          const flicker = scatteringRef.current
+            ? p.fade
+            : p.a * (0.4 + 0.6 * Math.abs(Math.sin(t * 0.002 * p.speed + p.phase)));
+  
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255,255,255,${flicker})`;
+          ctx.fill();
+        }
+  
+        if (alive > 0) {
+          rafRef.current = requestAnimationFrame(draw);
+        }
+      };
+  
+      rafRef.current = requestAnimationFrame(draw);
+    }, []);
+  
+    useEffect(() => {
       const container = containerRef.current;
       const canvas = canvasRef.current;
       if (!container || !canvas) return;
-
+  
+      const resize = () => {
+        const rect = container.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        if (!revealedRef.current) {
+          particlesRef.current = initParticles(rect.width, rect.height);
+        }
+      };
+  
+      resize();
+      window.addEventListener("resize", resize);
+      startAnimation();
+  
+      return () => {
+        cancelAnimationFrame(rafRef.current);
+        clearTimeout(hideTimerRef.current);
+        window.removeEventListener("resize", resize);
+      };
+    }, [initParticles, startAnimation]);
+  
+    const reveal = useCallback(() => {
+      if (revealedRef.current) return;
+      scatteringRef.current = true;
+      setRevealed(true);
+      revealedRef.current = true;
+    }, []);
+  
+    const reset = useCallback(() => {
       scatteringRef.current = false;
       revealedRef.current = false;
       setRevealed(false);
-
+      const container = containerRef.current;
+      if (!container) return;
       const rect = container.getBoundingClientRect();
       particlesRef.current = initParticles(rect.width, rect.height);
       startAnimation();
-    }, hideDelay);
-  };
-
-  return (
-    <span
-      ref={containerRef}
-      className="relative inline-block cursor-pointer"
-      onClick={handleReveal}
-      onMouseEnter={handleReveal}
-      onMouseLeave={handleHide}
-    >
-      {/* Actual text */}
+    }, [initParticles, startAnimation]);
+  
+    // Auto-reveal driven by `active` (tie to inView) + `autoRevealDelay`.
+    // Sticky: stays revealed until `active` goes false, then resets so it
+    // can play again next time the section re-enters view.
+    useEffect(() => {
+      if (autoRevealDelay == null) return;
+      if (active) {
+        autoTimerRef.current = setTimeout(reveal, autoRevealDelay * 1000);
+      } else {
+        clearTimeout(autoTimerRef.current);
+        reset();
+      }
+      return () => clearTimeout(autoTimerRef.current);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [active, autoRevealDelay]);
+  
+    const handleReveal = () => {
+      clearTimeout(hideTimerRef.current);
+      reveal();
+    };
+  
+    const handleHide = () => {
+      if (autoRevealDelay != null) return; // sticky mode: no hover-hide
+      hideTimerRef.current = setTimeout(reset, hideDelay);
+    };
+  
+    return (
       <span
-        className="relative z-0"
-        style={{
-          filter: revealed ? "blur(0px)" : "blur(10px)",
-          opacity: revealed ? 1 : 0,
-          ...(revealed ? gradientText : {}),
-          textShadow: revealed
-            ? "0 0 20px rgba(255,255,255,0.55), 0 0 44px rgba(255,255,255,0.24)"
-            : "none",
-          transition: revealed
-            ? "filter 0.7s ease-out, opacity 0.7s ease-out, text-shadow 0.7s ease-out 0.3s"
-            : "filter 0.9s ease-in 0.1s, opacity 0.9s ease-in 0.1s, text-shadow 0.4s ease-in",
-        }}
+        ref={containerRef}
+        className="relative inline-block cursor-pointer"
+        onClick={handleReveal}
+        onMouseEnter={handleReveal}
+        onMouseLeave={handleHide}
       >
-        {children}
+        {/* Actual text */}
+        <span
+          className="relative z-0"
+          style={{
+            filter: revealed ? "blur(0px)" : "blur(10px)",
+            opacity: revealed ? 1 : 0,
+            ...(revealed ? gradientText : {}),
+            textShadow: revealed
+              ? "0 0 20px rgba(255,255,255,0.55), 0 0 44px rgba(255,255,255,0.24)"
+              : "none",
+            transition: revealed
+              ? "filter 0.7s ease-out, opacity 0.7s ease-out, text-shadow 0.7s ease-out 0.3s"
+              : "filter 0.9s ease-in 0.1s, opacity 0.9s ease-in 0.1s, text-shadow 0.4s ease-in",
+          }}
+        >
+          {children}
+        </span>
+  
+        {/* Particle overlay */}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 z-10 pointer-events-none"
+          style={{
+            opacity: revealed ? 0 : 1,
+            transition: revealed
+              ? "opacity 0.7s ease-out"
+              : "opacity 0.6s ease-in 0.3s",
+          }}
+        />
       </span>
-
-      {/* Particle overlay */}
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 z-10 pointer-events-none"
-        style={{
-          opacity: revealed ? 0 : 1,
-          transition: revealed
-            ? "opacity 0.7s ease-out"
-            : "opacity 0.6s ease-in 0.3s",
-        }}
-      />
-    </span>
-  );
-}
+    );
+  }
 
 /* ─── Synced pulse hook ───
    Drives the trend-line draw-in on counting cards and the flat-line
    draw-in on the New Hires card, all from a single shared heartbeat. */
 function usePulse(period = 3600, holdDuration = 2100) {
-  const [active, setActive] = useState(false);
+  const [active, setActive] = useState(true);
 
   useEffect(() => {
     let holdTimer;
@@ -692,34 +717,37 @@ function NewHiresCard({ inView, pulse, countsComplete }) {
   );
 }
 
-/* ─── Client attribution pill (cyan hover) ─── */
-function ClientBadge() {
+/* ─── Client attribution pill (cyan hover, mobile default-active) ─── */
+function ClientBadge({ baseOpacity = 0.85, defaultActive = false }) {
   const [hovered, setHovered] = useState(false);
+  const [active, setActive] = useState(defaultActive);
+  const isOn = hovered || active;
+
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="flex items-center gap-4 px-7 py-4 rounded-full border transition-all duration-300"
+      onClick={() => setActive((prev) => !prev)}
+      className="flex items-center gap-4 px-7 py-4 rounded-full border transition-all duration-300 cursor-pointer"
       style={{
-        borderColor: hovered ? "rgba(34,211,238,0.55)" : "rgba(255,255,255,0.12)",
-        background: hovered
+        borderColor: isOn ? "rgba(34,211,238,0.55)" : "rgba(255,255,255,0.12)",
+        background: isOn
           ? "linear-gradient(145deg, rgba(34,211,238,0.12), rgba(34,211,238,0.03))"
           : "linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))",
         backdropFilter: "blur(10px)",
-        boxShadow: hovered ? "0 0 30px rgba(34,211,238,0.28)" : "none",
-        transform: hovered ? "translateY(-1px)" : "translateY(0)",
+        boxShadow: isOn ? "0 0 30px rgba(34,211,238,0.28)" : "none",
+        transform: isOn ? "translateY(-1px)" : "translateY(0)",
       }}
     >
-
       <img
         src={clientLogo}
         alt="Advanced Dental Arts"
         className="h-9 md:h-11 w-auto object-contain transition-all duration-300"
         style={{
-          filter: hovered
+          filter: isOn
             ? "drop-shadow(0 0 10px rgba(34,211,238,0.85))"
             : "none",
-          opacity: hovered ? 1 : 0.85,
+          opacity: isOn ? 1 : baseOpacity,
         }}
       />
     </div>
@@ -782,79 +810,90 @@ function StStyles() {
           padding: 8px 0 6px !important;
           overflow: hidden !important;
         }
+        /* Wrap fills the section's flex space */
         .st-metrics-fit .st-metrics-wrap {
-          display: flex;
-          flex-direction: column;
-          height: 100%;
-          min-height: 0;
-          padding-left: 14px;
-          padding-right: 14px;
-        }
-        .st-metrics-fit .st-metrics-title {
-          font-size: 0.95rem !important;
-          margin-bottom: 6px !important;
-          flex-shrink: 0;
-        }
-        .st-metrics-fit .st-metrics-badge {
-          margin-bottom: 6px !important;
-          gap: 8px !important;
-          flex-shrink: 0;
-        }
-        .st-metrics-fit .st-metrics-badge > div.flex.items-center {
-          padding: 5px 10px !important;
-          gap: 8px !important;
-        }
-        .st-metrics-fit .st-metrics-badge img {
-          height: 22px !important;
-        }
-        .st-metrics-fit .st-metrics-grid {
-          display: flex !important;
-          flex-direction: column;
-          gap: 5px;
           flex: 1;
           min-height: 0;
+          display: flex;
+          flex-direction: column;
+          padding: 0 14px;
+          height: auto;
         }
-        .st-metrics-fit .st-metrics-grid > * {
+        /* Lightened logo strip between card groups */
+        .st-metrics-fit .st-metrics-badge-mid {
+          flex-shrink: 0;
+          padding: 8px 0;
+        }
+        .st-metrics-fit .st-metrics-badge-mid > div {
+          padding: 8px 20px !important;
+          gap: 8px !important;
+        }
+        .st-metrics-fit .st-metrics-badge-mid img {
+          height: 30px !important;
+        }
+        /* Each card group takes equal share of remaining height */
+        .st-metrics-fit .st-metrics-top-cards,
+        .st-metrics-fit .st-metrics-bot-cards {
+          flex: 1;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+        }
+        .st-metrics-fit .st-metrics-top-cards > *,
+        .st-metrics-fit .st-metrics-bot-cards > * {
           flex: 1 1 0;
           min-height: 0;
           border-radius: 14px !important;
         }
-        .st-metrics-fit .st-metrics-grid .relative.z-10 {
-          padding: 6px 10px !important;
-          gap: 2px !important;
+        /* Card inner padding */
+        .st-metrics-fit .st-metrics-top-cards .relative.z-10,
+        .st-metrics-fit .st-metrics-bot-cards .relative.z-10 {
+          padding: 8px 12px !important;
+          gap: 3px !important;
           height: 100%;
           justify-content: center;
         }
-        .st-metrics-fit .st-metrics-grid .absolute.top-4.right-4 {
+        /* Star dot */
+        .st-metrics-fit .st-metrics-top-cards .absolute.top-4.right-4,
+        .st-metrics-fit .st-metrics-bot-cards .absolute.top-4.right-4 {
           top: 6px !important;
           right: 8px !important;
         }
-        .st-metrics-fit .st-metrics-grid .absolute.top-4.right-4 > div {
+        .st-metrics-fit .st-metrics-top-cards .absolute.top-4.right-4 > div,
+        .st-metrics-fit .st-metrics-bot-cards .absolute.top-4.right-4 > div {
           width: 4px !important;
           height: 4px !important;
         }
-        .st-metrics-fit .st-metrics-grid .font-semibold.tracking-tight.inline-flex {
-          font-size: 1.2rem !important;
+        /* Counter — bigger */
+        .st-metrics-fit .st-metrics-top-cards .font-semibold.tracking-tight.inline-flex,
+        .st-metrics-fit .st-metrics-bot-cards .font-semibold.tracking-tight.inline-flex {
+          font-size: 1.65rem !important;
         }
-        .st-metrics-fit .st-metrics-grid h4 {
-          font-size: 11px !important;
-          line-height: 1.15 !important;
+        /* Label */
+        .st-metrics-fit .st-metrics-top-cards h4,
+        .st-metrics-fit .st-metrics-bot-cards h4 {
+          font-size: 16px !important;
+          line-height: 1.2 !important;
         }
-        .st-metrics-fit .st-metrics-grid .h-px {
+        .st-metrics-fit .st-metrics-top-cards .h-px,
+        .st-metrics-fit .st-metrics-bot-cards .h-px {
           margin: 1px 0 !important;
         }
-        .st-metrics-fit .st-metrics-grid p.text-sm {
-          font-size: 9.5px !important;
-          line-height: 1.25 !important;
+        /* Description — 2-line clamp, bigger than before */
+        .st-metrics-fit .st-metrics-top-cards p.text-sm,
+        .st-metrics-fit .st-metrics-bot-cards p.text-sm {
+          font-size: 14px !important;
+          line-height: 1.3 !important;
           display: -webkit-box;
-          -webkit-line-clamp: 1;
+          -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
         }
         .st-metrics-fit .st-metrics-foot {
-          margin-top: 6px !important;
-          padding-top: 5px !important;
           flex-shrink: 0;
+          margin-top: 5px !important;
+          padding-top: 5px !important;
         }
         .st-metrics-fit .st-metrics-foot span {
           font-size: 7.5px;
@@ -865,7 +904,7 @@ function StStyles() {
   );
 }
 
-/** Slide 1 — centered ROI wording (nav #impact) */
+/** Slide 1 — centered ROI wording (nav #impact) — MOBILE ONLY, unchanged. */
 export function ImpactNarrative() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: false, margin: "-80px" });
@@ -885,7 +924,7 @@ export function ImpactNarrative() {
               animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
               transition={{ duration: 0.85, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
             >
-              ROI REFRAME
+              gOS in Action
             </motion.span>
           </div>
         </header>
@@ -908,7 +947,7 @@ export function ImpactNarrative() {
   );
 }
 
-/** Slide 2 — stats grid */
+/** Slide 2 — stats grid — MOBILE ONLY, unchanged. */
 export function ImpactMetrics() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: false, margin: "-80px" });
@@ -931,42 +970,26 @@ export function ImpactMetrics() {
     <div className="relative st-section st-metrics-fit" style={stSectionStyle}>
       <Process />
       <div ref={ref} className="relative z-10 max-w-7xl mx-auto w-full st-metrics-wrap px-4 sm:px-6 lg:px-8">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7, delay: 0.1 }}
-          className="st-metrics-title text-center text-xl md:text-2xl lg:text-3xl font-semibold tracking-tight font-['Montserrat'] mb-5 md:mb-6"
-          style={{
-            color: "#ffffff",
-            letterSpacing: "-0.02em",
-            lineHeight: 1.05,
-            textShadow: "0 0 60px rgba(255,255,255,0.10)",
-          }}
-        >
-          gOS in Action
-        </motion.h2>
 
+        {/* Top 2 stat cards */}
+        <div className="st-metrics-top-cards">
+          <Card stat={stats[0]} index={0} inView={inView} pulse={pulse} countsComplete={countsComplete} />
+          <Card stat={stats[1]} index={1} inView={inView} pulse={pulse} countsComplete={countsComplete} />
+        </div>
+
+        {/* Lightened client logo sandwiched between card groups */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="st-metrics-badge flex items-center gap-4 mb-6 md:mb-7"
+          initial={{ opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.6, delay: 0.25 }}
+          className="st-metrics-badge-mid flex items-center justify-center"
         >
-          <div
-            className="flex-1 h-px"
-            style={{ background: "linear-gradient(to right, transparent, rgba(255,255,255,0.15))" }}
-          />
-          <ClientBadge />
-          <div
-            className="flex-1 h-px"
-            style={{ background: "linear-gradient(to left, transparent, rgba(255,255,255,0.15))" }}
-          />
+          <ClientBadge baseOpacity={0.65} defaultActive={true} />
         </motion.div>
 
-        <div className="st-metrics-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {stats.map((stat, i) => (
-            <Card key={i} stat={stat} index={i} inView={inView} pulse={pulse} countsComplete={countsComplete} />
-          ))}
+        {/* Bottom 2 stat cards */}
+        <div className="st-metrics-bot-cards">
+          <Card stat={stats[2]} index={2} inView={inView} pulse={pulse} countsComplete={countsComplete} />
           <NewHiresCard inView={inView} pulse={pulse} countsComplete={countsComplete} />
         </div>
 
@@ -988,7 +1011,12 @@ export function ImpactMetrics() {
   );
 }
 
-/** Desktop — full impact section in one viewport */
+/** Desktop — full impact section in one viewport.
+    Reordered per request: "gOS in Action" heading → client logo →
+    stat boxes → the "They sell ROI / We deliver..." line, last.
+    Each block keeps its own motion + delay (only reassigned to match
+    the new visual order); nothing about the animation mechanics,
+    the mobile slides above, or shared sub-components changed. */
 export default function Processes() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: false, margin: "-80px" });
@@ -1011,6 +1039,8 @@ export default function Processes() {
     <div id="impact" className="relative st-section" style={stSectionStyle}>
       <Process />
       <div ref={ref} className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+
+        {/* 1. Heading — "gOS in Action" is now the section's single heading */}
         <header className="st-header">
           <div className="st-heading">
             <motion.span
@@ -1019,43 +1049,16 @@ export default function Processes() {
               animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
               transition={{ duration: 0.85, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
             >
-              ROI REFRAME
+              gOS in Action
             </motion.span>
           </div>
         </header>
 
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-left mb-8 md:mb-10"
-        >
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white/45 leading-tight">
-            They sell{" "}
-            <AnimatedStrike inView={inView}>ROI</AnimatedStrike>.<br />{" "}
-            We deliver <InvisibleInk>Realtime Operational Impact</InvisibleInk>.
-          </h2>
-        </motion.div>
-
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7, delay: 0.3 }}
-          className="text-center text-xl md:text-2xl lg:text-3xl font-semibold tracking-tight font-['Montserrat'] mb-5 md:mb-6 mt-6 md:mt-8"
-          style={{
-            color: "#ffffff",
-            letterSpacing: "-0.02em",
-            lineHeight: 1.05,
-            textShadow: "0 0 60px rgba(255,255,255,0.10)",
-          }}
-        >
-          gOS in Action
-        </motion.h2>
-
+        {/* 2. Client logo */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.45 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
           className="flex items-center gap-4 mb-6 md:mb-7"
         >
           <div
@@ -1069,6 +1072,7 @@ export default function Processes() {
           />
         </motion.div>
 
+        {/* 3. Stat boxes */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {stats.map((stat, i) => (
             <Card key={i} stat={stat} index={i} inView={inView} pulse={pulse} countsComplete={countsComplete} />
@@ -1076,10 +1080,24 @@ export default function Processes() {
           <NewHiresCard inView={inView} pulse={pulse} countsComplete={countsComplete} />
         </div>
 
+        {/* 4. "They sell ROI / We deliver..." — now last */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, delay: 0.75 }}
+          className="text-left mt-8 md:mt-10"
+        >
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white/45 leading-tight">
+            They sell{" "}
+            <AnimatedStrike inView={inView}>ROI</AnimatedStrike>.<br />{" "}
+            We deliver <InvisibleInk active={inView} autoRevealDelay={7.2}>Realtime Operational Impact</InvisibleInk>.
+          </h2>
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
-          transition={{ delay: 0.9, duration: 0.8 }}
+          transition={{ delay: 1.1, duration: 0.8 }}
           className="flex items-center gap-4 mt-6 border-t border-white/10 pt-4"
         >
           <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(255,255,255,0.28), transparent)` }} />

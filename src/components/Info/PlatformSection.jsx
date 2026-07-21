@@ -405,20 +405,20 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
         }
         .pf-hl-bold {
           display: block;
-          font-size: clamp(26px, 4.2vw, 44px);
+          font-size: clamp(22px, 3.4vw, 42px);
           font-weight: 800;
           letter-spacing: -0.03em;
-          color: #fff;
+          color: rgba(255,255,255,0.48);
           line-height: 1.06;
           white-space: nowrap;
         }
         .pf-hl-muted {
           display: block;
-          font-size: clamp(17px, 2.6vw, 26px);
-          font-weight: 600;
-          letter-spacing: -0.02em;
-          color: rgba(255,255,255,0.48);
-          line-height: 1.14;
+          font-size: clamp(32px, 5vw, 60px);
+          font-weight: 700;
+          letter-spacing: -0.025em;
+          color: #fff;
+          line-height: 1.08;
         }
 
         /* Vertical ticker (LogoStream tagline, on Y — scrolls upward) */
@@ -427,7 +427,7 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
           max-width: min(1100px, 100%);
           margin: 0 auto;
           overflow: hidden;
-          height: clamp(52px, 7vh, 72px);
+          height: clamp(44px, 6vh, 60px);
           padding: 0 8px;
           box-sizing: border-box;
           display: flex;
@@ -643,23 +643,27 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
             flex: 1 1 auto;
             min-height: 0;
             padding: 0 16px;
+            margin-top: 6px;
           }
           .pf-header {
-            margin-bottom: 12px;
+            margin-bottom: 20px;   /* was 12px — more gap before the cards start */
             padding: 0 14px;
           }
-          .pf-heading { gap: 8px; }
+          .pf-heading { gap: 14px; }   /* was 8px — more gap between subheader and header */
           .pf-hl-bold {
-            font-size: clamp(17px, 4.8vw, 22px);
+            font-size: clamp(18px, 5.2vw, 24px);
             white-space: nowrap;
           }
           .pf-headline-ticker {
-            height: clamp(40px, 10vw, 52px);
+            height: clamp(36px, 8.5vw, 46px);
             max-width: 100%;
             padding: 0 4px;
           }
           .pf-headline-line { padding: 0 4px; }
-          .pf-hl-muted { font-size: clamp(14px, 4.2vw, 18px); color: rgba(255,255,255,0.52); }
+          .pf-hl-muted {
+            font-size: clamp(26px, 7.5vw, 34px);
+            color: #fff;
+          }
 
           /* ── Hide the 4-tab icon row on mobile ── */
           .pf-tabs { display: none !important; }
@@ -674,9 +678,9 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
           .pf-card-content {
             height: 100%;
             justify-content: flex-start;
-            padding: 24px 20px 20px;
-            gap: 12px;
             overflow: hidden;
+            padding: 18px 18px 16px;   /* was 24px 20px 20px — reclaims dead vertical space */
+            gap: 10px;     
           }
           .pf-card-icon { display: flex; }
           .pf-card-autoplay {
@@ -687,14 +691,14 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
 
           /* ── Large centered icon in card ── */
           .pf-card-icon img {
-            width: 72px !important;
-            height: 72px !important;
+            width: 90px !important;
+            height: 90px !important;
           }
 
           /* ── Service name label below big icon ── */
           .pf-card-label {
             display: block;
-            font-size: 10px;
+            font-size: 18px;
             font-weight: 600;
             letter-spacing: 0.28em;
             text-transform: uppercase;
@@ -703,11 +707,11 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
           }
 
           .pf-card-title {
-            font-size: clamp(16px, 4.5vw, 20px);
+            font-size: clamp(20px, 4.5vw, 24px);
             line-height: 1.38;
           }
           .pf-card-feature {
-            font-size: clamp(12px, 3.4vw, 14px);
+            font-size: clamp(18px, 3.4vw, 20px);
             line-height: 1.45;
             width: 100%;
             max-width: 290px;
@@ -773,15 +777,6 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
           {/* ── Centered header ── */}
           <div className="pf-header">
             <div className="pf-heading">
-              <motion.span
-                className="pf-hl-muted"
-                initial={{ opacity: 0, y: 8 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              >
-                The Platform
-              </motion.span>
-              
               <motion.span
                 className="pf-hl-muted"
                 initial={{ opacity: 0, y: 12 }}
