@@ -138,8 +138,8 @@ const MODULES = [
     title: "Identified, Verified, Filled",
     features: [
       "Initiates automated outreach for no-shows, overdue procedures, and reactivations to recapture scheduling leakage",
-      "Patients submit appointment preferences via a booking link, surfaced in a queue for staff to schedule",
-      "AdWords integration attributes patient appointment activity to specific marketing spend",
+      "Patients submit appointment preferences through an embedded scheduling prompt, providing a staff queue for booking while AdWords integration attributes the visit to its source marketing campaign.",
+      "Verifies patient benefits ahead of each appointment, flagging discrepancies for staff review before the visit",
     ],
   },
   {
@@ -148,6 +148,7 @@ const MODULES = [
     features: [
       "Identifies production gaps, such as unscheduled and declined treatment plans, in order to re-engage with patients automatically",
       "Deploys targeted campaigns for select events and procedure-specific opportunities",
+      "Offers complete customization of the outreach, messaging, and flow for each individual initiative"
     ],
   },
   {
@@ -156,7 +157,7 @@ const MODULES = [
     features: [
       "Segments patient-balance scenarios into distinct categories, from missed OTC payments to aged A/R balances",
       "Applies an automated cadence to each scenario to accelerate A/R recovery",
-      "Flags problem claims that require EOB review",
+      "Automatically reconciles claims against incoming EOBs, flagging denials or discrepancies for staff review",
     ],
   },
   {
@@ -165,7 +166,7 @@ const MODULES = [
     features: [
       "Centralizes all communications and responses into a single, real-time chat inbox interface",
       "Handles exception management tasking to close the last inch of the patient journey",
-      "Provides a monitoring view of the automation lifecycles for each patient",
+      "Surfaces a live view of each patient's progress through the automation lifecycle",
     ],
   },
 ];
@@ -948,9 +949,7 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
                       height: "100%", background: "rgba(255,255,255,0.55)", width: "0%",
                     }} />
                   </div>
-                  <div className="pf-card-footer">
-                    auto-advancing — click an icon to jump, hover to pause
-                  </div>
+                  
 
                   {/* Dot indicators — visible only on mobile */}
                   <div className="pf-dot-row" aria-label="Service navigation">

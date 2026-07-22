@@ -72,26 +72,31 @@ function ProblemSentenceTicker({ active }) {
 const WORDS = [
   { text: "missed collections",  tier: 1 },
   { text: "aging A/R",           tier: 1 },
-  { text: "capacity gaps",       tier: 1 },
-  { text: "dormant patients",    tier: 1 },
-
-  { text: "collections drops",    tier: 2 },
+  { text: "lost patients",       tier: 1 },
+  { text: "eligibility delays",  tier: 1 },
+  { text: "no follow-ups",       tier: 1 },
+ 
+  { text: "no-shows",            tier: 2 },
   { text: "problem claims",      tier: 2 },
-  { text: "no follow-ups",       tier: 2 },
   { text: "missed recalls",      tier: 2 },
   { text: "declined tx",         tier: 2 },
   { text: "overdue tx",          tier: 2 },
-  { text: "lost patients",       tier: 2 },
   { text: "blind ad spend",      tier: 2 },
-
-  { text: "no-shows",            tier: 3 },
-  { text: "vob delays",          tier: 3 },
-  { text: "eligibility delays",  tier: 3 },
+  { text: "no insights",         tier: 2 },
+  { text: "disjointed solutions",tier: 2 },
+  { text: "no tasking structure",tier: 2 },
+  { text: "capacity gaps", tier: 2},
+ 
+  { text: "inflexible outreach",       tier: 3},
+  { text: "dormant patients",    tier: 3 },
+  { text: "collection drops",    tier: 3 },
+  { text: "VOB delays",          tier: 3 },
   { text: "no care standards",   tier: 3 },
   { text: "static data",         tier: 3 },
-  { text: "no insights",         tier: 3 },
   { text: "manual workflows",    tier: 3 },
-  { text: "rigid systems",       tier: 3 },
+  { text: "communication gaps",  tier: 3 },
+  { text: "empty chairs", tier: 3 },
+  { text: "rigid systems", tier: 3 },
 ];
 
 const TIER_STYLE = {
