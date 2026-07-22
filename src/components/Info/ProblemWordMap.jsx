@@ -70,28 +70,28 @@ function ProblemSentenceTicker({ active }) {
 
 /* ─── Word pool ─────────────────────────────────────────────────────────── */
 const WORDS = [
-  { text: "Missed Collections",  tier: 1 },
-  { text: "Aging A/R",           tier: 1 },
-  { text: "Capacity Gaps",       tier: 1 },
-  { text: "Dormant Patients",    tier: 1 },
+  { text: "missed collections",  tier: 1 },
+  { text: "aging A/R",           tier: 1 },
+  { text: "capacity gaps",       tier: 1 },
+  { text: "dormant patients",    tier: 1 },
 
-  { text: "Collection Drops",    tier: 2 },
-  { text: "Problem Claims",      tier: 2 },
-  { text: "No Follow-Ups",       tier: 2 },
-  { text: "Missed Recalls",      tier: 2 },
-  { text: "Declined Tx",         tier: 2 },
-  { text: "Overdue Tx",          tier: 2 },
-  { text: "Lost Patients",       tier: 2 },
-  { text: "Blind Ad Spend",      tier: 2 },
+  { text: "collections drops",    tier: 2 },
+  { text: "problem claims",      tier: 2 },
+  { text: "no follow-ups",       tier: 2 },
+  { text: "missed recalls",      tier: 2 },
+  { text: "declined tx",         tier: 2 },
+  { text: "overdue tx",          tier: 2 },
+  { text: "lost patients",       tier: 2 },
+  { text: "blind ad spend",      tier: 2 },
 
-  { text: "No-Shows",            tier: 3 },
-  { text: "VOB Delays",          tier: 3 },
-  { text: "Eligibility Delays",  tier: 3 },
-  { text: "No Care Standards",   tier: 3 },
-  { text: "Static Data",         tier: 3 },
-  { text: "No Insights",         tier: 3 },
-  { text: "Manual Workflows",    tier: 3 },
-  { text: "Rigid Systems",       tier: 3 },
+  { text: "no-shows",            tier: 3 },
+  { text: "vob delays",          tier: 3 },
+  { text: "eligibility delays",  tier: 3 },
+  { text: "no care standards",   tier: 3 },
+  { text: "static data",         tier: 3 },
+  { text: "no insights",         tier: 3 },
+  { text: "manual workflows",    tier: 3 },
+  { text: "rigid systems",       tier: 3 },
 ];
 
 const TIER_STYLE = {
