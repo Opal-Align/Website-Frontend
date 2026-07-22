@@ -65,6 +65,25 @@ const gradientText = {
 };
 
 /**
+ * Keep brand "gOS" casing when a parent uses CSS `uppercase`.
+ * Other characters still uppercase via inheritance.
+ */
+function BrandAwareLabel({ children }) {
+  const text = String(children ?? "");
+  const parts = text.split(/(gOS)/g);
+  if (parts.length === 1) return children;
+  return parts.map((part, i) =>
+    part === "gOS" ? (
+      <span key={i} className="normal-case">
+        {part}
+      </span>
+    ) : (
+      <span key={i}>{part}</span>
+    ),
+  );
+}
+
+/**
  * Pill button used on the large-screen nav bar.
  *  - default: subtle white border, white text, lilac border on hover
  *  - accent  (last CTA, e.g. "Contact"): gradient ring + gradient text
@@ -86,7 +105,9 @@ function NavButton({ label, target, accent = false, isActive = false, onClick })
           boxShadow: "0 0 0 rgba(255,255,255,0)",
         }}
       >
-        <span style={gradientText}>{label}</span>
+        <span style={gradientText}>
+          <BrandAwareLabel>{label}</BrandAwareLabel>
+        </span>
       </motion.button>
     );
   }
@@ -110,7 +131,7 @@ function NavButton({ label, target, accent = false, isActive = false, onClick })
             }
       }
     >
-      {label}
+      <BrandAwareLabel>{label}</BrandAwareLabel>
     </motion.button>
   );
 }

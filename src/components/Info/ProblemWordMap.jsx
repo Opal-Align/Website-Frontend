@@ -516,6 +516,7 @@ export default function ProblemWordMap() {
           text-align: center;
           flex-shrink: 0;
           margin-bottom: clamp(16px, 2.5vh, 28px);
+          margin-top: clamp(16px, 2.5vh, 28px);
           width: 100%;
           padding: 0 clamp(16px, 3vw, 52px);
           box-sizing: border-box;

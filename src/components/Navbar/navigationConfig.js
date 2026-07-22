@@ -35,7 +35,7 @@ export const NAV_TARGET = {
 export const OVERLAY_NAV_ITEMS = [
   { key: "home", label: "Home", target: NAV_TARGET.home },
   { key: "problem", label: "The Problem", target: NAV_TARGET.problem },
-  { key: "platform", label: "Te Platform", target: NAV_TARGET.platform },
+  { key: "platform", label: "The Platform", target: NAV_TARGET.platform },
   { key: "loop", label: "The gOS Loop", target: NAV_TARGET.loop },
   { key: "impact", label: "Impact", target: NAV_TARGET.impact },
   { key: "stack", label: "The Stack", target: NAV_TARGET.stack },
@@ -48,7 +48,7 @@ export const NAVBAR_LINKS = {
   left: [
     { key: "problem", label: "The Problem", target: NAV_TARGET.problem },   // 1
     { key: "platform", label: "The Platform",     target: NAV_TARGET.platform },  // 2
-    { key: "loop",    label: "The gos Loop",target: NAV_TARGET.loop },      // 3
+    { key: "loop",    label: "The gOS Loop",target: NAV_TARGET.loop },      // 3
   ],
   right: [
     { key: "impact",        label: "Impact",       target: NAV_TARGET.impact },        // 4

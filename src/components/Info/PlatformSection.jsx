@@ -588,20 +588,20 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
           padding-top: clamp(4px, 0.8vh, 10px);
         }
         .pf-card-title {
-          font-size: clamp(20px, 2.5vh, 26px);
+          font-size: clamp(24px, 3.1vh, 32px);
           font-weight: 700;
-          line-height: 1.34;
+          line-height: 1.3;
           color: rgba(255,255,255,0.94);
-          max-width: 620px;
+          max-width: 680px;
         }
         .pf-card-features {
           width: 100%;
-          max-width: 640px;
+          max-width: 680px;
           display: flex;
           flex-direction: column;
           align-items: flex-start;
           justify-content: flex-start;
-          gap: clamp(8px, 1.2vh, 12px);
+          gap: clamp(10px, 1.4vh, 14px);
           flex: 1 1 auto;
           min-height: 0;
           text-align: left;
@@ -609,10 +609,10 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
         .pf-card-feature {
           display: flex;
           align-items: flex-start;
-          gap: 9px;
-          font-size: clamp(14px, 1.5vh, 17px);
-          line-height: 1.46;
-          color: rgba(255,255,255,0.55);
+          gap: 10px;
+          font-size: clamp(16px, 1.9vh, 20px);
+          line-height: 1.5;
+          color: rgba(255,255,255,0.58);
           text-align: left;
           max-width: 100%;
           width: 100%;
@@ -710,12 +710,12 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
           }
 
           .pf-card-title {
-            font-size: clamp(20px, 4.5vw, 24px);
-            line-height: 1.38;
+            font-size: clamp(22px, 5.2vw, 28px);
+            line-height: 1.32;
           }
           .pf-card-feature {
-            font-size: clamp(18px, 3.4vw, 20px);
-            line-height: 1.45;
+            font-size: clamp(15px, 3.8vw, 18px);
+            line-height: 1.5;
             width: 100%;
             max-width: none;
           }
@@ -790,7 +790,7 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
                 animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.75, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
               >
-                The Guided Operating System.
+                The Guided Operating System
               </motion.span>
               <HeadlineTicker active={inView} />
             </div>

@@ -206,16 +206,11 @@ export default function ContactUs() {
                   height="24"
                   viewBox="0 0 24 24"
                   fill="none"
+                  stroke="#fff"
                   strokeWidth="2"
                   className="group-hover:translate-x-[-4px] transition-transform"
                 >
-                  <defs>
-                      <linearGradient id="arrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%"   stopColor="#B8EEFF" />
-                      <stop offset="100%" stopColor="#38BDF8" />
-                    </linearGradient>
-                  </defs>
-                  <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="url(#arrowGrad)" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M19 12H5M5 12L12 19M5 12L12 5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 <span className="text-base md:text-lg font-medium" style={gradientText}>Back to Home</span>
               </motion.div>
@@ -244,14 +239,14 @@ export default function ContactUs() {
                         href="tel:8779966725"
                         className="flex items-center gap-3 text-base md:text-lg transition-opacity hover:opacity-75"
                       >
-                        <MdCall className="w-5 h-5 md:w-6 md:h-6 shrink-0" style={{ fill: "url(#opalContactGrad)" }} />
+                        <MdCall className="w-5 h-5 md:w-6 md:h-6 shrink-0" style={{ color: "#fff" }} />
                         <span style={gradientText}>877-996-6725 (OPAL)</span>
                       </a>
                       <a
                         href="mailto:info@opalgos.com"
                         className="flex items-center gap-3 text-base md:text-lg transition-opacity hover:opacity-75"
                       >
-                        <MdEmail className="w-5 h-5 md:w-6 md:h-6 shrink-0" style={{ fill: "url(#opalContactGrad)" }} />
+                        <MdEmail className="w-5 h-5 md:w-6 md:h-6 shrink-0" style={{ color: "#fff" }} />
                         <span style={gradientText}>info@opalgos.com</span>
                       </a>
                     </div>

@@ -19,14 +19,13 @@ const gradientText = {
   color: "transparent",
 };
 
-/* Gradient fill for CSS-mask SVG images (instagram, linkedin) */
-const gradientMaskIcon = (src, size = "1.25rem") => ({
+/* White fill for CSS-mask SVG images (instagram, linkedin) */
+const whiteMaskIcon = (src, size = "1.25rem") => ({
   display: "inline-block",
   width: size,
   height: size,
   flexShrink: 0,
-  backgroundImage: OPAL_GRADIENT,
-  backgroundSize: "100% 100%",
+  backgroundColor: "#fff",
   WebkitMaskImage: `url("${src}")`,
   WebkitMaskRepeat: "no-repeat",
   WebkitMaskPosition: "center",
@@ -299,7 +298,7 @@ export default function Footer() {
           rel="noopener noreferrer"
           className="flex items-center gap-2.5 text-sm md:text-base transition-opacity hover:opacity-75"
         >
-          <span style={gradientMaskIcon(instagramIcon, "1.05rem")} />
+          <span style={whiteMaskIcon(instagramIcon, "1.05rem")} />
           <Typewriter
             text="Instagram"
             started={typewriterStarted}
@@ -317,7 +316,7 @@ export default function Footer() {
           rel="noopener noreferrer"
           className="flex items-center gap-2.5 text-sm md:text-base transition-opacity hover:opacity-75"
         >
-          <span style={gradientMaskIcon(linkedinIcon, "1.05rem")} />
+          <span style={whiteMaskIcon(linkedinIcon, "1.05rem")} />
           <Typewriter
             text="LinkedIn"
             started={typewriterStarted}
