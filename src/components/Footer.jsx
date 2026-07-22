@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { MdCall, MdEmail } from "react-icons/md";
 import instagramIcon from "../assets/instagram.svg";
 import linkedinIcon from "../assets/linkedin.svg";
-import opalLogo from "../assets/OPALgos GreyWhite Website.png";
+import opalLogo from "../assets/OPAL.svg";
 import { goToTarget, NAV_TARGET } from "./Navbar/navigationConfig";
 
 const OPAL_GRADIENT =
@@ -340,7 +340,7 @@ export default function Footer() {
             <img
               src={opalLogo}
               alt="OPAL gOS"
-              className="h-6 md:h-8 w-auto object-contain"
+              className="h-6 md:h-8 w-auto object-contain ft-logo-glow"
             />
           </div>
 
@@ -357,7 +357,7 @@ export default function Footer() {
               href="/sms-opt-in"
               target="_blank"
               rel="noopener noreferrer"
-              style={gradientText}
+              style={{ ...gradientText, opacity: 0.55 }}
               className="hover:opacity-80 transition-opacity"
             >
               SMS Opt In
@@ -367,7 +367,7 @@ export default function Footer() {
               href="/privacy-policy"
               target="_blank"
               rel="noopener noreferrer"
-              style={gradientText}
+              style={{ ...gradientText, opacity: 0.55 }}
               className="hover:opacity-80 transition-opacity"
             >
               Privacy Policy
@@ -452,6 +452,12 @@ export default function Footer() {
             .ft-header { margin-bottom: 20px; padding: 0 14px; }
             .ft-heading { gap: 8px; }
             .ft-cta-copy { margin-bottom: 22px; }
+          }
+
+          .ft-logo-glow {
+            filter: drop-shadow(0 0 8px rgba(255,255,255,0.55))
+                    drop-shadow(0 0 22px rgba(255,255,255,0.22))
+                    drop-shadow(0 0 44px rgba(255,255,255,0.10));
           }
         `}</style>
         <div ref={mobileRef}>
@@ -550,6 +556,12 @@ export default function Footer() {
         @media (max-width: 600px) {
           .ft-header { margin-bottom: 20px; padding: 0 14px; }
           .ft-heading { gap: 8px; }
+        }
+
+        .ft-logo-glow {
+          filter: drop-shadow(0 0 8px rgba(255,255,255,0.55))
+                  drop-shadow(0 0 22px rgba(255,255,255,0.22))
+                  drop-shadow(0 0 44px rgba(255,255,255,0.10));
         }
       `}</style>
       <div className="relative w-full">

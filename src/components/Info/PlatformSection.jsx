@@ -556,7 +556,7 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
           background: linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018));
           backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
           flex: 1 1 auto;
-          min-height: min(34vh, 320px);
+          min-height: min(28vh, 280px);
           max-height: none;
           align-self: stretch;
         }
@@ -571,52 +571,55 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
           align-items: center;
           text-align: center;
           height: 100%;
-          padding: clamp(22px, 3vh, 36px) clamp(24px, 3vw, 40px);
-          gap: clamp(12px, 1.6vh, 18px);
+          padding: clamp(16px, 2.4vh, 32px) clamp(20px, 2.8vw, 40px);
+          gap: clamp(8px, 1.2vh, 16px);
           min-height: 0;
           flex: 1;
+          overflow: hidden;
           justify-content: flex-start;
         }
         .pf-card-icon { display: none; }
         .pf-card-autoplay {
-          margin-top: auto;
           flex-shrink: 0;
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: clamp(8px, 1vh, 12px);
+          gap: clamp(6px, 0.8vh, 10px);
           width: 100%;
-          padding-top: clamp(4px, 0.8vh, 10px);
+          padding-top: clamp(4px, 0.6vh, 8px);
         }
         .pf-card-title {
-          font-size: clamp(24px, 3.1vh, 32px);
+          font-size: clamp(22px, min(3.2vh, 2.8vw), 36px);
           font-weight: 700;
-          line-height: 1.3;
+          line-height: 1.28;
           color: rgba(255,255,255,0.94);
           max-width: 680px;
+          flex-shrink: 0;
         }
         .pf-card-features {
           width: 100%;
-          max-width: 680px;
+          max-width: 700px;
           display: flex;
           flex-direction: column;
           align-items: flex-start;
           justify-content: flex-start;
-          gap: clamp(10px, 1.4vh, 14px);
-          flex: 1 1 auto;
+          gap: clamp(8px, 1.1vh, 14px);
+          flex: 1 1 0;
           min-height: 0;
+          overflow: hidden;
           text-align: left;
         }
         .pf-card-feature {
           display: flex;
           align-items: flex-start;
-          gap: 10px;
-          font-size: clamp(16px, 1.9vh, 20px);
+          gap: 9px;
+          font-size: clamp(15px, min(2vh, 1.55vw), 21px);
           line-height: 1.5;
           color: rgba(255,255,255,0.58);
           text-align: left;
           max-width: 100%;
           width: 100%;
+          flex-shrink: 1;
         }
         .pf-card-footer {
           font-size: clamp(10.5px, 1.15vh, 12px);
@@ -711,12 +714,12 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
           }
 
           .pf-card-title {
-            font-size: clamp(22px, 5.2vw, 28px);
-            line-height: 1.32;
+            font-size: clamp(20px, 5vw, 26px);
+            line-height: 1.3;
           }
           .pf-card-feature {
-            font-size: clamp(15px, 3.8vw, 18px);
-            line-height: 1.5;
+            font-size: clamp(17px, 3.7vw, 20px);
+            line-height: 1.46;
             width: 100%;
             max-width: none;
           }
