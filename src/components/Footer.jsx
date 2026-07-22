@@ -194,7 +194,7 @@ export default function Footer() {
      column, revealed top to bottom — title, message, action, then the
      ways to reach us. */
   const footerContent = (
-    <div className="ft-credits w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-16 py-10 md:py-14 flex flex-col items-center text-center">
+    <div className="ft-credits w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-16 pt-10 md:pt-14 pb-0 flex flex-col items-center text-center">
       {/* Hidden SVG gradient defs — makes fill="url(#opalIconGrad)" work for react-icons */}
       <svg width="0" height="0" style={{ position: "absolute", overflow: "hidden" }} aria-hidden>
         <defs>
@@ -445,8 +445,8 @@ export default function Footer() {
             gap: clamp(14px, 2vh, 18px);
             flex-shrink: 0;
             margin-top: auto;
-            padding-top: clamp(28px, 5vh, 48px);
-            padding-bottom: clamp(8px, 1.5vh, 16px);
+            padding-top: clamp(20px, 3vh, 32px);
+            padding-bottom: 10px;
           }
           .ft-dot { display: none; }
           @media (max-width: 600px) {
@@ -538,8 +538,8 @@ export default function Footer() {
           gap: clamp(18px, 2.4vw, 40px);
           flex-shrink: 0;
           margin-top: auto;
-          padding-top: clamp(32px, 6vh, 64px);
-          padding-bottom: clamp(12px, 2vh, 24px);
+          padding-top: clamp(24px, 4vh, 40px);
+          padding-bottom: 10px;
         }
         .ft-dot {
           width: 3px;

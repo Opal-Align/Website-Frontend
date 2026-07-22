@@ -478,33 +478,6 @@ const TestimonialSection = () => {
             })}
           </div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={inView ? { opacity: 1 } : {}}
-            transition={{ delay: 0.4, duration: 0.6 }}
-            className="flex items-center gap-3 pt-2 border-t border-white/10"
-          >
-            <div
-              className="flex-1 h-px"
-              style={{
-                background:
-                  "linear-gradient(to right, transparent, rgba(255,255,255,0.28), transparent)",
-              }}
-            />
-            <span
-              className="text-[9px] sm:text-[10px] tracking-[0.28em] sm:tracking-[0.32em] uppercase whitespace-nowrap"
-              style={{ color: "rgba(244,248,255,0.4)" }}
-            >
-              trusted · validated · proven
-            </span>
-            <div
-              className="flex-1 h-px"
-              style={{
-                background:
-                  "linear-gradient(to right, transparent, rgba(255,255,255,0.28), transparent)",
-              }}
-            />
-          </motion.div>
         </div>
       </div>
 

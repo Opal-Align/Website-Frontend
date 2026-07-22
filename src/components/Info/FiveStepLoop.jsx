@@ -14,39 +14,46 @@ const OPAL_GOS_LOGO_RATIO = 1;
 
 const STEP_DATA = [
   {
-    num: "04", label: "Calibrate",
-    body: `gOS learns from every response. Timing adjusts. Pattern sharpens. <strong>Month six performs better than month one</strong> — automatically.`,
-  },
-  {
-    num: "05", label: "Guide",
-    body: `What automation can't resolve gets handed to your team — queued, prioritized, and ready to act on. <strong>Guides you forward. Starts the loop again.</strong>`,
-  },
-  {
-    num: "06", label: "Resolve",
-    body: `Every outcome logged, every edge case closed. <strong>Issues resolved, loops completed, revenue recovered.</strong> The system resets — and begins again.`,
-  },
-  {
-    num: "01", label: "Identify",
-    body: `Every revenue lever — aged A/R, unscheduled treatment, dormant patients, missed collections — is scanned continuously. <strong>The moment a gap opens, gOS surfaces it.</strong>`,
-  },
-  {
+    // -60° top-right
     num: "02", label: "Strategize",
-    body: `Channels, pattern, message tone, escalation thresholds — <strong>all configured to your practice, your providers, your patients.</strong> Your playbook. At machine scale.`,
+    body: `Communication channels, tonality, cadence — all configured to your practice, your providers, your patients.`,
   },
   {
+    // 0° right
     num: "03", label: "Engage",
-    body: `Multi-channel, multi-touch outreach — sequenced and dispatched automatically. <strong>The right message, to the right person, at the right time.</strong>`,
+    body: `Multi-channel, multi-touch outreach — sequenced and dispatched automatically.`,
+  },
+  {
+    // 60° bottom-right
+    num: "04", label: "Calibrate",
+    body: `gOS learns from every response. Timing adjusts. Pattern sharpens.`,
+  },
+  {
+    // 120° bottom-left
+    num: "05", label: "Guide",
+    body: `What automation can't resolve gets handed to your team — queued, prioritized, and ready to act on.`,
+  },
+  {
+    // 180° left
+    num: "06", label: "Resolve",
+    body: `Every outcome logged, every edge case closed. Issues resolved, loops completed, revenue recovered.`,
+  },
+  {
+    // 240° top-left
+    num: "01", label: "Identify",
+    body: `Every revenue lever — unscheduled treatment, dormant patients, unresolved balances — is scanned continuously.`,
   },
 ];
 
 const N = STEP_DATA.length;
 const STEP_ANGLES = [-60, 0, 60, 120, 180, 240];
-// Column layout: left 01–03 bottom→top, right 04–06 top→bottom (STEP_DATA order unchanged)
-const LEFT_COLUMN  = [5, 4, 3]; // render 03, 02, 01 top-down → 01 sits at bottom
-const RIGHT_COLUMN = [0, 1, 2]; // render 04, 05, 06 top-down
-const MOBILE_SEQUENCE = [3, 4, 5, 0, 1, 2]; // 01 Identify → 06 Resolve, top to bottom
+// Column layout: left 03→01 top→bottom, right 04→06 top→bottom
+const LEFT_COLUMN  = [5, 4, 3]; // Engage, Strategize, Identify
+const RIGHT_COLUMN = [ 0, 1, 2]; // Calibrate, Guide, Resolve
+const MOBILE_SEQUENCE = [5, 0, 1, 2, 3, 4]; // 01 Identify → 06 Resolve
 const ORBIT_DURATION = 14000;
 const MANUAL_PAUSE   = 7000;
+const CARD_AUTOPLAY_MS = 3800;
 const BG             = "#0a0a0a";
 const NODE_SIZE      = 96;
 const NODE_ACTIVE_SCALE = 1.14;
@@ -428,13 +435,12 @@ function FslStyles() {
         transition: max-height 0.38s ease, padding 0.3s;
         padding: 0 18px;
       }
-      .fsl-card.active .fsl-card-body { max-height: 120px; padding: 0 18px 16px; }
+      .fsl-card.active .fsl-card-body { max-height: 160px; padding: 0 18px 16px; }
       .fsl-card-body p {
         font-size: clamp(12.5px, 1.35vh, 14px); font-weight: 300;
         color: rgba(255,255,255,0.42); line-height: 1.62;
         border-top: 1px solid rgba(255,255,255,0.07); padding-top: 10px; margin: 0;
       }
-      .fsl-card-body p strong { color: rgba(255,255,255,0.82); font-weight: 600; }
 
       .fsl-orbital {
         flex: 1 1 auto;
@@ -698,21 +704,60 @@ export function FiveStepLoopOrbit() {
   );
 }
 
-/** Slide 2 — step detail cards */
+/** Slide 2 — step detail cards (mobile: auto-expands top → bottom) */
 export function FiveStepLoopCards() {
-  const [active, setActive] = useState(0);
+  const [active, setActive] = useState(MOBILE_SEQUENCE[0]);
+  const [inView, setInView] = useState(false);
+  const sectionRef = useRef(null);
+  const seqPosRef = useRef(0);
+  const manualRef = useRef(false);
+  const manualTimerRef = useRef(null);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { threshold: 0.3 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!inView) return;
+    const id = setInterval(() => {
+      if (manualRef.current) return;
+      seqPosRef.current = (seqPosRef.current + 1) % MOBILE_SEQUENCE.length;
+      setActive(MOBILE_SEQUENCE[seqPosRef.current]);
+    }, CARD_AUTOPLAY_MS);
+    return () => clearInterval(id);
+  }, [inView]);
+
+  useEffect(() => () => clearTimeout(manualTimerRef.current), []);
+
+  const selectCard = (idx) => {
+    setActive(idx);
+    const pos = MOBILE_SEQUENCE.indexOf(idx);
+    if (pos >= 0) seqPosRef.current = pos;
+    manualRef.current = true;
+    clearTimeout(manualTimerRef.current);
+    manualTimerRef.current = setTimeout(() => {
+      manualRef.current = false;
+    }, MANUAL_PAUSE);
+  };
 
   const renderStepCard = (step, globalIdx) => (
     <div
       key={step.num}
       className={`fsl-card${active === globalIdx ? " active" : ""}`}
-      onClick={() => setActive(globalIdx)}
+      onClick={() => selectCard(globalIdx)}
     >
       <div className="fsl-card-header">
         <span className="fsl-sc-title">{step.label}</span>
       </div>
       <div className="fsl-card-body">
-        <p dangerouslySetInnerHTML={{ __html: step.body }} />
+        <p>{step.body}</p>
       </div>
     </div>
   );
@@ -720,7 +765,7 @@ export function FiveStepLoopCards() {
   return (
     <>
       <FslStyles />
-      <section className="fsl-section fsl-cards-only">
+      <section ref={sectionRef} className="fsl-section fsl-cards-only">
         <div className="fsl-bottom">
           <div className="fsl-col fsl-col-left">
             <div className="fsl-steps">
@@ -790,7 +835,7 @@ export default function FiveStepLoop() {
         <span className="fsl-sc-title">{step.label}</span>
       </div>
       <div className="fsl-card-body">
-        <p dangerouslySetInnerHTML={{ __html: step.body }} />
+        <p>{step.body}</p>
       </div>
     </div>
   );

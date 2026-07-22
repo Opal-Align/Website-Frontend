@@ -21,24 +21,66 @@ const gradientText = {
 // since it never counts and behaves differently (stays at 0, pulses itself).
 const stats = [
   {
-    target: 100, unit: "K",
+    target: 100, unit: "K", prefix: "$",
     label: "Recovered Revenue",
-    desc: "Automation drove A/R recovery in a single pilot, across two practices.",
+    desc: "gOS effectuated A/R recovery in a single pilot across 4 practices in just 1 month.",
     glyph: "α · 001",
   },
   {
     target: 75, unit: "K",
     label: "Communications Triggered",
-    desc: "Outreach attempts per session vastly outnumber what is humanely achievable.",
+    desc: "gOS triggered texts, emails, and mailers impossible to achieve even at superhuman scale",
     glyph: "β · 002",
   },
   {
-    target: 50, unit: "K",
+    target: 25, unit: "K",
     label: "Hours Saved",
-    desc: "Manual labor dependence is eliminated instantly.",
+    desc: "gOS eliminates manual labor required to accelerate revenue recovery at scale.",
     glyph: "γ · 003",
   },
 ];
+
+/* ─── Sticky-stack visibility ─────────────────────────────────────────
+   Framer useInView stays true when the next .home-slide covers this one
+   (both remain in the viewport). Treat the slide as active only while it
+   is the topmost docked card — so leaving downward resets like leaving up. */
+function useHomeSlideActive(ref) {
+  const [active, setActive] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const slide = node.closest(".home-slide") ?? node;
+
+    const measure = () => {
+      const navRaw = getComputedStyle(slide).getPropertyValue("--page-nav-h").trim();
+      const stickyTop = Number.parseFloat(navRaw) || 80;
+      const rect = slide.getBoundingClientRect();
+      const next = slide.nextElementSibling;
+      const nextTop =
+        next?.classList?.contains("home-slide")
+          ? next.getBoundingClientRect().top
+          : Number.POSITIVE_INFINITY;
+      const covered = nextTop <= stickyTop + 4;
+      const docked =
+        rect.top <= stickyTop + 32 && rect.bottom > stickyTop + 80;
+      setActive(docked && !covered);
+    };
+
+    measure();
+    window.addEventListener("scroll", measure, { passive: true });
+    window.addEventListener("resize", measure);
+    const ro = new ResizeObserver(measure);
+    ro.observe(slide);
+    return () => {
+      window.removeEventListener("scroll", measure);
+      window.removeEventListener("resize", measure);
+      ro.disconnect();
+    };
+  }, [ref]);
+
+  return active;
+}
 
 /* ─── Animated Strikethrough ─── */
 function AnimatedStrike({ children, inView }) {
@@ -395,17 +437,17 @@ function FlatLine({ active }) {
 function Counter({
   target,
   unit = "",
+  prefix = "",
   inView,
   startDelay = 0,
-  duration = 6,
+  duration = 2.8,
   pulse = false,
   countsComplete = false,
 }) {
   const [val, setVal] = useState(0);
   const [landed, setLanded] = useState(false);
-  // Pulse only after this card lands — synced with the shared heartbeat
-  // and the New Hires "0" once every counter has finished.
-  const showPulse = pulse && (landed || countsComplete);
+  // Arrow only after every counter has finished counting
+  const showPulse = pulse && countsComplete;
 
   useEffect(() => {
     if (!inView) {
@@ -419,7 +461,7 @@ function Counter({
     const timer = setTimeout(() => {
       ctrl = animate(0, target, {
         duration,
-        ease: [0.16, 1, 0.3, 1],
+        ease: "linear",
         onUpdate: (v) => setVal(Math.round(v)),
         onComplete: () => setLanded(true),
       });
@@ -449,26 +491,23 @@ function Counter({
           transition: "filter 0.5s ease-out",
         }}
       >
-        <span>{val}{unit}</span>
+        <span>{prefix}{val}{unit}</span>
         <TrendArrow active={showPulse} />
       </motion.span>
     </div>
   );
 }
 
-// Timing for the stat counters: a longer pause after the section loads
-// before anything starts counting, a small stagger so cards kick off one
-// after another, and a shared count duration so — regardless of stagger —
-// every counter finishes at the exact same moment.
-const COUNTER_LOAD_DELAY = 0.6; // pause before the first counter starts
-const COUNTER_STAGGER = 0.15; // gap between each card's start time
-const COUNT_DURATION = 6; // slow + noticeable — was 1.6, now 6s of visible ticking
-const COUNTER_END_TIME = COUNTER_LOAD_DELAY + COUNTER_STAGGER * (stats.length - 1) + COUNT_DURATION;
+// All counters start together (no stagger) and finish a bit quicker.
+const COUNTER_LOAD_DELAY = 0.35;
+const COUNTER_STAGGER = 0;
+const COUNT_DURATION = 2.8;
+const COUNTER_END_TIME = COUNTER_LOAD_DELAY + COUNT_DURATION;
 
 function Card({ stat, index, inView, pulse, countsComplete }) {
   const [hovered, setHovered] = useState(false);
   const startDelay = COUNTER_LOAD_DELAY + index * COUNTER_STAGGER;
-  const duration = COUNTER_END_TIME - startDelay;
+  const duration = COUNT_DURATION;
 
   return (
     <motion.div
@@ -855,6 +894,8 @@ function StStyles() {
 export function ImpactNarrative() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: false, margin: "-80px" });
+  const slideActive = useHomeSlideActive(ref);
+  const inkActive = inView && slideActive;
 
   return (
     <div id="impact" className="relative st-section" style={stSectionStyle}>
@@ -870,7 +911,7 @@ export function ImpactNarrative() {
               animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
               transition={{ duration: 0.85, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
             >
-              gOS loop in Action
+              gOS LOOP IN ACTION
             </motion.span>
           </div>
         </header>
@@ -883,8 +924,8 @@ export function ImpactNarrative() {
         >
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white/45 leading-tight text-center">
             They sell{" "}
-            <AnimatedStrike inView={inView}>ROI</AnimatedStrike>.<br />{" "}
-            We deliver <InvisibleInk>Realtime Operational Impact</InvisibleInk>.
+            <AnimatedStrike inView={inkActive}>ROI</AnimatedStrike>.<br />{" "}
+            We deliver <InvisibleInk active={inkActive} autoRevealDelay={1.4}>Realtime Operational Impact</InvisibleInk>.
           </h2>
         </motion.div>
       </div>
@@ -938,18 +979,7 @@ export function ImpactMetrics() {
           <NewHiresCard inView={inView} pulse={pulse} countsComplete={countsComplete} />
         </div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={inView ? { opacity: 1 } : {}}
-          transition={{ delay: 0.5, duration: 0.8 }}
-          className="st-metrics-foot flex items-center gap-4 mt-6 border-t border-white/10 pt-4"
-        >
-          <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(255,255,255,0.28), transparent)` }} />
-          <span className="text-[10px] tracking-[0.3em] uppercase text-white/28">
-             observed · catalogued · verified
-          </span>
-          <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(255,255,255,0.25), transparent)` }} />
-        </motion.div>
+       
       </div>
       <StStyles />
     </div>
@@ -965,6 +995,8 @@ export function ImpactMetrics() {
 export default function Processes() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: false, margin: "-80px" });
+  const slideActive = useHomeSlideActive(ref);
+  const inkActive = inView && slideActive;
   const pulse = usePulse();
   const [countsComplete, setCountsComplete] = useState(false);
 
@@ -993,7 +1025,7 @@ export default function Processes() {
               animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
               transition={{ duration: 0.85, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
             >
-              gOS loop in Action
+              gOS LOOP IN ACTION
             </motion.span>
           </div>
         </header>
@@ -1029,27 +1061,15 @@ export default function Processes() {
           initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.75 }}
-          className="text-center mt-8 md:mt-10"
+          className="text-center mt-10 md:mt-14"
         >
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white/45 leading-tight text-center">
             They sell{" "}
-            <AnimatedStrike inView={inView}>ROI</AnimatedStrike>.<br />{" "}
-            We deliver <InvisibleInk active={inView} autoRevealDelay={7.2}>Realtime Operational Impact</InvisibleInk>.
+            <AnimatedStrike inView={inkActive}>ROI</AnimatedStrike>.<br />{" "}
+            We deliver <InvisibleInk active={inkActive} autoRevealDelay={COUNTER_END_TIME + 0.7}>Realtime Operational Impact</InvisibleInk>.
           </h2>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={inView ? { opacity: 1 } : {}}
-          transition={{ delay: 1.1, duration: 0.8 }}
-          className="flex items-center gap-4 mt-6 border-t border-white/10 pt-4"
-        >
-          <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(255,255,255,0.28), transparent)` }} />
-          <span className="text-[10px] tracking-[0.3em] uppercase text-white/28">
-             observed · catalogued · verified
-          </span>
-          <div className="flex-1 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(255,255,255,0.25), transparent)` }} />
-        </motion.div>
       </div>
       <StStyles />
     </div>

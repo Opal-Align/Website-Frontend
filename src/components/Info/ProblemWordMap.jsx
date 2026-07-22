@@ -70,42 +70,28 @@ function ProblemSentenceTicker({ active }) {
 
 /* ─── Word pool ─────────────────────────────────────────────────────────── */
 const WORDS = [
-  { text: "Revenue Leaking",    tier: 1 },
-  { text: "A/R Aging",          tier: 1 },
-  { text: "Losing Touch",       tier: 1 },
-  { text: "Unused Capacity",    tier: 1 },
+  { text: "Missed Collections",  tier: 1 },
+  { text: "Aging A/R",           tier: 1 },
+  { text: "Capacity Gaps",       tier: 1 },
+  { text: "Dormant Patients",    tier: 1 },
 
-  { text: "Missed Collections", tier: 2 },
-  { text: "Dormant Patients",   tier: 2 },
-  { text: "Unscheduled Care",   tier: 2 },
-  { text: "Blind Spots",        tier: 2 },
-  { text: "Write-Offs",         tier: 2 },
-  { text: "No Follow-Up",       tier: 2 },
-  { text: "Declined Cases",     tier: 2 },
-  { text: "Oblivion",           tier: 2 },
-  { text: "Empty Chairs",       tier: 2 },
-  { text: "Lost Demand",        tier: 2 },
+  { text: "Collection Drops",    tier: 2 },
+  { text: "Problem Claims",      tier: 2 },
+  { text: "No Follow-Ups",       tier: 2 },
+  { text: "Missed Recalls",      tier: 2 },
+  { text: "Declined Tx",         tier: 2 },
+  { text: "Overdue Tx",          tier: 2 },
+  { text: "Lost Patients",       tier: 2 },
+  { text: "Blind Ad Spend",      tier: 2 },
 
-  { text: "Billed",             tier: 3 },
-  { text: "Aged Out",           tier: 3 },
-  { text: "Scattered",          tier: 3 },
-  { text: "Unreachable",        tier: 3 },
-  { text: "Uncollected",        tier: 3 },
-  { text: "Invisible",          tier: 3 },
-  { text: "Overdue",            tier: 3 },
-  { text: "Gaps",               tier: 3 },
-  { text: "No-Shows",           tier: 3 },
-  { text: "Slipping",           tier: 3 },
-  { text: "Unjustified",        tier: 3 },
-  { text: "Disconnected",       tier: 3 },
-  { text: "Headcount",          tier: 3 },
-  { text: "Manual",             tier: 3 },
-  { text: "Reactive",           tier: 3 },
-  { text: "Delayed",            tier: 3 },
-  { text: "Unmeasured",         tier: 3 },
-  { text: "Forgotten",          tier: 3 },
-  { text: "Siloed",             tier: 3 },
-  { text: "Fragmented",         tier: 3 },
+  { text: "No-Shows",            tier: 3 },
+  { text: "VOB Delays",          tier: 3 },
+  { text: "Eligibility Delays",  tier: 3 },
+  { text: "No Care Standards",   tier: 3 },
+  { text: "Static Data",         tier: 3 },
+  { text: "No Insights",         tier: 3 },
+  { text: "Manual Workflows",    tier: 3 },
+  { text: "Rigid Systems",       tier: 3 },
 ];
 
 const TIER_STYLE = {
@@ -662,21 +648,14 @@ export default function ProblemWordMap() {
 
           <div className="pwm-header">
             <div className="pwm-heading">
-              <motion.span
-                className="pwm-hl-muted"
-                initial={{ opacity: 0, y: 8 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              >
-                The Structural Problem
-              </motion.span>
+              
               <motion.span
                 className="pwm-hl-bold"
                 initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
                 animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
                 transition={{ duration: 0.85, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
               >
-                THE GAPS YOU CAN'T SEE.
+                THE PROBLEM
               </motion.span>
               <motion.div
                 className="pwm-ticker-motion"

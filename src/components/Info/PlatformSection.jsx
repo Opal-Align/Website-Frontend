@@ -135,38 +135,37 @@ function ModuleIcon({ src, active, size = 30 }) {
 const MODULES = [
   {
     id: "schedule", label: "Schedule", num: "01", glyph: "α · 001", icon: scheduleIcon,
-    title: "Identified, verified, and filled — automatically.",
+    title: "Identified, Verified, Filled",
     features: [
-      "Fills from prioritized waitlist in real time",
-      "No-show risk flagged 48 hrs ahead",
-      "One view — no calls, no spreadsheets",
+      "Initiates automated outreach for no-shows, overdue procedures, and reactivations to recapture scheduling leakage",
+      "Patients submit appointment preferences via a booking link, surfaced in a queue for staff to schedule",
+      "AdWords integration attributes patient appointment activity to specific marketing spend",
     ],
   },
   {
     id: "produce", label: "Produce", num: "02", glyph: "β · 002", icon: productionIcon,
-    title: "Reengaged, reactivated, recovered — automatically.",
+    title: "Reconnected, Reactivated, Recovered",
     features: [
-      "Treatment plans auto-queued into workflow",
-      "Right outreach, right channel, right time",
-      "Accepted → scheduled → completed",
+      "Identifies production gaps, such as unscheduled and declined treatment plans, in order to re-engage with patients automatically",
+      "Deploys targeted campaigns for select events and procedure-specific opportunities",
     ],
   },
   {
     id: "collect", label: "Collect", num: "03", glyph: "γ · 003", icon: collectIcon,
-    title: "Surfaced, pursued, collected, documented — automatically.",
+    title: "Identified, Pursued, Collected",
     features: [
-      "Highest-recovery balances surfaced first",
-      "Automated statements and payment links",
-      "Denial patterns caught before write-off",
+      "Segments patient-balance scenarios into distinct categories, from missed OTC payments to aged A/R balances",
+      "Applies an automated cadence to each scenario to accelerate A/R recovery",
+      "Flags problem claims that require EOB review",
     ],
   },
   {
     id: "relay", label: "Relay", num: "04", glyph: "δ · 004", icon: relayIcon,
-    title: "Centralized, real-time, prioritized, and interactive.",
+    title: "Centralized, Prioritized, Streamlined",
     features: [
-      "SMS, email, and portal unified in one view",
-      "Auto-routing to the right channel every time",
-      "Full patient history, always in context",
+      "Centralizes all communications and responses into a single, real-time chat inbox interface",
+      "Handles exception management tasking to close the last inch of the patient journey",
+      "Provides a monitoring view of the automation lifecycles for each patient",
     ],
   },
 ];
@@ -384,13 +383,14 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
           overflow: hidden;
           display: flex;
           flex-direction: column;
-          padding: clamp(14px, 2vh, 24px) 0 0;
+          padding: clamp(28px, 4.5vh, 48px) 0 0;
           box-sizing: border-box;
         }
 
         .pf-header {
           text-align: center;
           flex-shrink: 0;
+          margin-top: clamp(4px, 1vh, 12px);
           margin-bottom: clamp(16px, 2.5vh, 28px);
           width: 100%;
           padding: 0 clamp(16px, 3vw, 52px);
@@ -592,27 +592,30 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
           font-weight: 700;
           line-height: 1.34;
           color: rgba(255,255,255,0.94);
-          max-width: 540px;
+          max-width: 620px;
         }
         .pf-card-features {
           width: 100%;
-          max-width: 500px;
+          max-width: 640px;
           display: flex;
           flex-direction: column;
-          align-items: center;
+          align-items: flex-start;
           justify-content: flex-start;
           gap: clamp(8px, 1.2vh, 12px);
           flex: 1 1 auto;
           min-height: 0;
+          text-align: left;
         }
         .pf-card-feature {
-          display: inline-flex;
+          display: flex;
           align-items: flex-start;
           gap: 9px;
-          font-size: clamp(15px, 1.65vh, 18px);
+          font-size: clamp(14px, 1.5vh, 17px);
           line-height: 1.46;
           color: rgba(255,255,255,0.55);
           text-align: left;
+          max-width: 100%;
+          width: 100%;
         }
         .pf-card-footer {
           font-size: clamp(10.5px, 1.15vh, 12px);
@@ -640,6 +643,7 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
             min-height: 0;
             max-height: 100%;
             overflow: hidden;
+            padding-top: clamp(24px, 4vh, 36px);
             padding-bottom: 16px;
           }
           .pf-body {
@@ -649,6 +653,7 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
             margin-top: 6px;
           }
           .pf-header {
+            margin-top: 8px;
             margin-bottom: 20px;   /* was 12px — more gap before the cards start */
             padding: 0 14px;
           }
@@ -712,7 +717,11 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
             font-size: clamp(18px, 3.4vw, 20px);
             line-height: 1.45;
             width: 100%;
-            max-width: 290px;
+            max-width: none;
+          }
+          .pf-card-features {
+            align-items: flex-start;
+            max-width: 100%;
           }
 
           /* ── Footer text hidden; replaced by dot indicators ── */
