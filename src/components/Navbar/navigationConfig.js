@@ -99,16 +99,26 @@ export function goToTarget(target, navigate, options = {}) {
       if (index === -1) return;
 
       const container = slide.parentElement;
-      // container is position:relative (not sticky) → rect is always accurate
-      const containerDocTop =
-        container.getBoundingClientRect().top + window.scrollY;
+      // container is position:relative (not sticky) → rect is always accurate.
+      // Round to match HomePageLayout.snapPoints() exactly — a fractional
+      // anchor on high-DPI/zoomed monitors otherwise lands the nav jump a few
+      // px off from where the scroll controller expects the snap point, which
+      // can strand the view between two sticky cards.
+      const containerDocTop = Math.round(
+        container.getBoundingClientRect().top + window.scrollY,
+      );
 
-      // Each section is calc(100svh - NAV_HEIGHT); use the live viewport
-      // height so this works on any screen size including after resize.
-      const sectionHeight = window.innerHeight - NAV_HEIGHT;
+      // Sum the ACTUAL measured slide heights up to the target instead of
+      // assuming every card is exactly innerHeight - NAV_HEIGHT. This mirrors
+      // the layout's snapPoints() so nav clicks and wheel/touch snaps agree.
+      const fallbackH = Math.max(1, Math.round(window.innerHeight - NAV_HEIGHT));
+      let acc = 0;
+      for (let i = 0; i < index; i += 1) {
+        const el = slides[i];
+        acc += el && el.offsetHeight > 0 ? el.offsetHeight : fallbackH;
+      }
 
-      const scrollTop =
-        containerDocTop + index * sectionHeight - NAV_HEIGHT;
+      const scrollTop = containerDocTop + acc - NAV_HEIGHT;
       window.scrollTo({ top: Math.max(0, scrollTop), behavior: "smooth" });
       return;
     }

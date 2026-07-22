@@ -27,7 +27,12 @@ const PlatformSection = lazy(() => import("./Info/PlatformSection.jsx"));
    Desktop: full FiveStepLoop + Processes.
    Mobile:  Loop → orbit + cards; Impact → narrative + metrics. ─ */
 const SLIDE_BG = "#0a0a0a";
-const OVERFLOW_EPS = 48;
+// Minimum real overflow (px) before a card scrolls internally instead of
+// snapping to the next section. Kept generous so short-viewport monitors
+// (e.g. 3440×1440 landscape) don't trap a gesture on a card that only
+// overflows by a few dozen px. Mobile slides are all data-card-scroll="none"
+// and never reach this check, so this value is desktop-only.
+const OVERFLOW_EPS = 96;
 const MOBILE_BP = 767;
 
 /** Empty slide shell while a lazy section loads — keeps snap heights stable */
@@ -90,9 +95,15 @@ export default function HomePageLayout() {
     const snapPoints = () => {
       const container = stackRef.current;
       if (!container) return [];
-      const containerTop =
-        container.getBoundingClientRect().top + window.scrollY;
-      const slideH = Math.max(1, window.innerHeight - NAV_HEIGHT);
+      // Round the document anchor: getBoundingClientRect().top is a float
+      // (e.g. 1802.6) while offsetHeight is an integer. On high-DPI / zoomed /
+      // ultrawide monitors that fractional part accumulates across slides and
+      // lands the snap 3–8px between two sticky cards. Round both the anchor
+      // and each slide height so the math stays integer-aligned.
+      const containerTop = Math.round(
+        container.getBoundingClientRect().top + window.scrollY,
+      );
+      const slideH = Math.max(1, Math.round(window.innerHeight - NAV_HEIGHT));
       let acc = 0;
       return sectionRefs.current.map((el) => {
         const point = Math.max(0, containerTop + acc - NAV_HEIGHT);
@@ -154,7 +165,9 @@ export default function HomePageLayout() {
       // Safety net + hard clamp to the exact target if the engine overshoots.
       fallbackTimer = setTimeout(() => {
         if (pendingSnapTop != null) {
-          if (Math.abs(window.scrollY - pendingSnapTop) > 1) {
+          // Sub-pixel differences (fractional innerHeight on high-DPI/zoom)
+          // must not trigger a hard re-snap; only correct real overshoots.
+          if (Math.abs(window.scrollY - pendingSnapTop) > 3) {
             window.scrollTo({ top: pendingSnapTop, behavior: "auto" });
           }
           pendingSnapTop = null;
@@ -167,14 +180,18 @@ export default function HomePageLayout() {
     // momentum from a trackpad fling is swallowed instead of skipping ahead.
     const onScrollEnd = () => {
       if (pendingSnapTop != null) {
-        if (Math.abs(window.scrollY - pendingSnapTop) > 2) {
+        if (Math.abs(window.scrollY - pendingSnapTop) > 3) {
           window.scrollTo({ top: pendingSnapTop, behavior: "auto" });
         }
         pendingSnapTop = null;
       }
       if (!busy) return;
       clearTimeout(releaseTimer);
-      releaseTimer = setTimeout(() => { busy = false; }, 160);
+      // On high-refresh monitors (144Hz/165Hz) `scrollend` can fire a frame or
+      // two before the final position is painted. Hold `busy` a little longer
+      // so a re-scroll during that window can't fire a step() that fights the
+      // in-flight clamp and strands us mid-transition.
+      releaseTimer = setTimeout(() => { busy = false; }, 320);
     };
 
     // Card scrollability for the active .home-slide.
@@ -295,7 +312,27 @@ export default function HomePageLayout() {
       const slideH = Math.max(1, window.innerHeight - NAV_HEIGHT);
 
       if (y < firstP - slideH - 4) return;
-      if (y > lastP + 4) return;
+      if (y > lastP + 4) {
+        // Footer zone. Downward → stay native so the footer / reveal overlay
+        // is still reachable. Upward → re-anchor onto the LAST section first
+        // (was skipping it: free-scrolling straight up past the testimonial
+        // into LogoStream). This makes the exit a clean two-step —
+        // footer → last section → previous section — like the rest of the
+        // site. Desktop-only in practice: mobile wheel is muted after touch.
+        if (
+          e.deltaY < -4 &&
+          !busy &&
+          Date.now() >= snapLockUntil &&
+          Date.now() >= wheelIgnoreUntil
+        ) {
+          e.preventDefault();
+          snapTo(lastP);
+          wheelIgnoreUntil = Date.now() + 1000;
+          clearTimeout(wheelQuietTimer);
+          wheelQuietTimer = setTimeout(() => { wheelIgnoreUntil = 0; }, 1000);
+        }
+        return;
+      }
 
       if (busy || Date.now() < wheelIgnoreUntil || Date.now() < snapLockUntil) {
         e.preventDefault();
@@ -353,6 +390,24 @@ export default function HomePageLayout() {
 
       if (y < firstP - slideH - 4) return;
       if (y > lastP + 4) return;
+
+      // Final section → footer: let the browser scroll NATIVELY into the
+      // footer instead of hijacking the gesture. The footer is the end of the
+      // stack (not another snap section), so there's nothing to chain into.
+      // Without this, the last slide (testimonials on mobile) felt stuck:
+      // sub-48px swipes were preventDefault-ed and the post-snap cooldown
+      // swallowed the first gesture, so the page appeared to "not go
+      // anywhere". Runs BEFORE the cooldown guard on purpose, but only when no
+      // programmatic snap is in flight, and only for a downward (toward-footer)
+      // swipe on the last section — upward still snaps to the previous slide.
+      if (
+        isMobileRef.current &&
+        !busy &&
+        touchStartY - e.touches[0].clientY > 0 &&
+        nearestIndex(points, y) === points.length - 1
+      ) {
+        return; // no preventDefault → native scroll flows into the footer
+      }
 
       // Already snapped this finger-down — swallow everything until lift
       if (busy || snappedForGesture === gestureId || Date.now() < snapLockUntil) {

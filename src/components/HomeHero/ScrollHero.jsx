@@ -9,8 +9,8 @@ import opalLogo from "../../assets/OPALgos GreyWhite Website.png";
 
 const NAVY = "#08060C";
 const HERO_HEADLINE_SIZE = "clamp(2.4rem, 6.2vw, 5.2rem)";
-const SCROLL_LENGTH = "200vh";
-const HEADLINES_REVEAL_AT = 0.50;
+const SCROLL_LENGTH = "170vh";
+const HEADLINES_REVEAL_AT = 0.72;
 const PILL_DELAY_MS = 500;
 const SUBHEAD_AFTER_PILL_MS = 150;
 
@@ -264,14 +264,17 @@ export default function ScrollHero() {
     });
   }, []);
 
-  // Scroll-driven values — logo + three headline lines only
-  const allLinesOpacity = useTransform(progress, [0.38, 0.50], [0, 1]);
+  // Scroll-driven values — logo + three headline lines only.
+  // Breakpoints scaled so the reveal completes at HEADLINES_REVEAL_AT (0.72)
+  // instead of 0.50. This keeps the same on-screen reveal distance (~38vh)
+  // while cutting the empty tail after the verbiage from ~50vh to ~20vh.
+  const allLinesOpacity = useTransform(progress, [0.55, 0.72], [0, 1]);
 
-  const logoScale = useTransform(progress, [0.12, 0.32], [2.35, 1]);
-  const logoX     = useTransform(progress, [0.12, 0.32], ["0vw", "0vw"]);
-  const logoY     = useTransform(progress, [0.12, 0.32], ["0vh", "-35vh"]);
+  const logoScale = useTransform(progress, [0.17, 0.46], [2.35, 1]);
+  const logoX     = useTransform(progress, [0.17, 0.46], ["0vw", "0vw"]);
+  const logoY     = useTransform(progress, [0.17, 0.46], ["0vh", "-35vh"]);
 
-  const hintOpacity = useTransform(progress, [0, 0.05], [1, 0]);
+  const hintOpacity = useTransform(progress, [0, 0.07], [1, 0]);
 
   return (
     <>
@@ -376,16 +379,16 @@ export default function ScrollHero() {
                 style={{ opacity: allLinesOpacity }}
                 className="hero-h1 font-['Montserrat'] font-light leading-[1.05] tracking-tight"
               >
-                <AnimatedWord progress={progress} start={0.38} end={0.50}>Recover</AnimatedWord>
-                <AnimatedWord progress={progress} start={0.38} end={0.50} accent>Revenue.</AnimatedWord>
+                <AnimatedWord progress={progress} start={0.55} end={0.72}>Recover</AnimatedWord>
+                <AnimatedWord progress={progress} start={0.55} end={0.72} accent>Revenue.</AnimatedWord>
               </motion.h1>
 
               <motion.h1
                 style={{ opacity: allLinesOpacity }}
                 className="hero-h1 font-['Montserrat'] font-light leading-[1.05] tracking-tight mt-2 md:mt-3"
               >
-                <AnimatedWord progress={progress} start={0.38} end={0.50}>Maximize</AnimatedWord>
-                <AnimatedWord progress={progress} start={0.38} end={0.50} accent>Margins.</AnimatedWord>
+                <AnimatedWord progress={progress} start={0.55} end={0.72}>Maximize</AnimatedWord>
+                <AnimatedWord progress={progress} start={0.55} end={0.72} accent>Margins.</AnimatedWord>
               </motion.h1>
 
               <motion.div
@@ -422,9 +425,9 @@ export default function ScrollHero() {
                 </motion.svg>
 
                 <h1 className="hero-h1 relative font-['Montserrat'] font-light leading-[1.05] tracking-tight px-8 md:px-12 py-2 md:py-3">
-                  <AnimatedWord progress={progress} start={0.38} end={0.50}>Zero</AnimatedWord>
-                  <AnimatedWord progress={progress} start={0.38} end={0.50}>new</AnimatedWord>
-                  <AnimatedWord progress={progress} start={0.38} end={0.50} accent last>hires.</AnimatedWord>
+                  <AnimatedWord progress={progress} start={0.55} end={0.72}>Zero</AnimatedWord>
+                  <AnimatedWord progress={progress} start={0.55} end={0.72}>new</AnimatedWord>
+                  <AnimatedWord progress={progress} start={0.55} end={0.72} accent last>hires.</AnimatedWord>
                 </h1>
               </motion.div>
 

@@ -138,7 +138,7 @@ const MODULES = [
     title: "Identified, Verified, Filled",
     features: [
       "Initiates automated outreach for no-shows, overdue procedures, and reactivations to recapture scheduling leakage",
-      "Patients submit appointment preferences through an embedded scheduling prompt, providing a staff queue for booking while AdWords integration attributes the visit to its source marketing campaign.",
+      "Patients submit appointment preferences through an embedded scheduling prompt, providing a staff queue for booking while AdWords integration attributes the visit to its source marketing campaign",
       "Verifies patient benefits ahead of each appointment, flagging discrepancies for staff review before the visit",
     ],
   },
