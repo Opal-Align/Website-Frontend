@@ -316,20 +316,19 @@ export default function HomePageLayout() {
         // Footer zone. Downward → stay native so the footer / reveal overlay
         // is still reachable. Upward → re-anchor onto the LAST section first
         // (was skipping it: free-scrolling straight up past the testimonial
-        // into LogoStream). This makes the exit a clean two-step —
-        // footer → last section → previous section — like the rest of the
-        // site. Desktop-only in practice: mobile wheel is muted after touch.
-        if (
-          e.deltaY < -4 &&
-          !busy &&
-          Date.now() >= snapLockUntil &&
-          Date.now() >= wheelIgnoreUntil
-        ) {
+        // into LogoStream). Desktop-only in practice: mobile wheel is muted.
+        if (e.deltaY < -4) {
+          // ALWAYS block an upward wheel here — a trackpad fling keeps emitting
+          // momentum events, and if we let them through while a snap is in
+          // flight the native scroll overrides snapTo(lastP) and skips the
+          // testimonial again. Kill every upward event; trigger the snap once.
           e.preventDefault();
-          snapTo(lastP);
-          wheelIgnoreUntil = Date.now() + 1000;
-          clearTimeout(wheelQuietTimer);
-          wheelQuietTimer = setTimeout(() => { wheelIgnoreUntil = 0; }, 1000);
+          if (!busy && Date.now() >= snapLockUntil && Date.now() >= wheelIgnoreUntil) {
+            snapTo(lastP);
+            wheelIgnoreUntil = Date.now() + 1000;
+            clearTimeout(wheelQuietTimer);
+            wheelQuietTimer = setTimeout(() => { wheelIgnoreUntil = 0; }, 1000);
+          }
         }
         return;
       }
