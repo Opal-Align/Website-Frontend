@@ -674,7 +674,7 @@ export default function HomePageLayout() {
                   <LogoStream />
                 </Suspense>
               </div>
-              <div className="home-slide" ref={setSectionRef(5)} style={{ ["--slide-z"]: 6, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
+              <div className="home-slide" ref={setSectionRef(5)} data-card-scroll="none" style={{ ["--slide-z"]: 6, ["--page-nav-h"]: `${NAV_HEIGHT}px` }}>
                 <Suspense fallback={<SlideFallback />}>
                   <TestimonialSection />
                 </Suspense>
