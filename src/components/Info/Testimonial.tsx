@@ -2,6 +2,8 @@
 import React, { useRef, useEffect, useState } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, useInView, AnimatePresence } from "framer-motion";
+import useHomeSlideActive from "../../hooks/useHomeSlideActive";
+import useScrollContainer from "../../hooks/useScrollContainer";
 
 interface Testimonial {
   quote: string;
@@ -106,7 +108,7 @@ function TypewriterQuote({
         {visible}
         {!done && (
           <motion.span
-            className="inline-block w-[2px] h-[1em] align-[-0.15em] ml-0.5 rounded-sm"
+            className="inline-block w-0.5 h-[1em] align-[-0.15em] ml-0.5 rounded-sm"
             style={{ backgroundImage: OPAL_LIGHT_GRADIENT }}
             animate={{ opacity: [1, 0.2, 1] }}
             transition={{ duration: 0.85, repeat: Infinity, ease: "easeInOut" }}
@@ -117,7 +119,7 @@ function TypewriterQuote({
   );
 }
 
-function StarsCanvas() {
+function StarsCanvas({ active }: { active: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const canvas = ref.current;
@@ -136,10 +138,19 @@ function StarsCanvas() {
       hue: number;
     }> = [];
 
+    const reduced =
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let onScreen = active;
+    let running = false;
+
     const resize = () => {
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
-      const count = Math.floor((canvas.width * canvas.height) / 2600);
+      // Was /2600; halved to ~/5200 — still a dense field, half the fills.
+      const count = Math.floor((canvas.width * canvas.height) / 5200);
       stars = Array.from({ length: count }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
@@ -155,7 +166,7 @@ function StarsCanvas() {
       }));
     };
 
-    const draw = (t: number) => {
+    const renderFrame = (t: number) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       for (const s of stars) {
         let a = s.base;
@@ -175,17 +186,64 @@ function StarsCanvas() {
           ctx.stroke();
         }
       }
+    };
+
+    // Ambient twinkle capped at ~30fps.
+    const FRAME_MS = 1000 / 30;
+    let last = 0;
+    const draw = (t: number) => {
+      if (!running || document.hidden) return;
+      if (t - last < FRAME_MS) {
+        id = requestAnimationFrame(draw);
+        return;
+      }
+      last = t;
+      renderFrame(t);
       id = requestAnimationFrame(draw);
+    };
+
+    const start = () => {
+      if (running || !onScreen || document.hidden || reduced) return;
+      running = true;
+      id = requestAnimationFrame(draw);
+    };
+    const stop = () => {
+      running = false;
+      cancelAnimationFrame(id);
     };
 
     resize();
     window.addEventListener("resize", resize);
-    id = requestAnimationFrame(draw);
-    return () => {
-      cancelAnimationFrame(id);
-      window.removeEventListener("resize", resize);
+
+    if (reduced) {
+      renderFrame(0); // single static field, no loop
+    } else {
+      start();
+    }
+
+    // Pause the loop when the testimonial section is off-screen.
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        onScreen = entry.isIntersecting;
+        if (onScreen) start(); else stop();
+      },
+      { threshold: 0 },
+    );
+    io.observe(canvas);
+
+    const onVisibility = () => {
+      if (document.hidden) stop();
+      else start();
     };
-  }, []);
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      stop();
+      window.removeEventListener("resize", resize);
+      io.disconnect();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [active]);
 
   return (
     <canvas
@@ -207,12 +265,15 @@ function getDurationFor(text: string, reduced: boolean) {
 
 const TestimonialSection = () => {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: false, margin: "-12%" });
+  const containerCtx = useScrollContainer();
+  const inView = useInView(ref, { once: false, margin: "-12%", root: containerCtx });
+  const slideActive = useHomeSlideActive(ref);
+  const shouldAnimate = inView && slideActive;
   const [active, setActive] = useState(0);
   const [typeKey, setTypeKey] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [progress, setProgress] = useState(0);
   const reduced = usePrefersReducedMotion();
+  const progressElsRef = useRef<Array<HTMLDivElement | null>>([]);
 
   const item = testimonials[active];
   const duration = getDurationFor(item.quote, reduced);
@@ -220,17 +281,18 @@ const TestimonialSection = () => {
   // Restart typewriter when active or visibility changes
   useEffect(() => {
     setTypeKey((k) => k + 1);
-  }, [active, inView]);
+  }, [active, shouldAnimate]);
 
   // Auto-advance via rAF — pauses on hover or off-screen, resumes from where it left
   const progressRef = useRef(0);
   useEffect(() => {
     progressRef.current = 0;
-    setProgress(0);
-  }, [active, inView]);
+    const el = progressElsRef.current[active];
+    if (el) el.style.transform = "scaleX(0)";
+  }, [active, shouldAnimate]);
 
   useEffect(() => {
-    if (!inView || paused) return;
+    if (!shouldAnimate || paused) return;
     let raf: number;
     let last: number | null = null;
     let completed = false;
@@ -240,7 +302,10 @@ const TestimonialSection = () => {
       const dt = t - last;
       last = t;
       progressRef.current = Math.min(1, progressRef.current + dt / duration);
-      setProgress(progressRef.current);
+      // Update the compositor transform directly. Using React state here
+      // re-rendered the entire testimonial section ~60 times/second.
+      const el = progressElsRef.current[active];
+      if (el) el.style.transform = `scaleX(${progressRef.current})`;
       if (progressRef.current >= 1) {
         if (!completed) {
           completed = true;
@@ -253,7 +318,7 @@ const TestimonialSection = () => {
 
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [inView, paused, duration]);
+  }, [active, shouldAnimate, paused, duration]);
 
   return (
     <section
@@ -264,7 +329,7 @@ const TestimonialSection = () => {
         scrollMarginTop: "var(--page-nav-h, 80px)",
       }}
     >
-      <StarsCanvas />
+      <StarsCanvas active={shouldAnimate} />
 
       <div
         aria-hidden
@@ -284,7 +349,7 @@ const TestimonialSection = () => {
             <motion.span
               className="tm-hl-muted"
               initial={{ opacity: 0, y: 8 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
+              animate={shouldAnimate ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             >
               Testimonials
@@ -292,7 +357,7 @@ const TestimonialSection = () => {
             <motion.span
               className="tm-hl-bold"
               initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
-              animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+              animate={shouldAnimate ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
               transition={{ duration: 0.85, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
             >
               VOICES FROM OUR PARTNERS
@@ -375,7 +440,7 @@ const TestimonialSection = () => {
                 <TypewriterQuote
                   text={item.quote}
                   runKey={typeKey}
-                  active={inView}
+                  active={shouldAnimate}
                   charsPerTick={TYPE_CHARS_PER_TICK}
                   tickMs={TYPE_TICK_MS}
                 />
@@ -390,7 +455,7 @@ const TestimonialSection = () => {
 
                 <motion.div
                   initial={{ opacity: 0 }}
-                  animate={{ opacity: inView ? 1 : 0 }}
+                  animate={{ opacity: shouldAnimate ? 1 : 0 }}
                   transition={{ delay: reduced ? 0 : 0.35, duration: 0.5 }}
                   className="flex items-center gap-3"
                 >
@@ -451,7 +516,7 @@ const TestimonialSection = () => {
             {testimonials.map((_, i) => {
               const isActive = i === active;
               const isPast = i < active;
-              const fill = isActive ? progress : isPast ? 1 : 0;
+              const fill = isPast ? 1 : 0;
               return (
                 <div
                   key={i}
@@ -461,16 +526,20 @@ const TestimonialSection = () => {
                   style={{ backgroundColor: "rgba(255,255,255,0.10)" }}
                 >
                   <div
+                    ref={(el) => { progressElsRef.current[i] = el; }}
                     className="absolute inset-y-0 left-0"
                     style={{
-                      width: `${fill * 100}%`,
+                      width: "100%",
+                      transform: `scaleX(${fill})`,
+                      transformOrigin: "left center",
+                      willChange: isActive ? "transform" : "auto",
                       backgroundImage: OPAL_LIGHT_GRADIENT,
                       boxShadow: isActive
                         ? "0 0 12px rgba(255,255,255,0.45)"
                         : "none",
                       transition: isActive
                         ? "none"
-                        : "width 0.4s ease-out",
+                        : "transform 0.4s ease-out",
                     }}
                   />
                 </div>
@@ -485,9 +554,9 @@ const TestimonialSection = () => {
 
         .tm-section {
           --tm-nav-h: var(--page-nav-h, 80px);
-          min-height: calc(100svh - var(--tm-nav-h));
-          height: calc(100svh - var(--tm-nav-h));
-          max-height: calc(100svh - var(--tm-nav-h));
+          min-height: 100%;
+          height: 100%;
+          max-height: 100%;
         }
 
         .tm-header {

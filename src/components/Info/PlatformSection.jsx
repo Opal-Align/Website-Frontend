@@ -31,11 +31,14 @@
  */
 
 import { useRef, useState, useEffect, useCallback } from "react";
+// eslint-disable-next-line no-unused-vars
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import scheduleIcon from "../../assets/schedule.svg";
 import productionIcon from "../../assets/production.svg";
 import collectIcon from "../../assets/collect.svg";
 import relayIcon from "../../assets/relay.svg";
+import useHomeSlideActive from "../../hooks/useHomeSlideActive";
+import useScrollContainer from "../../hooks/useScrollContainer";
 
 /* ─── Constants ───────────────────────────────────────────────────── */
 const N            = 4;
@@ -213,7 +216,14 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
   const [phase,        setPhase]        = useState("idle"); // "idle" | "out" | "in"
   const [tileHovered,  setTileHovered]  = useState(false);
 
-  const inView = useInView(sectionRef, { once: false, margin: "-8% 0px" });
+  const containerCtx = useScrollContainer();
+  const inView = useInView(sectionRef, {
+    once: false,
+    margin: "-8% 0px",
+    root: containerCtx,
+  });
+  const slideActive = useHomeSlideActive(sectionRef);
+  const shouldAnimate = inView && slideActive;
 
   const stopBurst = useCallback(() => {
     if (burstRafRef.current) { cancelAnimationFrame(burstRafRef.current); burstRafRef.current = null; }
@@ -268,7 +278,7 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
 
   /* ── the one state machine that owns transitions ─────────────────── */
   useEffect(() => {
-    if (!inView) return;
+    if (!shouldAnimate) return;
 
     // First reveal — no "out" needed, just burst the first module in.
     if (!revealedOnceRef.current) {
@@ -288,7 +298,7 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
       runBurst("in", () => { setPhase("idle"); });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeIndex, inView]);
+  }, [activeIndex, shouldAnimate]);
 
   useEffect(() => () => { stopBurst(); }, [stopBurst]);
 
@@ -318,7 +328,7 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
 
   /* Leave view → pause & reset to Schedule so re-entry never feels mid-loop. */
   useEffect(() => {
-    if (inView) return;
+    if (shouldAnimate) return;
     stopBurst();
     elapsedRef.current = 0;
     lastTsRef.current = null;
@@ -327,10 +337,10 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
     setActiveIndex(0);
     setDisplayIndex(0);
     setPhase("idle");
-  }, [inView, stopBurst, applyProgress]);
+  }, [shouldAnimate, stopBurst, applyProgress]);
 
   useEffect(() => {
-    if (!inView) return;
+    if (!shouldAnimate) return;
 
     const tick = (now) => {
       if (lastTsRef.current == null) lastTsRef.current = now;
@@ -357,7 +367,7 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
       autoplayRafRef.current = null;
       lastTsRef.current = null;
     };
-  }, [inView, autoplayMs, applyProgress]);
+  }, [shouldAnimate, autoplayMs, applyProgress]);
 
   /* ── clicking an icon jumps straight there and resets the timer ──── */
   const goToIndex = useCallback((i) => {
@@ -378,9 +388,9 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
           color: #fff;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
           font-weight: 300;
-          height: calc(100svh - var(--pf-nav-h, var(--page-nav-h, 80px)));
-          min-height: calc(100svh - var(--pf-nav-h, var(--page-nav-h, 80px)));
-          max-height: calc(100svh - var(--pf-nav-h, var(--page-nav-h, 80px)));
+          height: 100%;
+          min-height: 100%;
+          max-height: 100%;
           overflow: hidden;
           display: flex;
           flex-direction: column;
@@ -546,6 +556,12 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
         .pf-wave-ring {
           position: absolute; inset: -4px;
           pointer-events: none; border: 1px solid rgba(255,255,255,0.35);
+          animation: pfWaveRing 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+          will-change: transform, opacity;
+        }
+        @keyframes pfWaveRing {
+          from { transform: scale(1); opacity: 0.35; }
+          to { transform: scale(1.12); opacity: 0; }
         }
 
         /* ── Content tile ── */
@@ -830,13 +846,12 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
                           </>
                         )}
                         {isHero && [0, 0.7, 1.4].map((delay) => (
-                          <motion.span
+                          <span
                             key={delay}
                             className="pf-wave-ring"
-                            animate={{ scale: [1, 1.12], opacity: [0.35, 0] }}
-                            transition={{
-                              duration: 2.4, repeat: Infinity,
-                              ease: [0.22, 1, 0.36, 1], delay,
+                            style={{
+                              animationDelay: `${delay}s`,
+                              animationPlayState: shouldAnimate ? "running" : "paused",
                             }}
                           />
                         ))}

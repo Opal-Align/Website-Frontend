@@ -8,6 +8,7 @@ import {
 } from "react";
 import opalLogo from "../../assets/OPAL.svg";
 import opalGosLogo from "../../assets/opal-gos.svg";
+import useHomeSlideActive from "../../hooks/useHomeSlideActive";
 
 const OPAL_LOGO_RATIO = 3520 / 1214;
 const OPAL_GOS_LOGO_RATIO = 1;
@@ -74,7 +75,7 @@ function polarToXY(r, deg, cx, cy) {
 
 
 /* ─── Orbital canvas hook ─────────────────────────────────────────── */
-function useOrbitalCanvas({ canvasRef, containerRef, setActive }) {
+function useOrbitalCanvas({ canvasRef, containerRef, setActive, enabled }) {
   const sparklesRef    = useRef([]);
   const starsRef       = useRef([]);
   const startTimeRef   = useRef(null);
@@ -157,7 +158,19 @@ function useOrbitalCanvas({ canvasRef, containerRef, setActive }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    let running = false;
+    let onScreen = enabled;
+    let lastFrame = 0;
+    const FRAME_MS = 1000 / 30;
+
     function frame(ts) {
+      if (!running || document.hidden) return;
+      if (ts - lastFrame < FRAME_MS) {
+        rafRef.current = requestAnimationFrame(frame);
+        return;
+      }
+      lastFrame = ts;
+
       const ctx = canvas.getContext("2d");
       const { W, H, cx, cy, stepR } = dimsRef.current;
       if (W === 0) { rafRef.current = requestAnimationFrame(frame); return; }
@@ -260,19 +273,49 @@ function useOrbitalCanvas({ canvasRef, containerRef, setActive }) {
       rafRef.current = requestAnimationFrame(frame);
     }
 
-    rafRef.current = requestAnimationFrame(frame);
+    const start = () => {
+      if (running || !onScreen || document.hidden) return;
+      running = true;
+      lastFrame = 0;
+      rafRef.current = requestAnimationFrame(frame);
+    };
+    const stop = () => {
+      running = false;
+      cancelAnimationFrame(rafRef.current);
+    };
+
+    start();
     const container = containerRef.current;
     const ro = container ? new ResizeObserver(resize) : null;
     if (container) ro.observe(container);
+
+    // The loop previously ran forever after mount. Pause it while its slide is
+    // off-screen, then resume from the same time-based orbit on re-entry.
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        onScreen = entry.isIntersecting;
+        if (onScreen) start(); else stop();
+      },
+      { threshold: 0 },
+    );
+    io.observe(canvas);
+
+    const onVisibility = () => {
+      if (document.hidden) stop();
+      else start();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("resize", resize);
     return () => {
-      cancelAnimationFrame(rafRef.current);
+      stop();
       clearTimeout(manualTimerRef.current);
       ro?.disconnect();
+      io.disconnect();
+      document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("resize", resize);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resize, activateStep]);
+  }, [resize, activateStep, enabled]);
 
   return { nodeXY, userActivate };
 }
@@ -288,9 +331,9 @@ function FslStyles() {
         color: #fff;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         font-weight: 300;
-        height: calc(100svh - var(--fsl-nav-h));
-        min-height: calc(100svh - var(--fsl-nav-h));
-        max-height: calc(100svh - var(--fsl-nav-h));
+        height: 100%;
+        min-height: 100%;
+        max-height: 100%;
         display: flex;
         flex-direction: column;
         padding: clamp(14px, 2vh, 24px) clamp(20px, 3vw, 40px) clamp(12px, 1.5vh, 20px);
@@ -629,9 +672,11 @@ export function FiveStepLoopOrbit() {
   const canvasRef    = useRef(null);
   const containerRef = useRef(null);
   const stageRef     = useRef(null);
+  const sectionRef   = useRef(null);
+  const slideActive  = useHomeSlideActive(sectionRef);
 
   const { nodeXY, userActivate } = useOrbitalCanvas({
-    canvasRef, containerRef, setActive,
+    canvasRef, containerRef, setActive, enabled: slideActive,
   });
 
   useEffect(() => {
@@ -657,7 +702,7 @@ export function FiveStepLoopOrbit() {
   return (
     <>
       <FslStyles />
-      <section id="loop" className="fsl-section">
+      <section ref={sectionRef} id="loop" className="fsl-section">
         <div className="fsl-heading">
           <div className="fsl-brand-opal">
             <img src={opalLogo} alt="OPAL" />
@@ -707,22 +752,11 @@ export function FiveStepLoopOrbit() {
 /** Slide 2 — step detail cards (mobile: auto-expands top → bottom) */
 export function FiveStepLoopCards() {
   const [active, setActive] = useState(MOBILE_SEQUENCE[0]);
-  const [inView, setInView] = useState(false);
   const sectionRef = useRef(null);
+  const inView = useHomeSlideActive(sectionRef);
   const seqPosRef = useRef(0);
   const manualRef = useRef(false);
   const manualTimerRef = useRef(null);
-
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([entry]) => setInView(entry.isIntersecting),
-      { threshold: 0.3 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
 
   useEffect(() => {
     if (!inView) return;
@@ -796,9 +830,11 @@ export default function FiveStepLoop() {
   const containerRef = useRef(null);
   const bottomRef    = useRef(null);
   const leftColRef   = useRef(null);
+  const sectionRef   = useRef(null);
+  const slideActive  = useHomeSlideActive(sectionRef);
 
   const { nodeXY, userActivate } = useOrbitalCanvas({
-    canvasRef, containerRef, setActive,
+    canvasRef, containerRef, setActive, enabled: slideActive,
   });
 
   useEffect(() => {
@@ -843,7 +879,7 @@ export default function FiveStepLoop() {
   return (
     <>
       <FslStyles />
-      <section id="loop" className="fsl-section fsl-desktop-combined">
+      <section ref={sectionRef} id="loop" className="fsl-section fsl-desktop-combined">
         <div className="fsl-heading">
           <div className="fsl-brand-opal">
             <img src={opalLogo} alt="OPAL" />
