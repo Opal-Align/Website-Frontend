@@ -923,7 +923,7 @@ export function ImpactNarrative() {
           className="w-full"
         >
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white/45 leading-tight text-center">
-            They sell{" "}
+            Others pitched{" "}
             <AnimatedStrike inView={inkActive}>ROI</AnimatedStrike>.<br />{" "}
             We deliver <InvisibleInk active={inkActive} autoRevealDelay={1.4}>Realtime Operational Impact</InvisibleInk>.
           </h2>
@@ -1064,7 +1064,7 @@ export default function Processes() {
           className="text-center mt-10 md:mt-14"
         >
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white/45 leading-tight text-center">
-            They sell{" "}
+          Others pitched{" "}
             <AnimatedStrike inView={inkActive}>ROI</AnimatedStrike>.<br />{" "}
             We deliver <InvisibleInk active={inkActive} autoRevealDelay={COUNTER_END_TIME + 0.7}>Realtime Operational Impact</InvisibleInk>.
           </h2>
