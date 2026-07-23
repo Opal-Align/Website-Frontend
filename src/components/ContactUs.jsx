@@ -7,6 +7,17 @@ import { MdCall } from "react-icons/md";
 import { MdEmail } from "react-icons/md";
 import { submitToHubSpot } from "../services/hubspotService.js";
 
+const OPAL_GRADIENT =
+  "linear-gradient(120deg, #FFFFFF 0%, #F8FAFC 30%, #F3F4F6 65%, #FFFFFF 100%)";
+
+const gradientText = {
+  backgroundImage: OPAL_GRADIENT,
+  WebkitBackgroundClip: "text",
+  backgroundClip: "text",
+  WebkitTextFillColor: "transparent",
+  color: "transparent",
+};
+
 export default function ContactUs() {
   const [formData, setFormData] = useState({
     name: "",
@@ -130,6 +141,37 @@ export default function ContactUs() {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
+      {/* Shared gradient defs for react-icons fills */}
+      <svg width="0" height="0" style={{ position: "absolute", overflow: "hidden" }} aria-hidden>
+        <defs>
+          <linearGradient id="opalContactGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%"   stopColor="#B8EEFF" />
+            <stop offset="30%"  stopColor="#7DD3FC" />
+            <stop offset="60%"  stopColor="#38BDF8" />
+            <stop offset="100%" stopColor="#22D3EE" />
+          </linearGradient>
+        </defs>
+      </svg>
+
+      {/* Input / focus styles */}
+      <style>{`
+        .opal-input {
+          background: transparent;
+          border-top: none;
+          border-left: none;
+          border-right: none;
+          border-bottom: 2px solid rgba(184,238,255,0.22);
+          color: #fff;
+          width: 100%;
+          padding: 1rem 0;
+          font-size: 1.125rem;
+          transition: border-color 0.2s;
+        }
+        .opal-input::placeholder { color: rgba(184,238,255,0.32); }
+        .opal-input:focus       { outline: none; border-bottom-color: rgba(34,211,238,0.72); }
+        .opal-input.field-error { border-bottom-color: rgba(255,100,100,0.7); }
+      `}</style>
+
       {/* Video Background */}
       <div className="absolute inset-0 w-full h-full">
         <video
@@ -154,23 +196,23 @@ export default function ContactUs() {
           {/* Header Section with Form */}
           <div className="flex flex-col md:flex-row md:gap-[20vw] gap-[12vw] md:mr-4">
             <Link to="/" className="mb-6 md:mb-0">
-              <motion.div 
-                className="flex items-center gap-3 text-white hover:text-white/80 transition-colors cursor-pointer group"
+              <motion.div
+                className="flex items-center gap-3 cursor-pointer group"
                 whileHover={{ x: -5 }}
                 transition={{ duration: 0.2 }}
               >
-                <svg 
-                  width="24" 
-                  height="24" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#fff"
                   strokeWidth="2"
                   className="group-hover:translate-x-[-4px] transition-transform"
                 >
                   <path d="M19 12H5M5 12L12 19M5 12L12 5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                <span className="text-base md:text-lg font-medium">Back to Home</span>
+                <span className="text-base md:text-lg font-medium" style={gradientText}>Back to Home</span>
               </motion.div>
             </Link>
 
@@ -189,23 +231,23 @@ export default function ContactUs() {
                     }}
                     className="space-y-4"
                   >
-                    <p className="text-white/70 text-base md:text-lg leading-relaxed">
+                    <p className="text-base md:text-lg leading-relaxed" style={{ ...gradientText, opacity: 0.65 }}>
                       Due to high demand, DEMO availability is limited. Request your invitation now before slots fill up.
                     </p>
-                    <div className="space-y-3 text-white">
+                    <div className="space-y-3">
                       <a
                         href="tel:8779966725"
-                        className="flex items-center gap-3 text-base md:text-lg hover:text-white/80 transition-colors"
+                        className="flex items-center gap-3 text-base md:text-lg transition-opacity hover:opacity-75"
                       >
-                        <MdCall className="w-5 h-5 md:w-6 md:h-6 shrink-0" />
-                        <span>877-996-6725 (OPAL)</span>
+                        <MdCall className="w-5 h-5 md:w-6 md:h-6 shrink-0" style={{ color: "#fff" }} />
+                        <span style={gradientText}>877-996-6725 (OPAL)</span>
                       </a>
                       <a
                         href="mailto:info@opalgos.com"
-                        className="flex items-center gap-3 text-base md:text-lg hover:text-white/80 transition-colors"
+                        className="flex items-center gap-3 text-base md:text-lg transition-opacity hover:opacity-75"
                       >
-                        <MdEmail className="w-5 h-5 md:w-6 md:h-6 shrink-0" />
-                        <span>info@opalgos.com</span>
+                        <MdEmail className="w-5 h-5 md:w-6 md:h-6 shrink-0" style={{ color: "#fff" }} />
+                        <span style={gradientText}>info@opalgos.com</span>
                       </a>
                     </div>
                   </motion.div>
@@ -278,18 +320,11 @@ export default function ContactUs() {
                     value={formData.name}
                     onChange={handleChange}
                     onBlur={() => handleBlur("name")}
-                    className={`w-full bg-transparent border-b-2 py-4 px-0 text-white placeholder-white/50 focus:outline-none transition-colors text-lg ${
-                      errors.name && touched.name
-                        ? "border-red-400"
-                        : "border-white/30 focus:border-white"
-                    }`}
+                    className={`opal-input${errors.name && touched.name ? " field-error" : ""}`}
                   />
                   {errors.name && touched.name && (
-                    <motion.p
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-red-400 text-sm mt-2 flex items-center gap-1"
-                    >
+                    <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                      className="text-red-400 text-sm mt-2 flex items-center gap-1">
                       <span className="inline-block w-1 h-1 bg-red-400 rounded-full animate-pulse" />
                       {errors.name}
                     </motion.p>
@@ -304,18 +339,11 @@ export default function ContactUs() {
                     value={formData.company}
                     onChange={handleChange}
                     onBlur={() => handleBlur("company")}
-                    className={`w-full bg-transparent border-b-2 py-4 px-0 text-white placeholder-white/50 focus:outline-none transition-colors text-lg ${
-                      errors.company && touched.company
-                        ? "border-red-400"
-                        : "border-white/30 focus:border-white"
-                    }`}
+                    className={`opal-input${errors.company && touched.company ? " field-error" : ""}`}
                   />
                   {errors.company && touched.company && (
-                    <motion.p
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-red-400 text-sm mt-2 flex items-center gap-1"
-                    >
+                    <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                      className="text-red-400 text-sm mt-2 flex items-center gap-1">
                       <span className="inline-block w-1 h-1 bg-red-400 rounded-full animate-pulse" />
                       {errors.company}
                     </motion.p>
@@ -330,18 +358,11 @@ export default function ContactUs() {
                     value={formData.website}
                     onChange={handleChange}
                     onBlur={() => handleBlur("website")}
-                    className={`w-full bg-transparent border-b-2 py-4 px-0 text-white placeholder-white/50 focus:outline-none transition-colors text-lg ${
-                      errors.website && touched.website
-                        ? "border-red-400"
-                        : "border-white/30 focus:border-white"
-                    }`}
+                    className={`opal-input${errors.website && touched.website ? " field-error" : ""}`}
                   />
                   {errors.website && touched.website && (
-                    <motion.p
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-red-400 text-sm mt-2 flex items-center gap-1"
-                    >
+                    <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                      className="text-red-400 text-sm mt-2 flex items-center gap-1">
                       <span className="inline-block w-1 h-1 bg-red-400 rounded-full animate-pulse" />
                       {errors.website}
                     </motion.p>
@@ -356,18 +377,11 @@ export default function ContactUs() {
                     value={formData.email}
                     onChange={handleChange}
                     onBlur={() => handleBlur("email")}
-                    className={`w-full bg-transparent border-b-2 py-4 px-0 text-white placeholder-white/50 focus:outline-none transition-colors text-lg ${
-                      errors.email && touched.email
-                        ? "border-red-400"
-                        : "border-white/30 focus:border-white"
-                    }`}
+                    className={`opal-input${errors.email && touched.email ? " field-error" : ""}`}
                   />
                   {errors.email && touched.email && (
-                    <motion.p
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-red-400 text-sm mt-2 flex items-center gap-1"
-                    >
+                    <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                      className="text-red-400 text-sm mt-2 flex items-center gap-1">
                       <span className="inline-block w-1 h-1 bg-red-400 rounded-full animate-pulse" />
                       {errors.email}
                     </motion.p>
@@ -378,69 +392,40 @@ export default function ContactUs() {
                   <motion.button
                     type="submit"
                     disabled={!isFormValid() || hubspotMutation.isPending}
-                    className={`px-8 py-4 rounded-full font-medium transition-colors flex items-center justify-center gap-2 ${
-                      isFormValid() && !hubspotMutation.isPending
-                        ? "bg-white text-black hover:bg-white/90"
-                        : "bg-white/50 text-black/50 cursor-not-allowed"
-                    }`}
-                    whileHover={
-                      isFormValid() && !hubspotMutation.isPending
-                        ? { scale: 1.02 }
-                        : {}
-                    }
-                    whileTap={
-                      isFormValid() && !hubspotMutation.isPending
-                        ? { scale: 0.98 }
-                        : {}
-                    }
+                    className="px-8 py-4 rounded-full font-medium flex items-center justify-center gap-2"
+                    style={{
+                      border: "1px solid transparent",
+                      background: isFormValid() && !hubspotMutation.isPending
+                        ? `linear-gradient(#08060C, #08060C) padding-box, ${OPAL_GRADIENT} border-box`
+                        : "rgba(255,255,255,0.06)",
+                      opacity: isFormValid() && !hubspotMutation.isPending ? 1 : 0.45,
+                      cursor: isFormValid() && !hubspotMutation.isPending ? "pointer" : "not-allowed",
+                    }}
+                    whileHover={isFormValid() && !hubspotMutation.isPending ? { scale: 1.02 } : {}}
+                    whileTap={isFormValid() && !hubspotMutation.isPending ? { scale: 0.98 } : {}}
                   >
                     {hubspotMutation.isPending ? (
                       <>
-                        <svg
-                          className="animate-spin h-5 w-5"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
+                        <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="url(#opalContactGrad)" strokeWidth="4" />
+                          <path className="opacity-75" fill="url(#opalContactGrad)"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
-                        <span>Submitting...</span>
+                        <span style={gradientText}>Submitting...</span>
                       </>
                     ) : hubspotMutation.isSuccess ? (
                       <>
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24">
+                          <path d="M5 13l4 4L19 7" stroke="url(#opalContactGrad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
-                        <span>Submitted!</span>
+                        <span style={gradientText}>Submitted!</span>
                       </>
                     ) : (
                       <>
-                        <span>Join Today</span>
+                        <span style={gradientText}>Join Today</span>
                         <span className="flex gap-1">
-                          <span className="w-2 h-2 bg-black rounded-full"></span>
-                          <span className="w-2 h-2 bg-black rounded-full"></span>
+                          <span className="w-2 h-2 rounded-full" style={{ background: OPAL_GRADIENT }} />
+                          <span className="w-2 h-2 rounded-full" style={{ background: OPAL_GRADIENT }} />
                         </span>
                       </>
                     )}
