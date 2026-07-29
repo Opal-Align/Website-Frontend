@@ -2,12 +2,15 @@
   "platform": {
     "apiRuntime": "node:20"
   },
+  "globalHeaders": {
+    "x-robots-tag": "index, follow"
+  },
   "navigationFallback": {
     "rewrite": "/index.html",
     "exclude": [
       "/api/*",
       "/assets/*",
-      "/*.{css,scss,js,png,gif,ico,jpg,svg,woff,woff2,ttf,eot}"
+      "/*.{css,scss,js,png,gif,ico,jpg,svg,woff,woff2,ttf,eot,txt,xml}"
     ]
   },
 
