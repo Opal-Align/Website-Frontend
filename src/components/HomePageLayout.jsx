@@ -45,10 +45,7 @@ const prefetchers = {
 
 const SLIDE_BG = "#0a0a0a";
 const MOBILE_BP = 767;
-/** Quiet gap that ends a wheel/trackpad gesture (same continuous spin = one section). */
-const GESTURE_IDLE_MS = 140;
-/** Fallback if scrollend never fires while a section is animating. */
-const ANIMATE_FALLBACK_MS = 700;
+const WHEEL_LOCK_MS = 900;
 
 function SlideFallback() {
   return (
@@ -104,41 +101,30 @@ export default function HomePageLayout() {
 
     setTimeout(() => prefetchAround(0), 600);
 
-    let scrollRaf = 0;
     const onScroll = () => {
-      if (scrollRaf) return;
-      scrollRaf = requestAnimationFrame(() => {
-        scrollRaf = 0;
-        const slides = container.querySelectorAll(".home-slide");
-        let current = 0;
-        const mid =
-          container.getBoundingClientRect().top + container.clientHeight * 0.5;
-        slides.forEach((slide, i) => {
-          if (slide.getBoundingClientRect().top <= mid) current = i;
-        });
-        prefetchAround(current);
+      const slides = container.querySelectorAll(".home-slide");
+      let current = 0;
+      const mid = container.getBoundingClientRect().top + container.clientHeight * 0.5;
+      slides.forEach((slide, i) => {
+        const rect = slide.getBoundingClientRect();
+        if (rect.top <= mid) current = i;
       });
+      prefetchAround(current);
     };
 
     container.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      container.removeEventListener("scroll", onScroll);
-      cancelAnimationFrame(scrollRaf);
-    };
+    return () => container.removeEventListener("scroll", onScroll);
   }, [isMobile]);
 
-  // One continuous wheel/trackpad gesture → exactly one snap stop.
-  // Free-scroll flings never skip sections; a short pause starts a new gesture.
-  // Hero still has two stops: logo → revealed words → first content slide.
+  // Mouse / trackpad flings often skip CSS snap-stop. One deliberate wheel
+  // gesture = one stop. The hero deliberately has two stops:
+  // logo → revealed words → first content slide.
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
-    let animating = false;
-    let usedThisGesture = false;
-    let gestureIdleTimer = null;
-    let animateFallbackTimer = null;
-    let settleRaf = 0;
+    let locked = false;
+    let unlockTimer = null;
 
     const snapTargets = () =>
       [
@@ -151,13 +137,13 @@ export default function HomePageLayout() {
       const origin = container.getBoundingClientRect().top;
       let idx = 0;
       let best = Infinity;
-      for (let i = 0; i < targets.length; i += 1) {
-        const d = Math.abs(targets[i].getBoundingClientRect().top - origin);
+      targets.forEach((el, i) => {
+        const d = Math.abs(el.getBoundingClientRect().top - origin);
         if (d < best) {
           best = d;
           idx = i;
         }
-      }
+      });
       return idx;
     };
 
@@ -166,34 +152,12 @@ export default function HomePageLayout() {
       container.getBoundingClientRect().top +
       container.scrollTop;
 
-    const restoreSnap = () => {
-      container.style.scrollSnapType = "";
+    const scheduleUnlock = () => {
+      clearTimeout(unlockTimer);
+      unlockTimer = setTimeout(() => {
+        locked = false;
+      }, WHEEL_LOCK_MS);
     };
-
-    const finishAnimate = () => {
-      if (!animating) return;
-      animating = false;
-      clearTimeout(animateFallbackTimer);
-      cancelAnimationFrame(settleRaf);
-      restoreSnap();
-    };
-
-    const watchSettle = (targetTop) => {
-      clearTimeout(animateFallbackTimer);
-      cancelAnimationFrame(settleRaf);
-
-      const tick = () => {
-        if (Math.abs(container.scrollTop - targetTop) <= 2) {
-          finishAnimate();
-          return;
-        }
-        settleRaf = requestAnimationFrame(tick);
-      };
-      settleRaf = requestAnimationFrame(tick);
-      animateFallbackTimer = setTimeout(finishAnimate, ANIMATE_FALLBACK_MS);
-    };
-
-    const onScrollEnd = () => finishAnimate();
 
     const onWheel = (e) => {
       if (Math.abs(e.deltaY) < 4) return;
@@ -211,46 +175,34 @@ export default function HomePageLayout() {
         }
       }
 
-      // Always own the scroll so a free-scroll fling cannot skip sections.
-      e.preventDefault();
-
-      // Same continuous spin = one gesture. Only a quiet gap starts a new one.
-      clearTimeout(gestureIdleTimer);
-      gestureIdleTimer = setTimeout(() => {
-        usedThisGesture = false;
-      }, GESTURE_IDLE_MS);
-
-      if (animating || usedThisGesture) return;
-
       const targets = snapTargets();
       if (!targets.length) return;
-
       const index = nearestIndex(targets);
+
+      e.preventDefault();
+      // Long mouse wheels fire many events — keep the lock extended so we
+      // never chain multiple section jumps from one fling.
+      if (locked) {
+        scheduleUnlock();
+        return;
+      }
+
       const direction = e.deltaY > 0 ? 1 : -1;
       const next = Math.max(0, Math.min(targets.length - 1, index + direction));
       if (next === index) return;
 
-      usedThisGesture = true;
-      animating = true;
-
-      // Disable snap during the programmatic move so mandatory snap cannot
-      // fight smooth scroll or overshoot into a later section.
-      container.style.scrollSnapType = "none";
-
-      const top = scrollTopOf(targets[next]);
-      container.scrollTo({ top, behavior: "smooth" });
-      watchSettle(top);
+      locked = true;
+      scheduleUnlock();
+      container.scrollTo({
+        top: scrollTopOf(targets[next]),
+        behavior: "smooth",
+      });
     };
 
     container.addEventListener("wheel", onWheel, { passive: false });
-    container.addEventListener("scrollend", onScrollEnd);
     return () => {
       container.removeEventListener("wheel", onWheel);
-      container.removeEventListener("scrollend", onScrollEnd);
-      clearTimeout(gestureIdleTimer);
-      clearTimeout(animateFallbackTimer);
-      cancelAnimationFrame(settleRaf);
-      restoreSnap();
+      clearTimeout(unlockTimer);
     };
   }, []);
 

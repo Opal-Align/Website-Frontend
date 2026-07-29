@@ -2,8 +2,8 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.jsx";
-import heroLogo from "./assets/OPALgos GreyWhite Website.png";
-import navLogo from "./assets/opal-gos.svg";
+import heroLogo from "./assets/opal-gos-hero.webp";
+import navLogo from "./assets/opal-gos-mark.webp";
 
 /** Preload LCP / first-paint images before React mounts (Vite-resolved URLs). */
 function preloadImage(href, { fetchPriority = "high" } = {}) {

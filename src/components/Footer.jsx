@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { MdCall, MdEmail } from "react-icons/md";
 import instagramIcon from "../assets/instagram.svg";
 import linkedinIcon from "../assets/linkedin.svg";
-import opalLogo from "../assets/OPAL.svg";
+import opalLogo from "../assets/opal-wordmark.webp";
 import useScrollContainer from "../hooks/useScrollContainer";
 
 const OPAL_GRADIENT =

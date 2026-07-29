@@ -6,8 +6,8 @@ import {
   useRef,
   useCallback,
 } from "react";
-import opalLogo from "../../assets/OPAL.svg";
-import opalGosLogo from "../../assets/opal-gos.svg";
+import opalLogo from "../../assets/opal-wordmark.webp";
+import opalGosLogo from "../../assets/opal-gos-mark.webp";
 import useHomeSlideActive from "../../hooks/useHomeSlideActive";
 
 const OPAL_LOGO_RATIO = 3520 / 1214;
