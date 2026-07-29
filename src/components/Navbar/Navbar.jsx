@@ -63,12 +63,26 @@ function useActiveSection() {
 
     update();
     const snap = document.querySelector(".snap-container");
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        update();
+      });
+    };
     if (snap) {
-      snap.addEventListener("scroll", update, { passive: true });
-      return () => snap.removeEventListener("scroll", update);
+      snap.addEventListener("scroll", onScroll, { passive: true });
+      return () => {
+        snap.removeEventListener("scroll", onScroll);
+        cancelAnimationFrame(raf);
+      };
     }
-    window.addEventListener("scroll", update, { passive: true });
-    return () => window.removeEventListener("scroll", update);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+    };
   }, []);
 
   return active;
