@@ -5,11 +5,13 @@
 // eslint-disable-next-line no-unused-vars
 import { motion, useScroll, useSpring, useTransform, useMotionValueEvent } from "framer-motion";
 import { useRef, useEffect, useState, useId, useCallback } from "react";
-import opalLogo from "../../assets/OPALgos GreyWhite Website.png";
+import opalLogo1400 from "../../assets/opal-gos-hero-1400.webp";
+import opalLogo2800 from "../../assets/opal-gos-hero.webp";
+import opalLogo3600 from "../../assets/opal-gos-hero-3600.webp";
+import useScrollContainer from "../../hooks/useScrollContainer";
 
 const NAVY = "#08060C";
 const HERO_HEADLINE_SIZE = "clamp(2.4rem, 6.2vw, 5.2rem)";
-const SCROLL_LENGTH = "170vh";
 const HEADLINES_REVEAL_AT = 0.72;
 const PILL_DELAY_MS = 500;
 const SUBHEAD_AFTER_PILL_MS = 150;
@@ -56,21 +58,43 @@ function AnimatedWord({ children, start, end, progress, accent = false, last = f
 }
 
 // ─── Starfield hook ──────────────────────────────────────────────────────────
-function useEnamelParticles(canvasRef) {
+function useEnamelParticles(canvasRef, containerRef) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
 
-    let W = 0, H = 0, raf;
+    const reduced =
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let W = 0, H = 0, raf = null;
     let mouseX = 0, mouseY = 0;
     let smoothX = 0, smoothY = 0;
+    // Loop only runs while the hero is on-screen and the tab is visible.
+    let onScreen = true;
+    let running = false;
 
     const onMouseMove = (e) => {
       mouseX = e.clientX / window.innerWidth  - 0.5;
       mouseY = e.clientY / window.innerHeight - 0.5;
     };
     window.addEventListener("mousemove", onMouseMove, { passive: true });
+
+    // Pre-render the soft glow once into an offscreen sprite instead of
+    // calling createRadialGradient() for every near star every frame.
+    const SPRITE_R = 32;
+    const glow = document.createElement("canvas");
+    glow.width = glow.height = SPRITE_R * 2;
+    const gctx = glow.getContext("2d");
+    const grad = gctx.createRadialGradient(
+      SPRITE_R, SPRITE_R, 0, SPRITE_R, SPRITE_R, SPRITE_R,
+    );
+    grad.addColorStop(0, "rgba(255,255,255,1)");
+    grad.addColorStop(1, "rgba(255,255,255,0)");
+    gctx.fillStyle = grad;
+    gctx.fillRect(0, 0, SPRITE_R * 2, SPRITE_R * 2);
 
     let stars = [];
 
@@ -96,19 +120,13 @@ function useEnamelParticles(canvasRef) {
     }
 
     function init() {
-      stars = Array.from({ length: 1000 }, () => makeStar(true));
+      // Scale count to viewport area (capped) instead of a flat 1000. On a
+      // typical screen this is ~420 — roughly 2.5× fewer than before.
+      const target = Math.min(460, Math.round((W * H) / 4200) || 420);
+      stars = Array.from({ length: target }, () => makeStar(true));
     }
 
-    function draw() {
-      if (canvas.offsetWidth !== W || canvas.offsetHeight !== H) { resize(); init(); }
-
-      smoothX += (mouseX - smoothX) * 0.055;
-      smoothY += (mouseY - smoothY) * 0.055;
-
-      ctx.fillStyle = "rgba(8,6,12,0.20)";
-      ctx.fillRect(0, 0, W, H);
-
-      const t = performance.now() / 1000;
+    function renderFrame(t) {
       const cx = W / 2;
       const cy = H / 2;
 
@@ -156,35 +174,84 @@ function useEnamelParticles(canvasRef) {
         ctx.fill();
 
         if (nearness > 0.75 && r > 1.2) {
-          const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * 3.5);
-          g.addColorStop(0, `rgba(255,255,255,${alpha * 0.22})`);
-          g.addColorStop(1, "rgba(255,255,255,0)");
-          ctx.beginPath();
-          ctx.arc(sx, sy, r * 3.5, 0, Math.PI * 2);
-          ctx.fillStyle = g;
-          ctx.fill();
+          const R = r * 3.5;
+          ctx.globalAlpha = alpha * 0.22;
+          ctx.drawImage(glow, sx - R, sy - R, R * 2, R * 2);
+          ctx.globalAlpha = 1;
         }
 
         s.px = sx;
         s.py = sy;
       }
+    }
 
+    function draw() {
+      if (!running) return;
+      if (canvas.offsetWidth !== W || canvas.offsetHeight !== H) { resize(); init(); }
+
+      smoothX += (mouseX - smoothX) * 0.055;
+      smoothY += (mouseY - smoothY) * 0.055;
+
+      ctx.fillStyle = "rgba(8,6,12,0.20)";
+      ctx.fillRect(0, 0, W, H);
+
+      renderFrame(performance.now() / 1000);
       raf = requestAnimationFrame(draw);
+    }
+
+    function start() {
+      if (running || !onScreen || document.hidden || reduced) return;
+      running = true;
+      raf = requestAnimationFrame(draw);
+    }
+
+    function stop() {
+      running = false;
+      cancelAnimationFrame(raf);
     }
 
     resize();
     init();
-    draw();
+
+    if (reduced) {
+      // One static frame — no loop for reduced-motion users.
+      ctx.fillStyle = "rgba(8,6,12,1)";
+      ctx.fillRect(0, 0, W, H);
+      renderFrame(0);
+    } else {
+      start();
+    }
 
     const ro = new ResizeObserver(() => { resize(); init(); });
     ro.observe(canvas);
 
-    return () => {
-      cancelAnimationFrame(raf);
-      ro.disconnect();
-      window.removeEventListener("mousemove", onMouseMove);
+    // Pause the loop whenever the hero scrolls out of view.
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        onScreen = entry.isIntersecting;
+        if (onScreen) start(); else stop();
+      },
+      {
+        root: containerRef?.current ?? null,
+        threshold: 0,
+      },
+    );
+    io.observe(canvas);
+
+    const onVisibility = () => {
+      if (document.hidden) stop();
+      else start();
     };
-  }, [canvasRef]);
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      stop();
+      ro.disconnect();
+      io.disconnect();
+      window.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [canvasRef, containerRef]);
 }
 
 // ─── Main component ─────────────────────────────────────────────────────────
@@ -192,11 +259,14 @@ export default function ScrollHero() {
   const sectionRef = useRef(null);
   const grainRef   = useRef(null);
   const pillGradientId = `opal-pill-${useId()}`;
+  const scrollContainerRef = useScrollContainer();
 
-  useEnamelParticles(grainRef);
+  useEnamelParticles(grainRef, scrollContainerRef);
 
+  // Progress must track the snap container — window no longer scrolls.
   const { scrollYProgress } = useScroll({
     target: sectionRef,
+    container: scrollContainerRef,
     offset: ["start start", "end end"],
   });
 
@@ -256,13 +326,19 @@ export default function ScrollHero() {
   // ── Click handler — scrolls to headline reveal point; pill + subhead auto-play after
   const handleLogoClick = useCallback(() => {
     const section = sectionRef.current;
-    if (!section) return;
-    const sectionTop = section.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo({
-      top: sectionTop + section.offsetHeight * HEADLINES_REVEAL_AT,
+    const container = scrollContainerRef?.current;
+    if (!section || !container) return;
+    const sectionTop =
+      section.getBoundingClientRect().top -
+      container.getBoundingClientRect().top +
+      container.scrollTop;
+    container.scrollTo({
+      top:
+        sectionTop +
+        Math.max(0, section.offsetHeight - container.clientHeight),
       behavior: "smooth",
     });
-  }, []);
+  }, [scrollContainerRef]);
 
   // Scroll-driven values — logo + three headline lines only.
   // Breakpoints scaled so the reveal completes at HEADLINES_REVEAL_AT (0.72)
@@ -285,9 +361,20 @@ export default function ScrollHero() {
           78%  { transform: scale(1.05); }
           100% { opacity: 1; transform: scale(1); filter: blur(0px); }
         }
+        @keyframes heroScrollHint {
+          0%, 100% { transform: scaleY(0); }
+          50% { transform: scaleY(1); }
+        }
         .logo-mount  { animation: logoIn 1.15s cubic-bezier(0.16,1,0.3,1) forwards; }
         .logo-hidden { opacity: 0; }
         .hero-h1     { font-size: inherit; }
+        .hero-scroll-hint {
+          animation: heroScrollHint 1.6s ease-in-out infinite;
+          transform-origin: top;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .hero-scroll-hint { animation: none; transform: scaleY(1); }
+        }
         .logo-clickable { cursor: pointer; }
         .logo-clickable:hover img {
           filter: drop-shadow(0 8px 40px rgba(255,255,255,0.32)) !important;
@@ -297,11 +384,11 @@ export default function ScrollHero() {
       <section
         ref={sectionRef}
         className="relative w-full"
-        style={{ height: SCROLL_LENGTH, backgroundColor: NAVY }}
+        style={{ height: "100%", backgroundColor: NAVY }}
       >
         <div
-          className="sticky top-0 h-screen w-full overflow-hidden"
-          style={{ backgroundColor: NAVY }}
+          className="sticky top-0 w-full overflow-hidden"
+          style={{ height: "var(--snap-h, 100vh)", backgroundColor: NAVY }}
         >
           <canvas
             ref={grainRef}
@@ -339,7 +426,9 @@ export default function ScrollHero() {
           >
             <div className={mounted ? "logo-mount" : "logo-hidden"}>
               <img
-                src={opalLogo}
+                src={opalLogo2800}
+                srcSet={`${opalLogo1400} 1400w, ${opalLogo2800} 2800w, ${opalLogo3600} 3600w`}
+                sizes="(max-width: 768px) 92vw, min(92vw, 56rem)"
                 alt="OPAL gOS"
                 className="h-[1.1em] w-auto max-w-[min(92vw,36rem)] object-contain object-center select-none pointer-events-none"
                 style={{
@@ -361,11 +450,9 @@ export default function ScrollHero() {
             <span className="font-['Montserrat'] text-white/40 text-[10px] tracking-[0.3em] uppercase">
               Scroll
             </span>
-            <motion.div
-              className="w-px h-8 origin-top"
+            <div
+              className="hero-scroll-hint w-px h-8"
               style={{ backgroundImage: OPAL_TEXT_GRADIENT, opacity: 0.6 }}
-              animate={{ scaleY: [0, 1, 0] }}
-              transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
             />
           </motion.div>
 

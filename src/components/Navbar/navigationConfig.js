@@ -58,6 +58,20 @@ export const NAVBAR_LINKS = {
   ],
 };
 
+/** Homepage scroller — window no longer scrolls on the marketing layout. */
+function getSnapContainer() {
+  return document.querySelector(".snap-container");
+}
+
+/** Distance from the top of `container` to the top of `el`. */
+function scrollTopWithin(container, el) {
+  return (
+    el.getBoundingClientRect().top -
+    container.getBoundingClientRect().top +
+    container.scrollTop
+  );
+}
+
 /**
  * Smoothly move to a nav target.
  * @param {string|null} target
@@ -71,8 +85,14 @@ export function goToTarget(target, navigate, options = {}) {
   const { afterCloseMs = 0 } = options;
 
   const run = () => {
+    const snap = getSnapContainer();
+
     if (target == null) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      if (snap) {
+        snap.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
       return;
     }
     if (typeof target === "string" && target.startsWith("/")) {
@@ -83,47 +103,20 @@ export function goToTarget(target, navigate, options = {}) {
     const el = document.querySelector(target);
     if (!el) return;
 
-    const slide = el.closest(".home-slide");
-
-    if (slide) {
-      // Sticky elements are always considered "in view" by the browser once
-      // they've adhered — so getBoundingClientRect, offsetTop, and
-      // scrollIntoView all fail for backward navigation.
-      //
-      // Fix: collect all .home-slide wrappers, find the target's index, then
-      // compute the raw scroll position from the CONTAINER's document offset
-      // (the container itself is not sticky, so getBoundingClientRect is
-      // reliable) + index × section height.  This works in both directions.
-      const slides = [...document.querySelectorAll(".home-slide")];
-      const index = slides.indexOf(slide);
-      if (index === -1) return;
-
-      const container = slide.parentElement;
-      // container is position:relative (not sticky) → rect is always accurate.
-      // Round to match HomePageLayout.snapPoints() exactly — a fractional
-      // anchor on high-DPI/zoomed monitors otherwise lands the nav jump a few
-      // px off from where the scroll controller expects the snap point, which
-      // can strand the view between two sticky cards.
-      const containerDocTop = Math.round(
-        container.getBoundingClientRect().top + window.scrollY,
-      );
-
-      // Sum the ACTUAL measured slide heights up to the target instead of
-      // assuming every card is exactly innerHeight - NAV_HEIGHT. This mirrors
-      // the layout's snapPoints() so nav clicks and wheel/touch snaps agree.
-      const fallbackH = Math.max(1, Math.round(window.innerHeight - NAV_HEIGHT));
-      let acc = 0;
-      for (let i = 0; i < index; i += 1) {
-        const el = slides[i];
-        acc += el && el.offsetHeight > 0 ? el.offsetHeight : fallbackH;
-      }
-
-      const scrollTop = containerDocTop + acc - NAV_HEIGHT;
-      window.scrollTo({ top: Math.max(0, scrollTop), behavior: "smooth" });
+    if (snap) {
+      const slide =
+        el.closest(".home-slide") ||
+        el.closest(".hero-snap") ||
+        el.closest(".footer-snap");
+      const dest = slide || el;
+      snap.scrollTo({
+        top: Math.max(0, scrollTopWithin(snap, dest)),
+        behavior: "smooth",
+      });
       return;
     }
 
-    // Fallback for non-sticky targets (e.g. footer)
+    // Fallback when not on the snap homepage layout
     const top =
       el.getBoundingClientRect().top + window.scrollY - NAV_SCROLL_OFFSET;
     window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });

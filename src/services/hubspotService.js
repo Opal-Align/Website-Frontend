@@ -1,4 +1,3 @@
-import axios from "axios";
 import { saveToAzureTable, isAzureConfigured } from "./azureService.js";
 
 // ============================================
@@ -38,7 +37,7 @@ const HUBSPOT_SUBMIT_URL =
  * Submit form data to HubSpot with Azure fallback
  * @param {Object} formData - Form data object with name, company, website, email, message, phone
  * @param {string} formType - Type of form (e.g., "contact", "sms-opt-in")
- * @returns {Promise} Axios response or Azure response
+ * @returns {Promise} HubSpot response data or Azure response
  */
 export const submitToHubSpot = async (formData, formType = "contact") => {
   // Check if HubSpot is configured
@@ -127,28 +126,31 @@ export const submitToHubSpot = async (formData, formType = "contact") => {
       },
     };
 
-    const response = await axios.post(HUBSPOT_SUBMIT_URL, hubspotData, {
+    const response = await fetch(HUBSPOT_SUBMIT_URL, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify(hubspotData),
     });
 
-    return response.data;
+    const responseData = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(
+        responseData?.message ||
+        `HubSpot error: ${response.status} ${response.statusText}`,
+      );
+    }
+
+    return responseData;
   } catch (error) {
     // HubSpot failed, try Azure fallback
     let errorMessage = "Unknown error";
     
-    if (error.response) {
-      // HubSpot returned an error response
-      errorMessage = error.response.data?.message ||
-        `HubSpot error: ${error.response.status} ${error.response.statusText}`;
-    } else if (error.request) {
-      // Request was made but no response received (network error, blocked request, etc.)
-      errorMessage = "Network error: Unable to reach HubSpot. Please check your connection.";
-    } else {
-      // Something else happened (CORS, timeout, etc.)
-      errorMessage = error.message || "An unexpected error occurred";
-    }
+    errorMessage =
+      error instanceof TypeError
+        ? "Network error: Unable to reach HubSpot. Please check your connection."
+        : error.message || "An unexpected error occurred";
 
     // Attempt Azure fallback
     if (isAzureConfigured()) {

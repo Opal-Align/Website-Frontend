@@ -1,20 +1,31 @@
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useRef, useMemo } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, useInView } from "framer-motion";
+import carestack from "../../assets/Carestack.svg";
+import cloud9 from "../../assets/Cloud 9.svg";
+import curve from "../../assets/Curve.svg";
+import denticon from "../../assets/Denticon.svg";
+import dentimax from "../../assets/Dentimax.svg";
+import dentrix from "../../assets/dentrix.svg";
+import dentrixAscend from "../../assets/DentrixAscend.svg";
+import dolphin from "../../assets/dolphin.svg";
+import eaglesoft from "../../assets/Eaglesoft.svg";
+import openDental from "../../assets/Open Dental.svg";
+import useScrollContainer from "../../hooks/useScrollContainer";
 
-// Dynamic imports — partner SVGs (~2MB+) stay out of the initial bundle
-// until the Stack section is near the viewport.
-const LOGO_LOADERS = [
-  () => import("../../assets/Carestack.svg"),
-  () => import("../../assets/Cloud 9.svg"),
-  () => import("../../assets/Curve.svg"),
-  () => import("../../assets/Denticon.svg"),
-  () => import("../../assets/Dentimax.svg"),
-  () => import("../../assets/dentrix.svg"),
-  () => import("../../assets/DentrixAscend.svg"),
-  () => import("../../assets/dolphin.svg"),
-  () => import("../../assets/Eaglesoft.svg"),
-  () => import("../../assets/Open Dental.svg"),
+// This component is already lazy-loaded, so static asset URLs remain outside
+// the initial homepage chunk without creating ten tiny JS import-stub requests.
+const PARTNER_LOGOS = [
+  carestack,
+  cloud9,
+  curve,
+  denticon,
+  dentimax,
+  dentrix,
+  dentrixAscend,
+  dolphin,
+  eaglesoft,
+  openDental,
 ];
 
 // Every column is padded out to the same unique-logo count before it's
@@ -34,20 +45,7 @@ function buildColumnLogos(allLogos, startIndex) {
 }
 
 function usePartnerLogos(enabled) {
-  const [logos, setLogos] = useState(null);
-
-  useEffect(() => {
-    if (!enabled || logos) return;
-    let cancelled = false;
-    Promise.all(LOGO_LOADERS.map((load) => load())).then((mods) => {
-      if (!cancelled) setLogos(mods.map((m) => m.default));
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [enabled, logos]);
-
-  return logos;
+  return enabled ? PARTNER_LOGOS : null;
 }
 
 // px/second — kept constant across columns so every column scrolls at the
@@ -135,9 +133,18 @@ function LogoCard({ logo }) {
 
 export default function LogoStream() {
   const sectionRef = useRef(null);
+  const containerCtx = useScrollContainer();
   // Prefetch logos well before the slide is focused (sticky stack).
-  const nearView = useInView(sectionRef, { once: true, margin: "600px 0px" });
-  const inView = useInView(sectionRef, { once: true, margin: "-80px" });
+  const nearView = useInView(sectionRef, {
+    once: true,
+    margin: "600px 0px",
+    root: containerCtx,
+  });
+  const inView = useInView(sectionRef, {
+    once: true,
+    margin: "-80px",
+    root: containerCtx,
+  });
   const logos = usePartnerLogos(nearView);
 
   const columns = useMemo(() => {
@@ -204,9 +211,9 @@ export default function LogoStream() {
       <style>{`
         .ls-section {
           --ls-nav-h: var(--page-nav-h, 80px);
-          height: calc(100svh - var(--ls-nav-h));
-          min-height: calc(100svh - var(--ls-nav-h));
-          max-height: calc(100svh - var(--ls-nav-h));
+          height: 100%;
+          min-height: 100%;
+          max-height: 100%;
           display: flex;
           flex-direction: column;
           justify-content: center;
@@ -277,10 +284,10 @@ export default function LogoStream() {
 
         @media (max-width: 600px) {
           .ls-section {
-            height: auto;
-            min-height: calc(100svh - var(--ls-nav-h));
-            max-height: none;
-            overflow: visible;
+            height: 100%;
+            min-height: 100%;
+            max-height: 100%;
+            overflow: hidden;
           }
           .ls-columns { min-height: 320px; height: 380px; }
           .ls-header { margin-bottom: 24px; padding: 0 14px; }

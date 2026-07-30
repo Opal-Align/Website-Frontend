@@ -1,7 +1,10 @@
 "use client";
 
 import { useRef, useEffect, useState, useCallback } from "react";
+// eslint-disable-next-line no-unused-vars
 import { useInView, motion, AnimatePresence } from "framer-motion";
+import useHomeSlideActive from "../../hooks/useHomeSlideActive";
+import useScrollContainer from "../../hooks/useScrollContainer";
 
 /* ─── Rotating problem sentences (header ticker) ────────────────────────── */
 const PROBLEM_SENTENCES = [
@@ -262,7 +265,14 @@ export default function ProblemWordMap() {
   const animatingRef  = useRef(false);
   const busyRef       = useRef(false);
 
-  const inView = useInView(sectionRef, { once: false, margin: "-80px" });
+  const containerCtx = useScrollContainer();
+  const inView = useInView(sectionRef, {
+    once: false,
+    margin: "-80px",
+    root: containerCtx,
+  });
+  const slideActive = useHomeSlideActive(sectionRef);
+  const shouldAnimate = inView && slideActive;
   const [words, setWords] = useState([]);
 
   /* ── Build layout on resize ─────────────────────────────────────────────── */
@@ -437,7 +447,7 @@ export default function ProblemWordMap() {
 
   /* ── Start / stop animation based on inView ─────────────────────────────── */
   useEffect(() => {
-    if (!inView || !words.length) {
+    if (!shouldAnimate || !words.length) {
       cancelAnimationFrame(rafRef.current);
       clearTimeout(timerRef.current);
       animatingRef.current = false;
@@ -493,7 +503,7 @@ export default function ProblemWordMap() {
       busyRef.current = false;
       activeRef.current = -1;
     };
-  }, [inView, words, animate, scheduleNext]);
+  }, [shouldAnimate, words, animate, scheduleNext]);
 
   return (
     <>
@@ -506,9 +516,9 @@ export default function ProblemWordMap() {
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
           font-weight: 300; color: #fff;
           padding: 0;
-          height: calc(100svh - var(--pwm-nav-h));
-          min-height: calc(100svh - var(--pwm-nav-h));
-          max-height: calc(100svh - var(--pwm-nav-h));
+          height: 100%;
+          min-height: 100%;
+          max-height: 100%;
           display: flex; flex-direction: column;
           overflow: hidden; position: relative;
         }
@@ -620,9 +630,9 @@ export default function ProblemWordMap() {
         @media (max-width: 600px) {
           .pwm-section {
             --pwm-nav-h: var(--page-nav-h, 80px);
-            height: calc(100svh - var(--pwm-nav-h));
-            min-height: calc(100svh - var(--pwm-nav-h));
-            max-height: calc(100svh - var(--pwm-nav-h));
+            height: 100%;
+            min-height: 100%;
+            max-height: 100%;
             overflow: hidden;
           }
           .pwm-inner { padding: 1.25rem 1rem 1rem; }
@@ -669,7 +679,7 @@ export default function ProblemWordMap() {
                 animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.75, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
               >
-                <ProblemSentenceTicker active={inView} />
+                <ProblemSentenceTicker active={shouldAnimate} />
               </motion.div>
             </div>
           </div>

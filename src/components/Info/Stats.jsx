@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, useCallback } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion, useInView, animate } from "framer-motion";
 import clientLogo from "../../assets/marquee-logo.svg";
+import useHomeSlideActive from "../../hooks/useHomeSlideActive";
+import useScrollContainer from "../../hooks/useScrollContainer";
 
 const OPAL_LIGHT_GRADIENT =
   "linear-gradient(120deg, #FFFFFF 0%, #F8FAFC 30%, #F3F4F6 65%, #FFFFFF 100%)";
@@ -40,48 +42,6 @@ const stats = [
   },
 ];
 
-/* ─── Sticky-stack visibility ─────────────────────────────────────────
-   Framer useInView stays true when the next .home-slide covers this one
-   (both remain in the viewport). Treat the slide as active only while it
-   is the topmost docked card — so leaving downward resets like leaving up. */
-function useHomeSlideActive(ref) {
-  const [active, setActive] = useState(false);
-
-  useEffect(() => {
-    const node = ref.current;
-    if (!node) return;
-    const slide = node.closest(".home-slide") ?? node;
-
-    const measure = () => {
-      const navRaw = getComputedStyle(slide).getPropertyValue("--page-nav-h").trim();
-      const stickyTop = Number.parseFloat(navRaw) || 80;
-      const rect = slide.getBoundingClientRect();
-      const next = slide.nextElementSibling;
-      const nextTop =
-        next?.classList?.contains("home-slide")
-          ? next.getBoundingClientRect().top
-          : Number.POSITIVE_INFINITY;
-      const covered = nextTop <= stickyTop + 4;
-      const docked =
-        rect.top <= stickyTop + 32 && rect.bottom > stickyTop + 80;
-      setActive(docked && !covered);
-    };
-
-    measure();
-    window.addEventListener("scroll", measure, { passive: true });
-    window.addEventListener("resize", measure);
-    const ro = new ResizeObserver(measure);
-    ro.observe(slide);
-    return () => {
-      window.removeEventListener("scroll", measure);
-      window.removeEventListener("resize", measure);
-      ro.disconnect();
-    };
-  }, [ref]);
-
-  return active;
-}
-
 /* ─── Animated Strikethrough ─── */
 function AnimatedStrike({ children, inView }) {
   return (
@@ -117,9 +77,14 @@ function AnimatedStrike({ children, inView }) {
     const hideTimerRef = useRef(null);
     const autoTimerRef = useRef(null);
     const scatteringRef = useRef(false);
+    // Loop is paused whenever the section isn't active or the tab is hidden,
+    // so the particle rAF doesn't burn the main thread off-screen.
+    const pausedRef = useRef(active === false);
   
     const initParticles = useCallback((w, h) => {
-      const count = Math.floor((w * h) / 18);
+      // Density was 1 particle / 18px² — thousands of per-frame canvas fills
+      // for a subtle dust effect. /90 keeps the look while cutting ~5×.
+      const count = Math.floor((w * h) / 90);
       return Array.from({ length: count }, () => ({
         x: Math.random() * w,
         y: Math.random() * h,
@@ -143,7 +108,37 @@ function AnimatedStrike({ children, inView }) {
   
       cancelAnimationFrame(rafRef.current);
   
+      // Render every particle once, no motion (used for reduced-motion users).
+      const drawStatic = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (const p of particlesRef.current) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255,255,255,${p.a})`;
+          ctx.fill();
+        }
+      };
+  
+      const reduced =
+        typeof window !== "undefined" &&
+        window.matchMedia &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (reduced) { drawStatic(); return; }
+  
+      // Ambient dust is cheap at 30fps; halving the frame rate halves the cost
+      // and is visually indistinguishable for this effect.
+      const FRAME_MS = 1000 / 30;
+      let last = 0;
+  
       const draw = (t) => {
+        // Self-terminate when paused (off-screen) or the tab is hidden.
+        if (pausedRef.current || document.hidden) return;
+        if (t - last < FRAME_MS) {
+          rafRef.current = requestAnimationFrame(draw);
+          return;
+        }
+        last = t;
+  
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         const particles = particlesRef.current;
         let alive = 0;
@@ -152,7 +147,7 @@ function AnimatedStrike({ children, inView }) {
           if (scatteringRef.current) {
             p.x += p.sx;
             p.y += p.sy;
-            p.fade -= 0.02;
+            p.fade -= 0.05; // ~0.65s scatter at 30fps (was 0.02 @ 60fps)
             if (p.fade <= 0) continue;
           } else {
             p.x += Math.sin(t * 0.003 * p.speed + p.phase) * 0.4;
@@ -194,12 +189,23 @@ function AnimatedStrike({ children, inView }) {
   
       resize();
       window.addEventListener("resize", resize);
-      startAnimation();
+      if (!pausedRef.current) startAnimation();
+  
+      // Stop the loop when the tab is backgrounded; resume on return.
+      const onVisibility = () => {
+        if (document.hidden) {
+          cancelAnimationFrame(rafRef.current);
+        } else if (!pausedRef.current) {
+          startAnimation();
+        }
+      };
+      document.addEventListener("visibilitychange", onVisibility);
   
       return () => {
         cancelAnimationFrame(rafRef.current);
         clearTimeout(hideTimerRef.current);
         window.removeEventListener("resize", resize);
+        document.removeEventListener("visibilitychange", onVisibility);
       };
     }, [initParticles, startAnimation]);
   
@@ -218,8 +224,21 @@ function AnimatedStrike({ children, inView }) {
       if (!container) return;
       const rect = container.getBoundingClientRect();
       particlesRef.current = initParticles(rect.width, rect.height);
-      startAnimation();
+      if (!pausedRef.current) startAnimation();
     }, [initParticles, startAnimation]);
+  
+    // Pause the particle loop when the section isn't active (off-screen), and
+    // resume it when it comes back. This is the main main-thread saving —
+    // previously the rAF ran forever once mounted, even scrolled away.
+    useEffect(() => {
+      const isActive = active !== false;
+      pausedRef.current = !isActive;
+      if (isActive) {
+        startAnimation();
+      } else {
+        cancelAnimationFrame(rafRef.current);
+      }
+    }, [active, startAnimation]);
   
     // Auto-reveal driven by `active` (tie to inView) + `autoRevealDelay`.
     // Sticky: stays revealed until `active` goes false, then resets so it
@@ -290,10 +309,14 @@ function AnimatedStrike({ children, inView }) {
 /* ─── Synced pulse hook ───
    Drives the trend-line draw-in on counting cards and the flat-line
    draw-in on the New Hires card, all from a single shared heartbeat. */
-function usePulse(period = 3600, holdDuration = 2100) {
+function usePulse(enabled = true, period = 3600, holdDuration = 2100) {
   const [active, setActive] = useState(true);
 
   useEffect(() => {
+    if (!enabled) {
+      setActive(false);
+      return;
+    }
     let holdTimer;
     const fire = () => {
       setActive(true);
@@ -308,7 +331,7 @@ function usePulse(period = 3600, holdDuration = 2100) {
       clearTimeout(holdTimer);
       clearInterval(interval);
     };
-  }, [period, holdDuration]);
+  }, [enabled, period, holdDuration]);
 
   return active;
 }
@@ -444,14 +467,14 @@ function Counter({
   pulse = false,
   countsComplete = false,
 }) {
-  const [val, setVal] = useState(0);
+  const valueRef = useRef(null);
   const [landed, setLanded] = useState(false);
   // Arrow only after every counter has finished counting
   const showPulse = pulse && countsComplete;
 
   useEffect(() => {
     if (!inView) {
-      setVal(0);
+      if (valueRef.current) valueRef.current.textContent = `${prefix}0${unit}`;
       setLanded(false);
       return;
     }
@@ -462,8 +485,18 @@ function Counter({
       ctrl = animate(0, target, {
         duration,
         ease: "linear",
-        onUpdate: (v) => setVal(Math.round(v)),
-        onComplete: () => setLanded(true),
+        // Avoid re-rendering the whole card on every animation frame.
+        onUpdate: (v) => {
+          if (valueRef.current) {
+            valueRef.current.textContent = `${prefix}${Math.round(v)}${unit}`;
+          }
+        },
+        onComplete: () => {
+          if (valueRef.current) {
+            valueRef.current.textContent = `${prefix}${target}${unit}`;
+          }
+          setLanded(true);
+        },
       });
     }, startDelay * 1000);
 
@@ -471,7 +504,7 @@ function Counter({
       clearTimeout(timer);
       ctrl?.stop();
     };
-  }, [inView, target, startDelay, duration]);
+  }, [inView, target, prefix, unit, startDelay, duration]);
 
   return (
     <div className="min-w-0 w-full">
@@ -491,7 +524,7 @@ function Counter({
           transition: "filter 0.5s ease-out",
         }}
       >
-        <span>{prefix}{val}{unit}</span>
+        <span ref={valueRef}>{prefix}0{unit}</span>
         <TrendArrow active={showPulse} />
       </motion.span>
     </div>
@@ -549,7 +582,7 @@ function Card({ stat, index, inView, pulse, countsComplete }) {
         {/* Star dot */}
         <div className="absolute top-4 right-4">
           <div
-            className="w-[6px] h-[6px] rounded-full"
+            className="w-1.5 h-1.5 rounded-full"
             style={{
               backgroundImage: OPAL_LIGHT_GRADIENT,
               boxShadow: `0 0 12px 4px ${OPAL_SOFT_GLOW}`,
@@ -640,7 +673,7 @@ function NewHiresCard({ inView, pulse, countsComplete }) {
 
         <div className="absolute top-4 right-4">
           <div
-            className="w-[6px] h-[6px] rounded-full"
+            className="w-1.5 h-1.5 rounded-full"
             style={{
               backgroundImage: OPAL_LIGHT_GRADIENT,
               boxShadow: `0 0 12px 4px ${OPAL_SOFT_GLOW}`,
@@ -743,9 +776,9 @@ function ClientBadge({ baseOpacity = 0.85, defaultActive = false }) {
 
 const stSectionStyle = {
   backgroundColor: "#0a0a0a",
-  height: "calc(100svh - var(--page-nav-h, 80px))",
-  minHeight: "calc(100svh - var(--page-nav-h, 80px))",
-  maxHeight: "calc(100svh - var(--page-nav-h, 80px))",
+  height: "100%",
+  minHeight: "100%",
+  maxHeight: "100%",
   display: "flex",
   flexDirection: "column",
   justifyContent: "center",
@@ -893,7 +926,12 @@ function StStyles() {
 /** Slide 1 — centered ROI wording (nav #impact) — MOBILE ONLY, unchanged. */
 export function ImpactNarrative() {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: false, margin: "-80px" });
+  const containerCtx = useScrollContainer();
+  const inView = useInView(ref, {
+    once: false,
+    margin: "-80px",
+    root: containerCtx,
+  });
   const slideActive = useHomeSlideActive(ref);
   const inkActive = inView && slideActive;
 
@@ -937,12 +975,19 @@ export function ImpactNarrative() {
 /** Slide 2 — stats grid — MOBILE ONLY, unchanged. */
 export function ImpactMetrics() {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: false, margin: "-80px" });
-  const pulse = usePulse();
+  const containerCtx = useScrollContainer();
+  const inView = useInView(ref, {
+    once: false,
+    margin: "-80px",
+    root: containerCtx,
+  });
+  const slideActive = useHomeSlideActive(ref);
+  const shouldAnimate = inView && slideActive;
+  const pulse = usePulse(shouldAnimate);
   const [countsComplete, setCountsComplete] = useState(false);
 
   useEffect(() => {
-    if (!inView) {
+    if (!shouldAnimate) {
       setCountsComplete(false);
       return;
     }
@@ -951,7 +996,7 @@ export function ImpactMetrics() {
       COUNTER_END_TIME * 1000,
     );
     return () => clearTimeout(timer);
-  }, [inView]);
+  }, [shouldAnimate]);
 
   return (
     <div className="relative st-section st-metrics-fit" style={stSectionStyle}>
@@ -959,14 +1004,14 @@ export function ImpactMetrics() {
 
         {/* Top 2 stat cards */}
         <div className="st-metrics-top-cards">
-          <Card stat={stats[0]} index={0} inView={inView} pulse={pulse} countsComplete={countsComplete} />
-          <Card stat={stats[1]} index={1} inView={inView} pulse={pulse} countsComplete={countsComplete} />
+          <Card stat={stats[0]} index={0} inView={shouldAnimate} pulse={pulse} countsComplete={countsComplete} />
+          <Card stat={stats[1]} index={1} inView={shouldAnimate} pulse={pulse} countsComplete={countsComplete} />
         </div>
 
         {/* Lightened client logo sandwiched between card groups */}
         <motion.div
           initial={{ opacity: 0 }}
-          animate={inView ? { opacity: 1 } : {}}
+          animate={shouldAnimate ? { opacity: 1 } : {}}
           transition={{ duration: 0.6, delay: 0.25 }}
           className="st-metrics-badge-mid flex items-center justify-center"
         >
@@ -975,8 +1020,8 @@ export function ImpactMetrics() {
 
         {/* Bottom 2 stat cards */}
         <div className="st-metrics-bot-cards">
-          <Card stat={stats[2]} index={2} inView={inView} pulse={pulse} countsComplete={countsComplete} />
-          <NewHiresCard inView={inView} pulse={pulse} countsComplete={countsComplete} />
+          <Card stat={stats[2]} index={2} inView={shouldAnimate} pulse={pulse} countsComplete={countsComplete} />
+          <NewHiresCard inView={shouldAnimate} pulse={pulse} countsComplete={countsComplete} />
         </div>
 
        
@@ -994,14 +1039,19 @@ export function ImpactMetrics() {
     the mobile slides above, or shared sub-components changed. */
 export default function Processes() {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: false, margin: "-80px" });
+  const containerCtx = useScrollContainer();
+  const inView = useInView(ref, {
+    once: false,
+    margin: "-80px",
+    root: containerCtx,
+  });
   const slideActive = useHomeSlideActive(ref);
   const inkActive = inView && slideActive;
-  const pulse = usePulse();
+  const pulse = usePulse(inkActive);
   const [countsComplete, setCountsComplete] = useState(false);
 
   useEffect(() => {
-    if (!inView) {
+    if (!inkActive) {
       setCountsComplete(false);
       return;
     }
@@ -1010,7 +1060,7 @@ export default function Processes() {
       COUNTER_END_TIME * 1000,
     );
     return () => clearTimeout(timer);
-  }, [inView]);
+  }, [inkActive]);
 
   return (
     <div id="impact" className="relative st-section" style={stSectionStyle}>
@@ -1022,7 +1072,7 @@ export default function Processes() {
             <motion.span
               className="st-hl-bold"
               initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
-              animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+              animate={inkActive ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
               transition={{ duration: 0.85, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
             >
               gOS LOOP IN ACTION
@@ -1033,7 +1083,7 @@ export default function Processes() {
         {/* 2. Client logo */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
+          animate={inkActive ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.3 }}
           className="flex items-center gap-4 mb-6 md:mb-7"
         >
@@ -1051,15 +1101,15 @@ export default function Processes() {
         {/* 3. Stat boxes */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {stats.map((stat, i) => (
-            <Card key={i} stat={stat} index={i} inView={inView} pulse={pulse} countsComplete={countsComplete} />
+            <Card key={i} stat={stat} index={i} inView={inkActive} pulse={pulse} countsComplete={countsComplete} />
           ))}
-          <NewHiresCard inView={inView} pulse={pulse} countsComplete={countsComplete} />
+          <NewHiresCard inView={inkActive} pulse={pulse} countsComplete={countsComplete} />
         </div>
 
         {/* 4. "They sell ROI / We deliver..." — now last */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
+          animate={inkActive ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.75 }}
           className="text-center mt-10 md:mt-14"
         >

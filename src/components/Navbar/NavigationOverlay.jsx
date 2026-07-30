@@ -14,15 +14,15 @@ const NavigationOverlay = ({ isOpen, onClose, activeKey }) => {
   useEffect(() => {
     if (!isOpen) return;
 
-    scrollPositionRef.current =
-      window.scrollY ||
-      window.pageYOffset ||
-      document.documentElement.scrollTop;
+    const snap = document.querySelector(".snap-container");
+    scrollPositionRef.current = snap
+      ? snap.scrollTop
+      : window.scrollY ||
+        window.pageYOffset ||
+        document.documentElement.scrollTop;
 
     document.body.style.overflow = "hidden";
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollPositionRef.current}px`;
-    document.body.style.width = "100%";
+    if (snap) snap.style.overflowY = "hidden";
 
     const preventScroll = (e) => {
       e.preventDefault();
@@ -30,9 +30,10 @@ const NavigationOverlay = ({ isOpen, onClose, activeKey }) => {
       return false;
     };
 
-    window.addEventListener("scroll", preventScroll, { passive: false });
     window.addEventListener("wheel", preventScroll, { passive: false });
     window.addEventListener("touchmove", preventScroll, { passive: false });
+    snap?.addEventListener("wheel", preventScroll, { passive: false });
+    snap?.addEventListener("touchmove", preventScroll, { passive: false });
 
     const onKey = (e) => {
       if (e.key === "Escape") onClose();
@@ -40,19 +41,19 @@ const NavigationOverlay = ({ isOpen, onClose, activeKey }) => {
     window.addEventListener("keydown", onKey);
 
     return () => {
-      window.removeEventListener("scroll", preventScroll);
       window.removeEventListener("wheel", preventScroll);
       window.removeEventListener("touchmove", preventScroll);
+      snap?.removeEventListener("wheel", preventScroll);
+      snap?.removeEventListener("touchmove", preventScroll);
       window.removeEventListener("keydown", onKey);
 
       document.body.style.overflow = "";
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.width = "";
+      if (snap) snap.style.overflowY = "";
 
       const restoreY = scrollPositionRef.current;
       setTimeout(() => {
-        window.scrollTo(0, restoreY);
+        if (snap) snap.scrollTo(0, restoreY);
+        else window.scrollTo(0, restoreY);
       }, 0);
     };
   }, [isOpen, onClose]);

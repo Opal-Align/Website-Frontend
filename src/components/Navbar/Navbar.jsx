@@ -3,8 +3,8 @@ import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import NavigationOverlay from "./NavigationOverlay";
-import { NAVBAR_LINKS, NAV_HEIGHT, goToTarget } from "./navigationConfig";
-import opalGosLogo from "../../assets/opal-gos.svg";
+import { NAVBAR_LINKS, goToTarget } from "./navigationConfig";
+import opalGosLogo from "../../assets/opal-gos-mark.webp";
 
 const SECTION_IDS = ["problem", "platform", "loop", "impact", "stack", "testimonials"];
 
@@ -21,22 +21,35 @@ function useActiveSection() {
   useEffect(() => {
     const update = () => {
       const slides = [...document.querySelectorAll(".home-slide")];
-      if (!slides.length) { setActive(null); return; }
-
-      const container = slides[0].parentElement;
-      const containerDocTop = container.getBoundingClientRect().top + window.scrollY;
-      const slideH = Math.max(1, window.innerHeight - NAV_HEIGHT);
-
-      // Hero zone — nothing highlighted
-      if (window.scrollY < containerDocTop - NAV_HEIGHT - slideH * 0.4) {
-        setActive((prev) => (prev === null ? prev : null));
+      if (!slides.length) {
+        setActive(null);
         return;
       }
 
-      const idx = Math.min(
-        Math.max(0, Math.round((window.scrollY - containerDocTop + NAV_HEIGHT) / slideH)),
-        slides.length - 1,
-      );
+      const snap =
+        document.querySelector(".snap-container") || slides[0].parentElement;
+      if (!snap) {
+        setActive(null);
+        return;
+      }
+
+      const origin = snap.getBoundingClientRect().top;
+      const mid = origin + snap.clientHeight * 0.45;
+
+      // Hero zone — nothing highlighted
+      const hero = snap.querySelector(".hero-snap");
+      if (hero) {
+        const heroBottom = hero.getBoundingClientRect().bottom;
+        if (heroBottom > mid) {
+          setActive((prev) => (prev === null ? prev : null));
+          return;
+        }
+      }
+
+      let idx = 0;
+      slides.forEach((slide, i) => {
+        if (slide.getBoundingClientRect().top <= mid) idx = i;
+      });
 
       // Walk backwards from current slide to find the nearest one with a known id
       let found = null;
@@ -49,8 +62,27 @@ function useActiveSection() {
     };
 
     update();
-    window.addEventListener("scroll", update, { passive: true });
-    return () => window.removeEventListener("scroll", update);
+    const snap = document.querySelector(".snap-container");
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        update();
+      });
+    };
+    if (snap) {
+      snap.addEventListener("scroll", onScroll, { passive: true });
+      return () => {
+        snap.removeEventListener("scroll", onScroll);
+        cancelAnimationFrame(raf);
+      };
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+    };
   }, []);
 
   return active;
@@ -127,7 +159,7 @@ function NavButton({ label, target, accent = false, isActive = false, onClick })
             }
           : {
               borderColor: "rgba(255,255,255,0.18)",
-              color: "rgba(255,255,255,0.78)",
+              color: "#fff",
             }
       }
     >
@@ -160,7 +192,7 @@ export default function Navbar() {
       <div
         className="fixed top-0 left-0 w-full z-90 px-6 md:px-10 py-3 md:py-4 backdrop-blur-md"
         style={{
-          backgroundColor: "rgba(8,6,12,0.55)",
+          backgroundColor: "black",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
         }}
       >
