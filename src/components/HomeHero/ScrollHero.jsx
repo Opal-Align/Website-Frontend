@@ -5,7 +5,9 @@
 // eslint-disable-next-line no-unused-vars
 import { motion, useScroll, useSpring, useTransform, useMotionValueEvent } from "framer-motion";
 import { useRef, useEffect, useState, useId, useCallback } from "react";
-import opalLogo from "../../assets/OPALgos GreyWhite Website.png";
+import opalLogo1400 from "../../assets/opal-gos-hero-1400.webp";
+import opalLogo2800 from "../../assets/opal-gos-hero.webp";
+import opalLogo3600 from "../../assets/opal-gos-hero-3600.webp";
 import useScrollContainer from "../../hooks/useScrollContainer";
 
 const NAVY = "#08060C";
@@ -424,7 +426,9 @@ export default function ScrollHero() {
           >
             <div className={mounted ? "logo-mount" : "logo-hidden"}>
               <img
-                src={opalLogo}
+                src={opalLogo2800}
+                srcSet={`${opalLogo1400} 1400w, ${opalLogo2800} 2800w, ${opalLogo3600} 3600w`}
+                sizes="(max-width: 768px) 92vw, min(92vw, 56rem)"
                 alt="OPAL gOS"
                 className="h-[1.1em] w-auto max-w-[min(92vw,36rem)] object-contain object-center select-none pointer-events-none"
                 style={{

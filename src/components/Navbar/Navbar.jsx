@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import NavigationOverlay from "./NavigationOverlay";
 import { NAVBAR_LINKS, goToTarget } from "./navigationConfig";
-import opalGosLogo from "../../assets/opal-gos.svg";
+import opalGosLogo from "../../assets/opal-gos-mark.webp";
 
 const SECTION_IDS = ["problem", "platform", "loop", "impact", "stack", "testimonials"];
 
@@ -63,12 +63,26 @@ function useActiveSection() {
 
     update();
     const snap = document.querySelector(".snap-container");
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        update();
+      });
+    };
     if (snap) {
-      snap.addEventListener("scroll", update, { passive: true });
-      return () => snap.removeEventListener("scroll", update);
+      snap.addEventListener("scroll", onScroll, { passive: true });
+      return () => {
+        snap.removeEventListener("scroll", onScroll);
+        cancelAnimationFrame(raf);
+      };
     }
-    window.addEventListener("scroll", update, { passive: true });
-    return () => window.removeEventListener("scroll", update);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+    };
   }, []);
 
   return active;
