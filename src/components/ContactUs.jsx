@@ -74,10 +74,11 @@ export default function ContactUs() {
       case "company":
         return value.trim() === "" ? "Company name is required" : "";
       case "website": {
-        if (value.trim() === "") return "Website is required";
-        const urlPattern =
-          /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
-        return !urlPattern.test(value) ? "Please enter a valid URL" : "";
+        const trimmed = value.trim();
+        if (trimmed === "") return "Website is required";
+        if (/\s/.test(trimmed) || !trimmed.includes("."))
+          return "Please enter a valid website";
+        return "";
       }
       case "email": {
         if (value.trim() === "") return "Email is required";
@@ -352,7 +353,7 @@ export default function ContactUs() {
 
                 <div>
                   <input
-                    type="url"
+                    type="text"
                     name="website"
                     placeholder="Company Website *"
                     value={formData.website}
