@@ -2,60 +2,24 @@
 // Drop-in ready. No external assets needed except your opalLogo import.
 // Replace the opalLogo import path to match your project.
 
-// eslint-disable-next-line no-unused-vars
-import { motion, useScroll, useSpring, useTransform, useMotionValueEvent } from "framer-motion";
-import { useRef, useEffect, useState, useId, useCallback } from "react";
-import opalLogo1400 from "../../assets/opal-gos-hero-1400.webp";
-import opalLogo2800 from "../../assets/opal-gos-hero.webp";
-import opalLogo3600 from "../../assets/opal-gos-hero-3600.webp";
+import { useRef, useEffect, useState } from "react";
+import opalLogo from "../../assets/OPAL - LOGO.svg";
+import heroPoster from "../../assets/hero-assets/poster.webp";
+import hero720Mp4 from "../../assets/hero-assets/hero-720.mp4";
+import hero720Webm from "../../assets/hero-assets/hero-720.webm";
+import hero1080Mp4 from "../../assets/hero-assets/hero-1080.mp4";
+import hero1080Webm from "../../assets/hero-assets/hero-1080.webm";
 import useScrollContainer from "../../hooks/useScrollContainer";
 
 const NAVY = "#08060C";
-const HERO_HEADLINE_SIZE = "clamp(2.4rem, 6.2vw, 5.2rem)";
-const HEADLINES_REVEAL_AT = 0.72;
-const PILL_DELAY_MS = 500;
-const SUBHEAD_AFTER_PILL_MS = 150;
 
-const OPAL_STOPS = [
-  { offset: "0%",   color: "#FFFFFF" },
-  { offset: "50%",  color: "#9AA2AE" },
-  { offset: "100%", color: "#FFFFFF" },
-];
-const OPAL_TEXT_GRADIENT =
-  "linear-gradient(120deg, #FFFFFF 0%, #C4CAD4 50%, #FFFFFF 100%)";
+const HERO_SOURCES = {
+  720: { mp4: hero720Mp4, webm: hero720Webm },
+  1080: { mp4: hero1080Mp4, webm: hero1080Webm },
+};
 
-// ─── Animated word ──────────────────────────────────────────────────────────
-function AnimatedWord({ children, start, end, progress, accent = false, last = false }) {
-  const opacity = useTransform(progress, [start, end], [0, 1]);
-  const y = useTransform(progress, [start, end], [40, 0]);
-  const accentStyle = accent
-    ? {
-        backgroundImage: OPAL_TEXT_GRADIENT,
-        WebkitBackgroundClip: "text",
-        backgroundClip: "text",
-        WebkitTextFillColor: "transparent",
-        color: "transparent",
-      }
-    : { color: "inherit" };
-
-  return (
-    <span className="inline-block overflow-hidden align-bottom leading-tight">
-      <motion.span
-        style={{
-          opacity,
-          y,
-          display: "inline-block",
-          willChange: "transform, opacity",
-          ...accentStyle,
-        }}
-      >
-        {children}
-      </motion.span>
-      {/* No trailing space on the last word — keeps the pill symmetric */}
-      {!last && "\u00A0"}
-    </span>
-  );
-}
+// 16:9 frame that leaves room for the logo above and the caption below.
+const VIDEO_WIDTH = "min(90vw, 56rem, calc((var(--snap-h, 100vh) - 12.5rem) * 16 / 9))";
 
 // ─── Starfield hook ──────────────────────────────────────────────────────────
 function useEnamelParticles(canvasRef, containerRef) {
@@ -254,103 +218,170 @@ function useEnamelParticles(canvasRef, containerRef) {
   }, [canvasRef, containerRef]);
 }
 
+// ─── Dish-style "channel change" static ─────────────────────────────────────
+// Tiny 160×90 noise canvas, CSS-upscaled. Only runs while static is visible;
+// once it fades to 0 the loop stops and the canvas is hidden (zero cost).
+function useChannelStatic(canvasRef) {
+  const api = useRef({ set() {}, rampTo() {} });
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const NW = 160, NH = 90;
+    canvas.width = NW;
+    canvas.height = NH;
+    const img = ctx.createImageData(NW, NH);
+    const px = new Uint32Array(img.data.buffer);
+    const host = canvas.parentElement;
+
+    let level = 0, ramp = null, raf = null, last = 0, running = false;
+
+    function frame(t) {
+      if (!running) return;
+      raf = requestAnimationFrame(frame);
+
+      if (ramp) {
+        const k = Math.min(1, (t - ramp.t0) / ramp.dur);
+        const e = k * k * (3 - 2 * k);
+        level = ramp.from + (ramp.to - ramp.from) * e;
+        if (k === 1) {
+          const cb = ramp.cb;
+          ramp = null;
+          if (cb) cb();
+        }
+      }
+      if (level <= 0.001 && !ramp) { stop(); return; }
+      if (t - last < 40) return; // ~25fps looks more like analog noise
+      last = t;
+
+      const a = ((Math.min(1, level) * 255) | 0) << 24;
+      for (let i = 0; i < px.length; i++) {
+        const v = (Math.random() * 256) | 0;
+        px[i] = a | (v << 16) | (v << 8) | v;
+      }
+      ctx.putImageData(img, 0, 0);
+      // horizontal tear/jitter while the signal is "unstable"
+      canvas.style.transform =
+        level > 0.15 ? `translateX(${((Math.random() - 0.5) * level * 16) | 0}px)` : "";
+    }
+
+    function start() {
+      if (running) return;
+      running = true;
+      host.dataset.static = "on";
+      raf = requestAnimationFrame(frame);
+    }
+
+    function stop() {
+      running = false;
+      cancelAnimationFrame(raf);
+      host.dataset.static = "off";
+      canvas.style.transform = "";
+    }
+
+    api.current = {
+      set(v) {
+        level = v;
+        ramp = null;
+        if (v > 0) start(); else stop();
+      },
+      rampTo(to, dur, cb) {
+        start();
+        ramp = { from: level, to, dur, t0: performance.now(), cb };
+      },
+    };
+
+    return () => {
+      running = false;
+      cancelAnimationFrame(raf);
+    };
+  }, [canvasRef]);
+
+  return api;
+}
+
 // ─── Main component ─────────────────────────────────────────────────────────
 export default function ScrollHero() {
-  const sectionRef = useRef(null);
   const grainRef   = useRef(null);
-  const pillGradientId = `opal-pill-${useId()}`;
+  const staticRef  = useRef(null);
+  const videoRef   = useRef(null);
   const scrollContainerRef = useScrollContainer();
 
   useEnamelParticles(grainRef, scrollContainerRef);
-
-  // Progress must track the snap container — window no longer scrolls.
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    container: scrollContainerRef,
-    offset: ["start start", "end end"],
-  });
-
-  const progress = useSpring(scrollYProgress, {
-    stiffness: 200,
-    damping: 30,
-    mass: 0.3,
-  });
+  const fx = useChannelStatic(staticRef);
 
   const [mounted, setMounted] = useState(false);
-  const [showPill, setShowPill] = useState(false);
-  const [showSubhead, setShowSubhead] = useState(false);
-  const autoTriggeredRef = useRef(false);
-  const pillDrawnRef = useRef(false);
-  const pillTimerRef = useRef(null);
-  const subheadTimerRef = useRef(null);
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 80);
     return () => clearTimeout(t);
   }, []);
 
-  useEffect(() => () => {
-    clearTimeout(pillTimerRef.current);
-    clearTimeout(subheadTimerRef.current);
-  }, []);
+  // ── Video: fetch immediately; static covers only the initial fetch ──
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = true;
 
-  const resetAutoSequence = useCallback(() => {
-    clearTimeout(pillTimerRef.current);
-    clearTimeout(subheadTimerRef.current);
-    autoTriggeredRef.current = false;
-    pillDrawnRef.current = false;
-    setShowPill(false);
-    setShowSubhead(false);
-  }, []);
-
-  const triggerAutoSequence = useCallback(() => {
-    if (autoTriggeredRef.current) return;
-    autoTriggeredRef.current = true;
-    pillTimerRef.current = setTimeout(() => setShowPill(true), PILL_DELAY_MS);
-  }, []);
-
-  const handlePillDrawComplete = useCallback(() => {
-    if (!showPill || pillDrawnRef.current) return;
-    pillDrawnRef.current = true;
-    subheadTimerRef.current = setTimeout(() => setShowSubhead(true), SUBHEAD_AFTER_PILL_MS);
-  }, [showPill]);
-
-  useMotionValueEvent(progress, "change", (v) => {
-    if (v >= HEADLINES_REVEAL_AT) {
-      triggerAutoSequence();
-    } else {
-      resetAutoSequence();
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const conn = navigator.connection;
+    const slow = conn && (conn.saveData || /(^|-)(2g|3g)$/.test(conn.effectiveType || ""));
+    if (reduced || slow) {
+      fx.current.set(0); // poster only — no download, no noise
+      return;
     }
-  });
 
-  // ── Click handler — scrolls to headline reveal point; pill + subhead auto-play after
-  const handleLogoClick = useCallback(() => {
-    const section = sectionRef.current;
-    const container = scrollContainerRef?.current;
-    if (!section || !container) return;
-    const sectionTop =
-      section.getBoundingClientRect().top -
-      container.getBoundingClientRect().top +
-      container.scrollTop;
-    container.scrollTo({
-      top:
-        sectionTop +
-        Math.max(0, section.offsetHeight - container.clientHeight),
-      behavior: "smooth",
-    });
-  }, [scrollContainerRef]);
+    let inView = true;
+    let staticVisible = true;
+    fx.current.set(0.92);
 
-  // Scroll-driven values — logo + three headline lines only.
-  // Breakpoints scaled so the reveal completes at HEADLINES_REVEAL_AT (0.72)
-  // instead of 0.50. This keeps the same on-screen reveal distance (~38vh)
-  // while cutting the empty tail after the verbiage from ~50vh to ~20vh.
-  const allLinesOpacity = useTransform(progress, [0.55, 0.72], [0, 1]);
+    const revealVideo = () => {
+      if (!staticVisible) return;
+      staticVisible = false;
+      fx.current.rampTo(0, 250);
+    };
 
-  const logoScale = useTransform(progress, [0.17, 0.46], [2.35, 1]);
-  const logoX     = useTransform(progress, [0.17, 0.46], ["0vw", "0vw"]);
-  const logoY     = useTransform(progress, [0.17, 0.46], ["0vh", "-35vh"]);
+    const tryPlay = () => {
+      if (!v.src || !inView || document.hidden) return;
+      v.play().catch(revealVideo); // autoplay blocked → reveal the poster
+    };
 
-  const hintOpacity = useTransform(progress, [0, 0.07], [1, 0]);
+    const onPlaying = revealVideo;
+    const onError = revealVideo;
+
+    const ua = navigator.userAgent;
+    const isSafari = /safari/i.test(ua) && !/chrome|chromium|android/i.test(ua);
+    const webm = !isSafari && v.canPlayType('video/webm; codecs="vp9"');
+    const quality = window.innerWidth > 900 ? "1080" : "720";
+    v.src = HERO_SOURCES[quality][webm ? "webm" : "mp4"];
+    v.load();
+    tryPlay();
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        inView = entry.isIntersecting;
+        if (inView) tryPlay(); else v.pause();
+      },
+      { root: scrollContainerRef?.current ?? null, threshold: 0.15 },
+    );
+    io.observe(v);
+
+    const onVisibility = () => { if (document.hidden) v.pause(); else tryPlay(); };
+    document.addEventListener("visibilitychange", onVisibility);
+    v.addEventListener("playing", onPlaying);
+    v.addEventListener("error", onError);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      v.removeEventListener("playing", onPlaying);
+      v.removeEventListener("error", onError);
+      io.disconnect();
+      v.pause();
+      v.removeAttribute("src");
+      v.load(); // release the network + decoder
+    };
+  }, [fx, scrollContainerRef]);
 
   return (
     <>
@@ -368,21 +399,66 @@ export default function ScrollHero() {
         .logo-mount  { animation: logoIn 1.15s cubic-bezier(0.16,1,0.3,1) forwards; }
         .logo-hidden { opacity: 0; }
         .hero-h1     { font-size: inherit; }
+        .hero-copy > * { opacity: 0; }
+        .hero-copy.is-in > * {
+          animation: logoIn 1.05s cubic-bezier(0.16,1,0.3,1) both;
+        }
+        .hero-copy {
+          gap: clamp(16px, 2.4vh, 28px);
+        }
+        .hero-copy.is-in > :nth-child(1) { animation-delay: 0.08s; }
+        .hero-copy.is-in > :nth-child(2) { animation-delay: 0.24s; }
+        .hero-copy.is-in > :nth-child(3) { animation-delay: 0.42s; }
+        .hero-logo {
+          height: clamp(2.1rem, 4.8vh, 3.2rem);
+          width: auto;
+        }
+        .hero-caption {
+          margin: 0;
+          max-width: 44rem;
+          line-height: 1.45;
+        }
+        .hero-hint { opacity: 0; }
+        .hero-hint.is-in { animation: hintIn 0.8s ease 0.95s both; }
+        @keyframes hintIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
         .hero-scroll-hint {
           animation: heroScrollHint 1.6s ease-in-out infinite;
           transform-origin: top;
         }
         @media (prefers-reduced-motion: reduce) {
+          .logo-mount, .logo-hidden { animation: none; opacity: 1; filter: none; transform: none; }
+          .hero-copy > *,
+          .hero-copy.is-in > * { animation: none; opacity: 1; filter: none; transform: none; }
+          .hero-hint, .hero-hint.is-in { animation: none; opacity: 1; }
           .hero-scroll-hint { animation: none; transform: scaleY(1); }
         }
-        .logo-clickable { cursor: pointer; }
+        .hero-copy > .hero-frame {
+          opacity: 1;
+        }
+        .hero-copy.is-in > .hero-frame {
+          animation: none;
+        }
+        .tv-scan { background: repeating-linear-gradient(to bottom, rgba(0,0,0,0.22) 0 1px, transparent 1px 3px); }
+        .tv-roll {
+          position: absolute; left: 0; right: 0; top: -25%; height: 22%;
+          background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.12), transparent);
+          animation: tvRoll 1.4s linear infinite;
+        }
+        @keyframes tvRoll { to { transform: translateY(570%); } }
+        .tv-frame[data-static="off"] .tv-noise,
+        .tv-frame[data-static="off"] .tv-overlay { display: none; }
+        @media (prefers-reduced-motion: reduce) {
+          .tv-noise, .tv-overlay { display: none; }
+        }
         .logo-clickable:hover img {
-          filter: drop-shadow(0 8px 40px rgba(255,255,255,0.32)) !important;
+          filter: brightness(0) invert(1) drop-shadow(0 8px 40px rgba(255,255,255,0.32)) !important;
         }
       `}</style>
 
       <section
-        ref={sectionRef}
         className="relative w-full"
         style={{ height: "100%", backgroundColor: NAVY }}
       >
@@ -409,125 +485,67 @@ export default function ScrollHero() {
             style={{ zIndex: 2, background: `linear-gradient(to bottom, transparent, ${NAVY})` }}
           />
 
-          {/* Logo — clickable */}
-          <motion.div
-            className="absolute left-1/2 top-1/2 z-20 flex items-center justify-center logo-clickable"
-            style={{
-              fontSize: HERO_HEADLINE_SIZE,
-              x: logoX,
-              y: logoY,
-              translateX: "-50%",
-              translateY: "-50%",
-              scale: logoScale,
-              transformOrigin: "center center",
-              willChange: "transform",
-            }}
-            onClick={handleLogoClick}
-          >
-            <div className={mounted ? "logo-mount" : "logo-hidden"}>
-              <img
-                src={opalLogo2800}
-                srcSet={`${opalLogo1400} 1400w, ${opalLogo2800} 2800w, ${opalLogo3600} 3600w`}
-                sizes="(max-width: 768px) 92vw, min(92vw, 56rem)"
-                alt="OPAL gOS"
-                className="h-[1.1em] w-auto max-w-[min(92vw,36rem)] object-contain object-center select-none pointer-events-none"
-                style={{
-                  filter: "drop-shadow(0 8px 30px rgba(255,255,255,0.18))",
-                  transition: "filter 0.3s ease",
-                }}
-                fetchPriority="high"
-                decoding="async"
-                draggable={false}
-              />
-            </div>
-          </motion.div>
-
-          {/* Scroll hint */}
-          <motion.div
-            className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 pointer-events-none"
-            style={{ opacity: hintOpacity }}
-          >
-            <span className="font-['Montserrat'] text-white/40 text-[10px] tracking-[0.3em] uppercase">
-              Scroll
-            </span>
-            <div
-              className="hero-scroll-hint w-px h-8"
-              style={{ backgroundImage: OPAL_TEXT_GRADIENT, opacity: 0.6 }}
-            />
-          </motion.div>
-
-          {/* Headlines */}
+          {/* Logo, video, and caption share one centered column */}
           <div className="absolute inset-0 z-10 flex items-center justify-center px-6">
             <div
-              className="w-full max-w-5xl text-center text-white"
-              style={{ fontSize: HERO_HEADLINE_SIZE }}
+              className={`hero-copy flex w-full flex-col items-center text-center text-white${mounted ? " is-in" : ""}`}
+              style={{ maxWidth: VIDEO_WIDTH }}
             >
-              <motion.h1
-                style={{ opacity: allLinesOpacity }}
-                className="hero-h1 font-['Montserrat'] font-light leading-[1.05] tracking-tight"
+              <div className="flex shrink-0 items-center justify-center">
+                <img
+                  src={opalLogo}
+                  alt="OPAL"
+                  className="hero-logo object-contain select-none pointer-events-none"
+                  style={{
+                    filter: "brightness(0) invert(1) drop-shadow(0 8px 30px rgba(255,255,255,0.18))",
+                  }}
+                  fetchPriority="high"
+                  decoding="async"
+                  draggable={false}
+                />
+              </div>
+              <div
+                className="hero-frame tv-frame relative w-full overflow-hidden rounded-xl"
+                data-static="on"
+                style={{
+                  aspectRatio: "16 / 9",
+                  background: "#000",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  boxShadow: "0 30px 80px rgba(0,0,0,0.6), 0 0 60px rgba(255,255,255,0.05)",
+                  contain: "layout paint",
+                }}
               >
-                <AnimatedWord progress={progress} start={0.55} end={0.72}>Recover</AnimatedWord>
-                <AnimatedWord progress={progress} start={0.55} end={0.72} accent>Revenue.</AnimatedWord>
-              </motion.h1>
+                <video
+                  ref={videoRef}
+                  className="absolute inset-0 h-full w-full object-cover"
+                  poster={heroPoster}
+                  preload="auto"
+                  loop
+                  muted
+                  playsInline
+                  disablePictureInPicture
+                  disableRemotePlayback
+                  tabIndex={-1}
+                  aria-hidden="true"
+                />
+                {/* static + scanlines sit above the video and vanish once it plays */}
+                <canvas
+                  ref={staticRef}
+                  className="tv-noise absolute inset-0 h-full w-full pointer-events-none"
+                  style={{ imageRendering: "pixelated" }}
+                />
+                <div className="tv-overlay tv-scan absolute inset-0 pointer-events-none" />
+                <div className="tv-overlay tv-roll pointer-events-none" />
+              </div>
 
-              <motion.h1
-                style={{ opacity: allLinesOpacity }}
-                className="hero-h1 font-['Montserrat'] font-light leading-[1.05] tracking-tight mt-2 md:mt-3"
-              >
-                <AnimatedWord progress={progress} start={0.55} end={0.72}>Maximize</AnimatedWord>
-                <AnimatedWord progress={progress} start={0.55} end={0.72} accent>Margins.</AnimatedWord>
-              </motion.h1>
-
-              <motion.div
-                style={{ opacity: allLinesOpacity }}
-                className="relative inline-block mt-2 md:mt-3"
-              >
-                <motion.svg
-                  aria-hidden
-                  className="absolute pointer-events-none"
-                  style={{ inset: -2, width: "calc(100% + 4px)", height: "calc(100% + 4px)", overflow: "visible" }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: showPill ? 1 : 0 }}
-                  transition={{ duration: 0.2, ease: "easeOut" }}
-                >
-                  <defs>
-                    <linearGradient id={pillGradientId} x1="0" y1="1" x2="1" y2="0">
-                      {OPAL_STOPS.map((s) => (
-                        <stop key={s.offset} offset={s.offset} stopColor={s.color} />
-                      ))}
-                    </linearGradient>
-                  </defs>
-                  <motion.rect
-                    x="3" y="3"
-                    style={{ width: "calc(100% - 6px)", height: "calc(100% - 6px)" }}
-                    rx="9999" ry="9999"
-                    fill="transparent"
-                    stroke={`url(#${pillGradientId})`}
-                    strokeWidth="1.5"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: showPill ? 1 : 0 }}
-                    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: showPill ? 0.05 : 0 }}
-                    onAnimationComplete={handlePillDrawComplete}
-                  />
-                </motion.svg>
-
-                <h1 className="hero-h1 relative font-['Montserrat'] font-light leading-[1.05] tracking-tight px-8 md:px-12 py-2 md:py-3">
-                  <AnimatedWord progress={progress} start={0.55} end={0.72}>Zero</AnimatedWord>
-                  <AnimatedWord progress={progress} start={0.55} end={0.72}>new</AnimatedWord>
-                  <AnimatedWord progress={progress} start={0.55} end={0.72} accent last>hires.</AnimatedWord>
-                </h1>
-              </motion.div>
-
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={showSubhead ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-                className="mt-8 md:mt-10 font-['Montserrat'] font-light text-white/55 text-[clamp(0.9rem,1.4vw,1.15rem)] tracking-[0.06em]"
-              >
-                The Guided Operating System for provider practices.
-              </motion.p>
+              <p className="hero-caption font-['Montserrat'] font-light text-white/55 text-[clamp(0.9rem,1.4vw,1.15rem)] tracking-[0.06em]">
+              Your Practices are leaking revenue. <br />OPAL can Recover Revenue & Maximize Margins <br/> with <strong className="font-bold text-white/90">No New Hires</strong>.
+              </p>
             </div>
           </div>
+
+          {/* Keep the headline for SEO / screen readers */}
+          <h1 className="sr-only">Recover Revenue. Maximize Margins. Zero new hires.</h1>
 
         </div>
       </section>

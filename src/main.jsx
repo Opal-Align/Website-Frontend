@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.jsx";
-import heroLogo from "./assets/opal-gos-hero.webp";
+import heroPoster from "./assets/hero-assets/poster.webp";
 import navLogo from "./assets/opal-gos-mark.webp";
 
 /** Preload LCP / first-paint images before React mounts (Vite-resolved URLs). */
@@ -19,7 +19,7 @@ function preloadImage(href, { fetchPriority = "high" } = {}) {
   document.head.appendChild(link);
 }
 
-preloadImage(heroLogo, { fetchPriority: "high" });
+preloadImage(heroPoster, { fetchPriority: "high" });
 preloadImage(navLogo, { fetchPriority: "high" });
 
 createRoot(document.getElementById("root")).render(

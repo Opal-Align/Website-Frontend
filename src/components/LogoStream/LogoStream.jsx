@@ -170,20 +170,20 @@ export default function LogoStream() {
         <header className="ls-header">
           <div className="ls-heading">
             <motion.span
-              className="ls-hl-muted"
+              className="ls-hl-bold"
               initial={{ opacity: 0, y: 8 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             >
-              Our Partners
+              OUR PARTNERS
             </motion.span>
             <motion.span
-              className="ls-hl-bold"
+              className="ls-hl-muted"
               initial={{ opacity: 0, y: 16 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.85, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
             >
-              YOUR SYSTEMS UNCHANGED
+              Integrates into your practice management systems. 
             </motion.span>
           </div>
         </header>
@@ -258,7 +258,7 @@ export default function LogoStream() {
           color: var(--page-hl-muted-color);
           line-height: var(--page-hl-muted-lh);
           text-align: center;
-          padding-top: clamp(16px, 2.5vh, 28px);
+          padding-top: clamp(12px, 2.0vh, 20px);
         }
         .ls-hl-bold {
           display: block;

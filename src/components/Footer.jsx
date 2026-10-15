@@ -136,7 +136,7 @@ export default function Footer() {
         </div>
 
         {/* CTA copy */}
-        <div className="ft-cta-copy space-y-2">
+        {/* <div className="ft-cta-copy space-y-2">
           
           <p className="text-xs md:text-sm">
             <Typewriter
@@ -147,7 +147,7 @@ export default function Footer() {
               style={{ ...gradientText, opacity: 0.6 }}
             />
           </p>
-        </div>
+        </div> */}
 
         {/* Join button */}
         <Link to="/contact-us" className="ft-join">
@@ -163,7 +163,7 @@ export default function Footer() {
             animate={{ opacity: typewriterStarted ? 1 : 0 }}
             transition={{ delay: typewriterStarted ? s.btn : 0, duration: 0.5 }}
           >
-            <span style={gradientText}>Join Today</span>
+            <span style={gradientText}>Book a Demo</span>
             <span className="flex gap-1.5">
               <span className="w-2 h-2 rounded-full" style={{ background: OPAL_GRADIENT }} />
               <span className="w-2 h-2 rounded-full" style={{ background: OPAL_GRADIENT }} />

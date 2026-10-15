@@ -27,7 +27,6 @@ export const NAV_TARGET = {
   loop: "#loop",
   impact: "#impact",
   stack: "#stack",
-  testimonials: "#testimonials",
   contact: "/contact-us",
 };
 
@@ -36,10 +35,8 @@ export const OVERLAY_NAV_ITEMS = [
   { key: "home", label: "Home", target: NAV_TARGET.home },
   { key: "problem", label: "The Problem", target: NAV_TARGET.problem },
   { key: "platform", label: "The Platform", target: NAV_TARGET.platform },
-  { key: "loop", label: "The gOS Loop", target: NAV_TARGET.loop },
   { key: "impact", label: "Impact", target: NAV_TARGET.impact },
   { key: "stack", label: "The Stack", target: NAV_TARGET.stack },
-  { key: "testimonials", label: "Testimonials", target: NAV_TARGET.testimonials },
   { key: "contact", label: "Contact", target: NAV_TARGET.contact },
 ];
 
@@ -48,12 +45,10 @@ export const NAVBAR_LINKS = {
   left: [
     { key: "problem", label: "The Problem", target: NAV_TARGET.problem },   // 1
     { key: "platform", label: "The Platform",     target: NAV_TARGET.platform },  // 2
-    { key: "loop",    label: "The gOS Loop",target: NAV_TARGET.loop },      // 3
   ],
   right: [
     { key: "impact",        label: "Impact",       target: NAV_TARGET.impact },        // 4
     { key: "stack",         label: "The Stack",    target: NAV_TARGET.stack },         // 5
-    { key: "testimonials",  label: "Testimonials", target: NAV_TARGET.testimonials },  // 6
     { key: "contact",       label: "Contact",      target: NAV_TARGET.contact, accent: true },
   ],
 };

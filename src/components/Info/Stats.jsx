@@ -23,21 +23,21 @@ const gradientText = {
 // since it never counts and behaves differently (stays at 0, pulses itself).
 const stats = [
   {
-    target: 100, unit: "K", prefix: "$",
+    target: 1, unit: "M", prefix: "$", suffix: "+",
     label: "Recovered Revenue",
-    desc: "gOS effectuated A/R recovery in a single pilot across 4 practices in just 1 month.",
+    desc: "In less than 6 months for 70+ practices.",
     glyph: "α · 001",
   },
   {
-    target: 75, unit: "K",
+    target: 200, unit: "K",
     label: "Communications Triggered",
-    desc: "gOS triggered texts, emails, and mailers impossible to achieve even at superhuman scale",
+    desc: "Volume of texts, emails, and letters impossible to achieve by a human workforce.",
     glyph: "β · 002",
   },
   {
-    target: 25, unit: "K",
+    target: 50, unit: "K",
     label: "Hours Saved",
-    desc: "gOS eliminates manual labor required to accelerate revenue recovery at scale.",
+    desc: "Eliminates human capital needed to accelerate revenue recovery at scale.",
     glyph: "γ · 003",
   },
 ];
@@ -461,6 +461,7 @@ function Counter({
   target,
   unit = "",
   prefix = "",
+  suffix = "",
   inView,
   startDelay = 0,
   duration = 2.8,
@@ -474,7 +475,7 @@ function Counter({
 
   useEffect(() => {
     if (!inView) {
-      if (valueRef.current) valueRef.current.textContent = `${prefix}0${unit}`;
+      if (valueRef.current) valueRef.current.textContent = `${prefix}0${unit}${suffix}`;
       setLanded(false);
       return;
     }
@@ -488,12 +489,12 @@ function Counter({
         // Avoid re-rendering the whole card on every animation frame.
         onUpdate: (v) => {
           if (valueRef.current) {
-            valueRef.current.textContent = `${prefix}${Math.round(v)}${unit}`;
+            valueRef.current.textContent = `${prefix}${Math.round(v)}${unit}${suffix}`;
           }
         },
         onComplete: () => {
           if (valueRef.current) {
-            valueRef.current.textContent = `${prefix}${target}${unit}`;
+            valueRef.current.textContent = `${prefix}${target}${unit}${suffix}`;
           }
           setLanded(true);
         },
@@ -504,7 +505,7 @@ function Counter({
       clearTimeout(timer);
       ctrl?.stop();
     };
-  }, [inView, target, prefix, unit, startDelay, duration]);
+  }, [inView, target, prefix, suffix, unit, startDelay, duration]);
 
   return (
     <div className="min-w-0 w-full">
@@ -524,7 +525,7 @@ function Counter({
           transition: "filter 0.5s ease-out",
         }}
       >
-        <span ref={valueRef}>{prefix}0{unit}</span>
+        <span ref={valueRef}>{prefix}0{unit}{suffix}</span>
         <TrendArrow active={showPulse} />
       </motion.span>
     </div>
@@ -949,7 +950,7 @@ export function ImpactNarrative() {
               animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
               transition={{ duration: 0.85, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
             >
-              gOS LOOP IN ACTION
+              OPAL IN ACTION
             </motion.span>
           </div>
         </header>
@@ -961,7 +962,7 @@ export function ImpactNarrative() {
           className="w-full"
         >
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white/45 leading-tight text-center">
-            Others pitched{" "}
+            Others sell{" "}
             <AnimatedStrike inView={inkActive}>ROI</AnimatedStrike>.<br />{" "}
             We deliver <InvisibleInk active={inkActive} autoRevealDelay={1.4}>Realtime Operational Impact</InvisibleInk>.
           </h2>
@@ -1075,7 +1076,7 @@ export default function Processes() {
               animate={inkActive ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
               transition={{ duration: 0.85, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
             >
-              gOS LOOP IN ACTION
+              OPAL IN ACTION
             </motion.span>
           </div>
         </header>
@@ -1114,7 +1115,7 @@ export default function Processes() {
           className="text-center mt-10 md:mt-14"
         >
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white/45 leading-tight text-center">
-          Others pitched{" "}
+          Others sell{" "}
             <AnimatedStrike inView={inkActive}>ROI</AnimatedStrike>.<br />{" "}
             We deliver <InvisibleInk active={inkActive} autoRevealDelay={COUNTER_END_TIME + 0.7}>Realtime Operational Impact</InvisibleInk>.
           </h2>
