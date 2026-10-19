@@ -621,8 +621,16 @@ export default function ProblemWordMap() {
           letter-spacing: 0.16em;
           text-transform: uppercase;
           cursor: pointer;
-          box-shadow: 0 0 22px rgba(255,255,255,0.08);
-          transition: box-shadow 0.2s ease;
+          box-shadow: 0 0 18px rgba(255,255,255,0.18), 0 0 40px rgba(255,255,255,0.08);
+          animation: pwmCtaGlow 2.6s ease-in-out infinite;
+        }
+        @keyframes pwmCtaGlow {
+          0%, 100% {
+            box-shadow: 0 0 16px rgba(255,255,255,0.16), 0 0 36px rgba(255,255,255,0.06);
+          }
+          50% {
+            box-shadow: 0 0 28px rgba(255,255,255,0.42), 0 0 64px rgba(255,255,255,0.18);
+          }
         }
         .pwm-assessment-cta span {
           background-image: linear-gradient(120deg, #FFFFFF 0%, #F8FAFC 30%, #F3F4F6 65%, #FFFFFF 100%);
@@ -631,7 +639,8 @@ export default function ProblemWordMap() {
           color: transparent;
         }
         .pwm-assessment-cta:hover {
-          box-shadow: 0 0 28px rgba(255,255,255,0.18);
+          animation: none;
+          box-shadow: 0 0 32px rgba(255,255,255,0.5), 0 0 72px rgba(255,255,255,0.22);
         }
         .pwm-assessment-cta:focus-visible {
           outline: 2px solid rgba(255,255,255,0.7);
@@ -679,6 +688,7 @@ export default function ProblemWordMap() {
         @media (prefers-reduced-motion: reduce) {
           .pwm-word { transition: none !important; }
           .pwm-ticker-line { position: relative; }
+          .pwm-assessment-cta { animation: none; }
         }
       `}</style>
 
@@ -722,7 +732,7 @@ export default function ProblemWordMap() {
                 animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.7, delay: 0.7, ease: [0.16, 1, 0.3, 1] }}
               >
-                <span>Take Your Assessment Now</span>
+                <span>Quick Revenue Assessment</span>
               </motion.button>
             </div>
           </div>

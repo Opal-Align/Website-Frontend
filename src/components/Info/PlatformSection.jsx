@@ -31,7 +31,6 @@
  */
 
 import { useRef, useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
 // eslint-disable-next-line no-unused-vars
 import { motion, useInView } from "framer-motion";
 import scheduleIcon from "../../assets/schedule.svg";
@@ -478,8 +477,12 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 2000 }
           text-transform: uppercase;
           text-decoration: none;
           cursor: pointer;
-          box-shadow: 0 0 22px rgba(255,255,255,0.08);
-          transition: box-shadow 0.2s ease;
+          box-shadow: 0 0 18px rgba(255,255,255,0.18), 0 0 40px rgba(255,255,255,0.08);
+          animation: pfCtaGlow 2.6s ease-in-out infinite;
+        }
+        @keyframes pfCtaGlow {
+          0%, 100% { box-shadow: 0 0 16px rgba(255,255,255,0.16), 0 0 36px rgba(255,255,255,0.06); }
+          50% { box-shadow: 0 0 28px rgba(255,255,255,0.42), 0 0 64px rgba(255,255,255,0.18); }
         }
         .pf-demo-cta span {
           background-image: ${OPAL_LIGHT_GRADIENT};
@@ -488,7 +491,8 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 2000 }
           color: transparent;
         }
         .pf-demo-cta:hover {
-          box-shadow: 0 0 28px rgba(255,255,255,0.18);
+          animation: none;
+          box-shadow: 0 0 32px rgba(255,255,255,0.5), 0 0 72px rgba(255,255,255,0.22);
         }
         .pf-demo-cta:focus-visible {
           outline: 2px solid rgba(255,255,255,0.7);
@@ -700,6 +704,7 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 2000 }
         }
         @media (prefers-reduced-motion: reduce) {
           .pf-wave-ring { animation: none !important; }
+          .pf-demo-cta { animation: none; }
         }
       `}</style>
 
@@ -732,9 +737,14 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 2000 }
               >
                 The Guided Operating System
               </motion.span>
-              <Link className="pf-demo-cta" to="/contact-us">
+              <a
+                className="pf-demo-cta"
+                href="https://calendly.com/opalgos/opal-connect-call"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <span>Book a Demo</span>
-              </Link>
+              </a>
             </div>
           </div>
 

@@ -163,7 +163,7 @@ export default function Footer() {
             animate={{ opacity: typewriterStarted ? 1 : 0 }}
             transition={{ delay: typewriterStarted ? s.btn : 0, duration: 0.5 }}
           >
-            <span style={gradientText}>Book a Demo</span>
+            <span style={gradientText}>CONTACT US</span>
             <span className="flex gap-1.5">
               <span className="w-2 h-2 rounded-full" style={{ background: OPAL_GRADIENT }} />
               <span className="w-2 h-2 rounded-full" style={{ background: OPAL_GRADIENT }} />
@@ -253,7 +253,7 @@ export default function Footer() {
           <div className="flex items-center">
             <img
               src={opalLogo}
-              alt="OPAL gOS"
+              alt="OPAL"
               className="h-6 md:h-8 w-auto object-contain ft-logo-glow"
             />
           </div>
@@ -261,7 +261,7 @@ export default function Footer() {
           {/* Copyright */}
           <div className="flex flex-wrap items-center gap-4 md:gap-6">
             <span style={{ ...gradientText, opacity: 0.55 }}>
-              © 2026 OPAL gOS, Inc. All rights reserved
+              © 2026 OPAL, Inc. All rights reserved
             </span>
           </div>
 

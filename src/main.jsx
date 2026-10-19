@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.jsx";
-import heroPoster from "./assets/hero-assets/poster.webp";
+import heroPoster from "./assets/hero-assets/opal-vignette-poster.jpg";
 import navLogo from "./assets/opal-gos-mark.webp";
 
 /** Preload LCP / first-paint images before React mounts (Vite-resolved URLs). */

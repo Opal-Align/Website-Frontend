@@ -4,22 +4,24 @@
 
 import { useRef, useEffect, useState } from "react";
 import opalLogo from "../../assets/OPAL - LOGO.svg";
-import heroPoster from "../../assets/hero-assets/poster.webp";
-import hero720Mp4 from "../../assets/hero-assets/hero-720.mp4";
-import hero720Webm from "../../assets/hero-assets/hero-720.webm";
-import hero1080Mp4 from "../../assets/hero-assets/hero-1080.mp4";
-import hero1080Webm from "../../assets/hero-assets/hero-1080.webm";
+import heroPoster from "../../assets/hero-assets/opal-vignette-poster.jpg";
+import vignette1080 from "../../assets/hero-assets/opal-vignette-1080p.webm";
+import vignetteMobile4x5 from "../../assets/hero-assets/opal-vignette-mobile-4x5 1.mp4";
+import vignetteMobile9x16 from "../../assets/hero-assets/OPAL_Vignette_41s_Thursday_v2_9x16_mobile.mp4";
 import useScrollContainer from "../../hooks/useScrollContainer";
 
 const NAVY = "#08060C";
 
-const HERO_SOURCES = {
-  720: { mp4: hero720Mp4, webm: hero720Webm },
-  1080: { mp4: hero1080Mp4, webm: hero1080Webm },
-};
+const MOBILE_NARROW = "(max-width: 640px)";
+const MOBILE = "(max-width: 900px)";
+const PORTRAIT = "(orientation: portrait)";
 
-// 16:9 frame that leaves room for the logo above and the caption below.
-const VIDEO_WIDTH = "min(90vw, 56rem, calc((var(--snap-h, 100vh) - 12.5rem) * 16 / 9))";
+function heroVideoSrc() {
+  const portrait = window.matchMedia(PORTRAIT).matches;
+  if (portrait && window.matchMedia(MOBILE_NARROW).matches) return vignetteMobile9x16;
+  if (portrait && window.matchMedia(MOBILE).matches) return vignetteMobile4x5;
+  return vignette1080;
+}
 
 // ─── Starfield hook ──────────────────────────────────────────────────────────
 function useEnamelParticles(canvasRef, containerRef) {
@@ -350,13 +352,25 @@ export default function ScrollHero() {
     const onPlaying = revealVideo;
     const onError = revealVideo;
 
-    const ua = navigator.userAgent;
-    const isSafari = /safari/i.test(ua) && !/chrome|chromium|android/i.test(ua);
-    const webm = !isSafari && v.canPlayType('video/webm; codecs="vp9"');
-    const quality = window.innerWidth > 900 ? "1080" : "720";
-    v.src = HERO_SOURCES[quality][webm ? "webm" : "mp4"];
-    v.load();
-    tryPlay();
+    let activeSrc = "";
+    const loadSource = () => {
+      const next = heroVideoSrc();
+      if (next === activeSrc) return;
+      activeSrc = next;
+      staticVisible = true;
+      fx.current.set(0.92);
+      v.src = next;
+      v.load();
+      tryPlay();
+    };
+    loadSource();
+
+    const mqNarrow = window.matchMedia(MOBILE_NARROW);
+    const mqMobile = window.matchMedia(MOBILE);
+    const mqPortrait = window.matchMedia(PORTRAIT);
+    mqNarrow.addEventListener("change", loadSource);
+    mqMobile.addEventListener("change", loadSource);
+    mqPortrait.addEventListener("change", loadSource);
 
     const io = new IntersectionObserver(
       ([entry]) => {
@@ -374,6 +388,9 @@ export default function ScrollHero() {
 
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
+      mqNarrow.removeEventListener("change", loadSource);
+      mqMobile.removeEventListener("change", loadSource);
+      mqPortrait.removeEventListener("change", loadSource);
       v.removeEventListener("playing", onPlaying);
       v.removeEventListener("error", onError);
       io.disconnect();
@@ -405,6 +422,32 @@ export default function ScrollHero() {
         }
         .hero-copy {
           gap: clamp(16px, 2.4vh, 28px);
+          max-width: min(90vw, 56rem, calc((var(--snap-h, 100vh) - 12.5rem) * 16 / 9));
+        }
+        .hero-frame { aspect-ratio: 16 / 9; }
+        @media (max-width: 900px) and (orientation: portrait) {
+          .hero-copy {
+            max-width: min(86vw, calc((var(--snap-h, 100vh) - 12.5rem) * 4 / 5));
+          }
+          .hero-frame { aspect-ratio: 4 / 5; }
+        }
+        @media (max-width: 640px) and (orientation: portrait) {
+          .hero-copy {
+            max-width: min(84vw, calc((var(--snap-h, 100vh) - 12.5rem) * 9 / 16));
+          }
+          .hero-frame { aspect-ratio: 9 / 16; }
+        }
+        @media (orientation: landscape) and (max-height: 520px) {
+          .hero-copy {
+            gap: 8px;
+            max-width: min(92vw, max(12rem, calc((var(--snap-h, 100vh) - 6.75rem) * 16 / 9)));
+          }
+          .hero-frame { aspect-ratio: 16 / 9; }
+          .hero-logo { height: 1.6rem; }
+          .hero-caption {
+            font-size: 0.72rem !important;
+            line-height: 1.35;
+          }
         }
         .hero-copy.is-in > :nth-child(1) { animation-delay: 0.08s; }
         .hero-copy.is-in > :nth-child(2) { animation-delay: 0.24s; }
@@ -489,7 +532,6 @@ export default function ScrollHero() {
           <div className="absolute inset-0 z-10 flex items-center justify-center px-6">
             <div
               className={`hero-copy flex w-full flex-col items-center text-center text-white${mounted ? " is-in" : ""}`}
-              style={{ maxWidth: VIDEO_WIDTH }}
             >
               <div className="flex shrink-0 items-center justify-center">
                 <img
@@ -508,7 +550,6 @@ export default function ScrollHero() {
                 className="hero-frame tv-frame relative w-full overflow-hidden rounded-xl"
                 data-static="on"
                 style={{
-                  aspectRatio: "16 / 9",
                   background: "#000",
                   border: "1px solid rgba(255,255,255,0.12)",
                   boxShadow: "0 30px 80px rgba(0,0,0,0.6), 0 0 60px rgba(255,255,255,0.05)",
@@ -539,7 +580,7 @@ export default function ScrollHero() {
               </div>
 
               <p className="hero-caption font-['Montserrat'] font-light text-white/55 text-[clamp(0.9rem,1.4vw,1.15rem)] tracking-[0.06em]">
-              Your Practices are leaking revenue. <br />OPAL can Recover Revenue & Maximize Margins <br/> with <strong className="font-bold text-white/90">No New Hires</strong>.
+              Your Practices are leaking revenue. <br />OPAL Recovers Revenue & Maximizes Margins with <br/><strong className="font-bold text-white/90">No New Hires</strong>.
               </p>
             </div>
           </div>

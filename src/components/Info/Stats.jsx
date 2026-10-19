@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-// eslint-disable-next-line no-unused-vars
 import { motion, useInView, animate } from "framer-motion";
 import clientLogo from "../../assets/marquee-logo.svg";
 import useHomeSlideActive from "../../hooks/useHomeSlideActive";
@@ -42,22 +41,16 @@ const stats = [
   },
 ];
 
-/* ─── Animated Strikethrough ─── */
-function AnimatedStrike({ children, inView }) {
+function BookDemoButton() {
   return (
-    <span className="relative inline-block">
-      <span className="text-white/60">{children}</span>
-      <motion.span
-        className="absolute left-0 top-1/2 h-[7px] rounded-full"
-        style={{
-          backgroundImage: OPAL_LIGHT_GRADIENT,
-          boxShadow: `0 0 22px ${OPAL_SOFT_GLOW}`,
-        }}
-        initial={{ width: "0%" }}
-        animate={inView ? { width: "100%" } : { width: "0%" }}
-        transition={{ duration: 0.8, delay: 0.6, ease: "easeInOut" }}
-      />
-    </span>
+    <a
+      className="st-demo-cta"
+      href="https://calendly.com/opalgos/opal-connect-call"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <span>Book a Demo</span>
+    </a>
   );
 }
 
@@ -792,6 +785,47 @@ const stSectionStyle = {
 function StStyles() {
   return (
     <style>{`
+      .st-demo-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 26px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        background:
+          linear-gradient(#0a0a0a, #0a0a0a) padding-box,
+          ${OPAL_LIGHT_GRADIENT} border-box;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        text-decoration: none;
+        cursor: pointer;
+        box-shadow: 0 0 18px rgba(255,255,255,0.18), 0 0 40px rgba(255,255,255,0.08);
+        animation: stCtaGlow 2.6s ease-in-out infinite;
+      }
+      @keyframes stCtaGlow {
+        0%, 100% { box-shadow: 0 0 16px rgba(255,255,255,0.16), 0 0 36px rgba(255,255,255,0.06); }
+        50% { box-shadow: 0 0 28px rgba(255,255,255,0.42), 0 0 64px rgba(255,255,255,0.18); }
+      }
+      .st-demo-cta span {
+        background-image: ${OPAL_LIGHT_GRADIENT};
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .st-demo-cta:hover {
+        animation: none;
+        box-shadow: 0 0 32px rgba(255,255,255,0.5), 0 0 72px rgba(255,255,255,0.22);
+      }
+      .st-demo-cta:focus-visible {
+        outline: 2px solid rgba(255,255,255,0.7);
+        outline-offset: 3px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .st-demo-cta { animation: none; }
+      }
 
       .st-header {
         text-align: center;
@@ -924,7 +958,7 @@ function StStyles() {
   );
 }
 
-/** Slide 1 — centered ROI wording (nav #impact) — MOBILE ONLY, unchanged. */
+/** Slide 1 — Book a Demo (nav #impact) — mobile only. */
 export function ImpactNarrative() {
   const ref = useRef(null);
   const containerCtx = useScrollContainer();
@@ -959,11 +993,10 @@ export function ImpactNarrative() {
           initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="w-full"
+          className="flex w-full flex-col items-center gap-6"
         >
+          <BookDemoButton />
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white/45 leading-tight text-center">
-            Others sell{" "}
-            <AnimatedStrike inView={inkActive}>ROI</AnimatedStrike>.<br />{" "}
             We deliver <InvisibleInk active={inkActive} autoRevealDelay={1.4}>Realtime Operational Impact</InvisibleInk>.
           </h2>
         </motion.div>
@@ -1033,11 +1066,7 @@ export function ImpactMetrics() {
 }
 
 /** Desktop — full impact section in one viewport.
-    Reordered per request: "gOS in Action" heading → client logo →
-    stat boxes → the "They sell ROI / We deliver..." line, last.
-    Each block keeps its own motion + delay (only reassigned to match
-    the new visual order); nothing about the animation mechanics,
-    the mobile slides above, or shared sub-components changed. */
+    Heading, client logo, stat boxes, then Book a Demo. */
 export default function Processes() {
   const ref = useRef(null);
   const containerCtx = useScrollContainer();
@@ -1107,16 +1136,14 @@ export default function Processes() {
           <NewHiresCard inView={inkActive} pulse={pulse} countsComplete={countsComplete} />
         </div>
 
-        {/* 4. "They sell ROI / We deliver..." — now last */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={inkActive ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.75 }}
-          className="text-center mt-10 md:mt-14"
+          className="mt-10 flex flex-col items-center gap-6 md:mt-14"
         >
+          <BookDemoButton />
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white/45 leading-tight text-center">
-          Others sell{" "}
-            <AnimatedStrike inView={inkActive}>ROI</AnimatedStrike>.<br />{" "}
             We deliver <InvisibleInk active={inkActive} autoRevealDelay={COUNTER_END_TIME + 0.7}>Realtime Operational Impact</InvisibleInk>.
           </h2>
         </motion.div>
