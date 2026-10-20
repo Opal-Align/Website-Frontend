@@ -175,7 +175,7 @@ export default function LogoStream() {
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             >
-              STAY WHERE YOUR ARE
+              STAY WHERE YOU ARE
             </motion.span>
             <motion.span
               className="ls-hl-muted"

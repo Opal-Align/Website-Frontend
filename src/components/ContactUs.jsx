@@ -232,7 +232,7 @@ export default function ContactUs() {
                     className="space-y-4"
                   >
                     <p className="text-base md:text-lg leading-relaxed" style={{ ...gradientText, opacity: 0.65 }}>
-                      Due to high demand, DEMO availability is limited. Request your invitation now before slots fill up.
+                    Let's find your leaks. Contact us today.
                     </p>
                     <div className="space-y-3">
                       <a
@@ -243,11 +243,11 @@ export default function ContactUs() {
                         <span style={gradientText}>877-996-6725 (OPAL)</span>
                       </a>
                       <a
-                        href="mailto:info@opalgos.com"
+                        href="mailto:connect@opalgos.com"
                         className="flex items-center gap-3 text-base md:text-lg transition-opacity hover:opacity-75"
                       >
                         <MdEmail className="w-5 h-5 md:w-6 md:h-6 shrink-0" style={{ color: "#fff" }} />
-                        <span style={gradientText}>info@opalgos.com</span>
+                        <span style={gradientText}>connect@opalgos.com</span>
                       </a>
                     </div>
                   </motion.div>

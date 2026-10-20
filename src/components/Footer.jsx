@@ -261,7 +261,7 @@ export default function Footer() {
           {/* Copyright */}
           <div className="flex flex-wrap items-center gap-4 md:gap-6">
             <span style={{ ...gradientText, opacity: 0.55 }}>
-              © 2026 OPAL, Inc. All rights reserved
+              © 2026 OPAL Align, Inc. All rights reserved
             </span>
           </div>
 
