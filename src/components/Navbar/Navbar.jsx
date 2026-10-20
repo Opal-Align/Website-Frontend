@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import NavigationOverlay from "./NavigationOverlay";
 import { NAVBAR_LINKS, goToTarget } from "./navigationConfig";
-import opalGosLogo from "../../assets/OPAL_favicon.svg";
+import opalGosLogo from "../../assets/Opal_favicon.svg";
 
 const SECTION_IDS = ["problem", "platform", "impact", "stack", "testimonials"];
 
