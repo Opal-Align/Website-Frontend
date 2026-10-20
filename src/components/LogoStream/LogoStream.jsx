@@ -175,7 +175,7 @@ export default function LogoStream() {
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             >
-              OUR PARTNERS
+              STAY WHERE YOUR ARE
             </motion.span>
             <motion.span
               className="ls-hl-muted"
@@ -183,7 +183,7 @@ export default function LogoStream() {
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.85, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
             >
-              Integrates into your practice management systems. 
+              OPAL plugs right in. 
             </motion.span>
           </div>
         </header>

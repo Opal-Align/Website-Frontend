@@ -621,15 +621,15 @@ export default function ProblemWordMap() {
           letter-spacing: 0.16em;
           text-transform: uppercase;
           cursor: pointer;
-          box-shadow: 0 0 18px rgba(255,255,255,0.18), 0 0 40px rgba(255,255,255,0.08);
+          box-shadow: 0 0 22px rgba(255,255,255,0.45), 0 0 48px rgba(255,255,255,0.22);
           animation: pwmCtaGlow 2.6s ease-in-out infinite;
         }
         @keyframes pwmCtaGlow {
           0%, 100% {
-            box-shadow: 0 0 16px rgba(255,255,255,0.16), 0 0 36px rgba(255,255,255,0.06);
+            box-shadow: 0 0 18px rgba(255,255,255,0.35), 0 0 42px rgba(255,255,255,0.16);
           }
           50% {
-            box-shadow: 0 0 28px rgba(255,255,255,0.42), 0 0 64px rgba(255,255,255,0.18);
+            box-shadow: 0 0 36px rgba(255,255,255,0.75), 0 0 80px rgba(255,255,255,0.38);
           }
         }
         .pwm-assessment-cta span {
@@ -640,7 +640,7 @@ export default function ProblemWordMap() {
         }
         .pwm-assessment-cta:hover {
           animation: none;
-          box-shadow: 0 0 32px rgba(255,255,255,0.5), 0 0 72px rgba(255,255,255,0.22);
+          box-shadow: 0 0 40px rgba(255,255,255,0.85), 0 0 90px rgba(255,255,255,0.42);
         }
         .pwm-assessment-cta:focus-visible {
           outline: 2px solid rgba(255,255,255,0.7);

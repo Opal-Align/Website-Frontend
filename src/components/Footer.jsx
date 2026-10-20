@@ -191,12 +191,12 @@ export default function Footer() {
         <span className="ft-dot" aria-hidden />
 
         <a
-          href="mailto:info@opalgos.com"
+          href="mailto:connect@opalgos.com "
           className="flex items-center gap-2.5 text-sm md:text-base transition-opacity hover:opacity-75"
         >
           <MdEmail className="w-4 h-4 md:w-5 md:h-5 shrink-0" style={{ color: "#fff" }} />
           <Typewriter
-            text="info@opalgos.com"
+            text="connect@opalgos.com "
             started={typewriterStarted}
             delay={s.email.d}
             speed={s.email.sp}

@@ -36,7 +36,7 @@ export const OVERLAY_NAV_ITEMS = [
   { key: "problem", label: "The Problem", target: NAV_TARGET.problem },
   { key: "platform", label: "The Platform", target: NAV_TARGET.platform },
   { key: "impact", label: "Impact", target: NAV_TARGET.impact },
-  { key: "stack", label: "The Stack", target: NAV_TARGET.stack },
+  { key: "stack", label: "Partners", target: NAV_TARGET.stack },
   { key: "contact", label: "Contact", target: NAV_TARGET.contact },
 ];
 
@@ -48,7 +48,7 @@ export const NAVBAR_LINKS = {
   ],
   right: [
     { key: "impact",        label: "Impact",       target: NAV_TARGET.impact },        // 4
-    { key: "stack",         label: "The Stack",    target: NAV_TARGET.stack },         // 5
+    { key: "stack",         label: "Partners",    target: NAV_TARGET.stack },         // 5
     { key: "contact",       label: "Contact",      target: NAV_TARGET.contact, accent: true },
   ],
 };

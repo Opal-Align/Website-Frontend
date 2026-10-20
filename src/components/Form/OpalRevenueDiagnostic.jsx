@@ -60,6 +60,15 @@ const QUESTIONS = SECTIONS.flatMap((s) =>
 const TOTAL = QUESTIONS.length; // 8
 const SESSION_UNLOCK_KEY = "opal-revenue-assessment-unlocked";
 
+function sessionAssessmentUnlocked() {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.sessionStorage.getItem(SESSION_UNLOCK_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
 const BANDS = [
   {
     id: "strong",
@@ -156,6 +165,9 @@ const CSS = `
 .opal-dx__field label {
   color: var(--opal-ink-2); font-size: 12px; font-weight: 700;
   letter-spacing: .1em; text-transform: uppercase;
+}
+.opal-dx__optional {
+  color: var(--opal-faint); font-weight: 500; letter-spacing: .04em; text-transform: none;
 }
 .opal-dx__input {
   width: 100%; border: 1.5px solid var(--opal-line); border-radius: 11px;
@@ -330,15 +342,8 @@ export default function OpalRevenueDiagnostic({
 
   // answers[i] = true | false | undefined
   const [answers, setAnswers] = useState(() => Array(TOTAL).fill(undefined));
-  const [index, setIndex] = useState(-1); // -1 = intro, 0..TOTAL-1 = questions, TOTAL = results
-  const [leadUnlocked, setLeadUnlocked] = useState(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      return window.sessionStorage.getItem(SESSION_UNLOCK_KEY) === "true";
-    } catch {
-      return false;
-    }
-  });
+  const [leadUnlocked, setLeadUnlocked] = useState(sessionAssessmentUnlocked);
+  const [index, setIndex] = useState(() => (sessionAssessmentUnlocked() ? 0 : -1));
   const [leadData, setLeadData] = useState({ name: "", company: "", email: "" });
   const [leadErrors, setLeadErrors] = useState({ name: "", company: "", email: "" });
   const [leadTouched, setLeadTouched] = useState({ name: false, company: false, email: false });
@@ -350,7 +355,7 @@ export default function OpalRevenueDiagnostic({
   const validateLeadField = useCallback((name, value) => {
     const trimmed = value.trim();
     if (!trimmed) {
-      if (name === "company") return "Company name is required";
+      if (name === "company") return "";
       if (name === "email") return "Email is required";
       return "Name is required";
     }
@@ -364,7 +369,7 @@ export default function OpalRevenueDiagnostic({
   const reset = useCallback(() => {
     clearTimeout(advanceTimer.current);
     setAnswers(Array(TOTAL).fill(undefined));
-    setIndex(-1);
+    setIndex(sessionAssessmentUnlocked() ? 0 : -1);
   }, []);
 
   // Reset whenever the overlay is re-opened
@@ -382,12 +387,12 @@ export default function OpalRevenueDiagnostic({
       if (e.key === "Escape" && onClose) onClose();
     };
     document.addEventListener("keydown", onKey);
-    cardRef.current?.focus();
+    if (leadUnlocked) cardRef.current?.focus();
     return () => {
       document.body.style.overflow = prev;
       document.removeEventListener("keydown", onKey);
     };
-  }, [open, onClose]);
+  }, [open, onClose, leadUnlocked]);
 
   const score = useMemo(() => answers.filter((a) => a === true).length, [answers]);
   const band = bandFor(score);
@@ -459,6 +464,7 @@ export default function OpalRevenueDiagnostic({
         // The assessment still unlocks when session storage is unavailable.
       }
       setLeadUnlocked(true);
+      setIndex(0);
     } catch {
       setLeadSubmitError("We couldn't save your details. Please check your connection and try again.");
     } finally {
@@ -529,10 +535,8 @@ export default function OpalRevenueDiagnostic({
           {!leadUnlocked && (
             <div className="opal-dx__step" key="lead-gate">
               <div className="opal-dx__eyebrow">Quick revenue assessment</div>
-              <h2 className="opal-dx__h1">First, tell us a little about you.</h2>
-              <p className="opal-dx__lead">
-                Enter your details to unlock the assessment and see where revenue may be leaking from your practice.
-              </p>
+              <h2 className="opal-dx__h1">Tell us a little about you.</h2>
+              
 
               <form className="opal-dx__lead-form" onSubmit={handleLeadSubmit} noValidate>
                 <div className="opal-dx__field">
@@ -557,7 +561,7 @@ export default function OpalRevenueDiagnostic({
                 </div>
 
                 <div className="opal-dx__field">
-                  <label htmlFor="opal-dx-company">Company name</label>
+                  <label htmlFor="opal-dx-company">Company name <span className="opal-dx__optional">(optional)</span></label>
                   <input
                     id="opal-dx-company"
                     className="opal-dx__input"
@@ -649,9 +653,10 @@ export default function OpalRevenueDiagnostic({
               <div className="opal-dx__foot">
                 <button
                   className="opal-btn opal-btn--text"
+                  disabled={index === 0}
                   onClick={() => {
                     clearTimeout(advanceTimer.current);
-                    setIndex((i) => i - 1);
+                    setIndex((i) => Math.max(0, i - 1));
                   }}
                 >
                   ← Back
@@ -672,7 +677,7 @@ export default function OpalRevenueDiagnostic({
 
           {leadUnlocked && isResult && (
             <div className="opal-dx__step" key="result">
-              <div className="opal-dx__eyebrow">How strong is your operating structure?</div>
+              <div className="opal-dx__eyebrow">How strong is your practice ?</div>
               <div className="opal-dx__result">
                 <ScoreRing score={score} color={ringColor} />
                 <div>
@@ -702,14 +707,19 @@ export default function OpalRevenueDiagnostic({
               </ul>
 
               <div className="opal-dx__cta">
-                <b>Curious to see how OPAL can accelerate your revenue recovery?</b> Schedule your 15-minute
+                <b>See how OPAL can accelerate your revenue recovery today.</b> Schedule your 15-minute
                 consultation with our team.
               </div>
 
               <div className="opal-dx__actions">
-                <button className="opal-btn opal-btn--ghost" onClick={reset}>
-                  ↺ Retake assessment
-                </button>
+                <a
+                  className="opal-btn opal-btn--primary"
+                  href="https://calendly.com/opalgos/opal-connect-call"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Book a Demo
+                </a>
                 <Link
                   className="opal-btn opal-btn--primary"
                   to="/contact-us"
