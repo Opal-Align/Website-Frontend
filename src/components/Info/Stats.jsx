@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-// eslint-disable-next-line no-unused-vars
 import { motion, useInView, animate } from "framer-motion";
 import clientLogo from "../../assets/marquee-logo.svg";
 import useHomeSlideActive from "../../hooks/useHomeSlideActive";
@@ -23,41 +22,35 @@ const gradientText = {
 // since it never counts and behaves differently (stays at 0, pulses itself).
 const stats = [
   {
-    target: 100, unit: "K", prefix: "$",
+    target: 1, unit: "M", prefix: "$", suffix: "+",
     label: "Recovered Revenue",
-    desc: "gOS effectuated A/R recovery in a single pilot across 4 practices in just 1 month.",
+    desc: "In less than 6 months for 70+ practices.",
     glyph: "α · 001",
   },
   {
-    target: 75, unit: "K",
+    target: 200, unit: "K",
     label: "Communications Triggered",
-    desc: "gOS triggered texts, emails, and mailers impossible to achieve even at superhuman scale",
+    desc: "Volume of texts, emails, and letters impossible to achieve by a human workforce.",
     glyph: "β · 002",
   },
   {
-    target: 25, unit: "K",
+    target: 50, unit: "K",
     label: "Hours Saved",
-    desc: "gOS eliminates manual labor required to accelerate revenue recovery at scale.",
+    desc: "Eliminates human capital needed to accelerate revenue recovery at scale.",
     glyph: "γ · 003",
   },
 ];
 
-/* ─── Animated Strikethrough ─── */
-function AnimatedStrike({ children, inView }) {
+function BookDemoButton() {
   return (
-    <span className="relative inline-block">
-      <span className="text-white/60">{children}</span>
-      <motion.span
-        className="absolute left-0 top-1/2 h-[7px] rounded-full"
-        style={{
-          backgroundImage: OPAL_LIGHT_GRADIENT,
-          boxShadow: `0 0 22px ${OPAL_SOFT_GLOW}`,
-        }}
-        initial={{ width: "0%" }}
-        animate={inView ? { width: "100%" } : { width: "0%" }}
-        transition={{ duration: 0.8, delay: 0.6, ease: "easeInOut" }}
-      />
-    </span>
+    <a
+      className="st-demo-cta"
+      href="https://calendly.com/opalgos/opal-connect-call"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <span>Book a Demo</span>
+    </a>
   );
 }
 
@@ -461,6 +454,7 @@ function Counter({
   target,
   unit = "",
   prefix = "",
+  suffix = "",
   inView,
   startDelay = 0,
   duration = 2.8,
@@ -474,7 +468,7 @@ function Counter({
 
   useEffect(() => {
     if (!inView) {
-      if (valueRef.current) valueRef.current.textContent = `${prefix}0${unit}`;
+      if (valueRef.current) valueRef.current.textContent = `${prefix}0${unit}${suffix}`;
       setLanded(false);
       return;
     }
@@ -488,12 +482,12 @@ function Counter({
         // Avoid re-rendering the whole card on every animation frame.
         onUpdate: (v) => {
           if (valueRef.current) {
-            valueRef.current.textContent = `${prefix}${Math.round(v)}${unit}`;
+            valueRef.current.textContent = `${prefix}${Math.round(v)}${unit}${suffix}`;
           }
         },
         onComplete: () => {
           if (valueRef.current) {
-            valueRef.current.textContent = `${prefix}${target}${unit}`;
+            valueRef.current.textContent = `${prefix}${target}${unit}${suffix}`;
           }
           setLanded(true);
         },
@@ -504,7 +498,7 @@ function Counter({
       clearTimeout(timer);
       ctrl?.stop();
     };
-  }, [inView, target, prefix, unit, startDelay, duration]);
+  }, [inView, target, prefix, suffix, unit, startDelay, duration]);
 
   return (
     <div className="min-w-0 w-full">
@@ -524,7 +518,7 @@ function Counter({
           transition: "filter 0.5s ease-out",
         }}
       >
-        <span ref={valueRef}>{prefix}0{unit}</span>
+        <span ref={valueRef}>{prefix}0{unit}{suffix}</span>
         <TrendArrow active={showPulse} />
       </motion.span>
     </div>
@@ -791,6 +785,47 @@ const stSectionStyle = {
 function StStyles() {
   return (
     <style>{`
+      .st-demo-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 26px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        background:
+          linear-gradient(#0a0a0a, #0a0a0a) padding-box,
+          ${OPAL_LIGHT_GRADIENT} border-box;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        text-decoration: none;
+        cursor: pointer;
+        box-shadow: 0 0 22px rgba(255,255,255,0.45), 0 0 48px rgba(255,255,255,0.22);
+        animation: stCtaGlow 2.6s ease-in-out infinite;
+      }
+      @keyframes stCtaGlow {
+        0%, 100% { box-shadow: 0 0 18px rgba(255,255,255,0.35), 0 0 42px rgba(255,255,255,0.16); }
+        50% { box-shadow: 0 0 36px rgba(255,255,255,0.75), 0 0 80px rgba(255,255,255,0.38); }
+      }
+      .st-demo-cta span {
+        background-image: ${OPAL_LIGHT_GRADIENT};
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .st-demo-cta:hover {
+        animation: none;
+        box-shadow: 0 0 40px rgba(255,255,255,0.85), 0 0 90px rgba(255,255,255,0.42);
+      }
+      .st-demo-cta:focus-visible {
+        outline: 2px solid rgba(255,255,255,0.7);
+        outline-offset: 3px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .st-demo-cta { animation: none; }
+      }
 
       .st-header {
         text-align: center;
@@ -923,7 +958,7 @@ function StStyles() {
   );
 }
 
-/** Slide 1 — centered ROI wording (nav #impact) — MOBILE ONLY, unchanged. */
+/** Slide 1 — Book a Demo (nav #impact) — mobile only. */
 export function ImpactNarrative() {
   const ref = useRef(null);
   const containerCtx = useScrollContainer();
@@ -949,7 +984,7 @@ export function ImpactNarrative() {
               animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
               transition={{ duration: 0.85, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
             >
-              gOS LOOP IN ACTION
+              OPAL IN ACTION
             </motion.span>
           </div>
         </header>
@@ -958,11 +993,10 @@ export function ImpactNarrative() {
           initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="w-full"
+          className="flex w-full flex-col items-center gap-6"
         >
+          <BookDemoButton />
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white/45 leading-tight text-center">
-            Others pitched{" "}
-            <AnimatedStrike inView={inkActive}>ROI</AnimatedStrike>.<br />{" "}
             We deliver <InvisibleInk active={inkActive} autoRevealDelay={1.4}>Realtime Operational Impact</InvisibleInk>.
           </h2>
         </motion.div>
@@ -1032,11 +1066,7 @@ export function ImpactMetrics() {
 }
 
 /** Desktop — full impact section in one viewport.
-    Reordered per request: "gOS in Action" heading → client logo →
-    stat boxes → the "They sell ROI / We deliver..." line, last.
-    Each block keeps its own motion + delay (only reassigned to match
-    the new visual order); nothing about the animation mechanics,
-    the mobile slides above, or shared sub-components changed. */
+    Heading, client logo, stat boxes, then Book a Demo. */
 export default function Processes() {
   const ref = useRef(null);
   const containerCtx = useScrollContainer();
@@ -1075,7 +1105,7 @@ export default function Processes() {
               animate={inkActive ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
               transition={{ duration: 0.85, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
             >
-              gOS LOOP IN ACTION
+              OPAL IN ACTION
             </motion.span>
           </div>
         </header>
@@ -1106,16 +1136,14 @@ export default function Processes() {
           <NewHiresCard inView={inkActive} pulse={pulse} countsComplete={countsComplete} />
         </div>
 
-        {/* 4. "They sell ROI / We deliver..." — now last */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={inkActive ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.75 }}
-          className="text-center mt-10 md:mt-14"
+          className="mt-10 flex flex-col items-center gap-6 md:mt-14"
         >
+          <BookDemoButton />
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-white/45 leading-tight text-center">
-          Others pitched{" "}
-            <AnimatedStrike inView={inkActive}>ROI</AnimatedStrike>.<br />{" "}
             We deliver <InvisibleInk active={inkActive} autoRevealDelay={COUNTER_END_TIME + 0.7}>Realtime Operational Impact</InvisibleInk>.
           </h2>
         </motion.div>

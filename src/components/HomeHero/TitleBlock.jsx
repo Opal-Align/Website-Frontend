@@ -1,9 +1,7 @@
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import { useState } from "react";
-import opalLogo1400 from "../../assets/opal-gos-hero-1400.webp";
-import opalLogo2800 from "../../assets/opal-gos-hero.webp";
-import opalLogo3600 from "../../assets/opal-gos-hero-3600.webp";
+import opalLogo from "../../assets/OPAL - LOGO.svg";
 import ScrollingWords from "../Info/ScrollingWords";
 
 export default function TitleBlock() {
@@ -112,10 +110,8 @@ export default function TitleBlock() {
             >
               {/* Front: Logo */}
               <motion.img
-                src={opalLogo2800}
-                srcSet={`${opalLogo1400} 1400w, ${opalLogo2800} 2800w, ${opalLogo3600} 3600w`}
-                sizes="(max-width: 768px) 92vw, min(92vw, 36rem)"
-                alt="OPAL gOS"
+                src={opalLogo}
+                alt="OPAL"
                 initial={{ y: "-100%", opacity: 0 }}
                 animate={{ y: "0%", opacity: 1 }}
                 transition={{
@@ -125,7 +121,7 @@ export default function TitleBlock() {
                 }}
                 className="relative w-full h-auto object-contain cursor-pointer"
                 style={{ 
-                  filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3))',
+                  filter: 'brightness(0) invert(1) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3))',
                   backfaceVisibility: 'hidden',
                   WebkitBackfaceVisibility: 'hidden',
                 }}

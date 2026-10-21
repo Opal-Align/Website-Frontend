@@ -32,7 +32,7 @@
 
 import { useRef, useState, useEffect, useCallback } from "react";
 // eslint-disable-next-line no-unused-vars
-import { motion, useInView, AnimatePresence } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import scheduleIcon from "../../assets/schedule.svg";
 import productionIcon from "../../assets/production.svg";
 import collectIcon from "../../assets/collect.svg";
@@ -46,65 +46,6 @@ const BURST_DUR    = 700;    // ms — dissolve burst duration (each direction)
 const PS           = 3;      // burst particle pixel size
 const EASE         = [0.22, 1, 0.36, 1];
 
-/* Vertical headline ticker — same language as LogoStream tagline, on Y */
-const HEADLINE_LINES = [
-  "Leakages Identified",
-  "Workflows Automated",
-  "Correspondence Throttled",
-  "Exceptions Managed",
-  "Continuous Recovery",
-];
-
-const headlineVariants = {
-  enter: {
-    y: "100%",
-    opacity: 0,
-    filter: "blur(8px)",
-  },
-  center: {
-    y: "0%",
-    opacity: 1,
-    filter: "blur(0px)",
-    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
-  },
-  exit: {
-    y: "-100%",
-    opacity: 0,
-    filter: "blur(6px)",
-    transition: { duration: 0.45, ease: [0.55, 0, 0.78, 0] },
-  },
-};
-
-function HeadlineTicker({ active }) {
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    if (!active) return;
-    const timer = setInterval(() => {
-      setIndex((i) => (i + 1) % HEADLINE_LINES.length);
-    }, 2800);
-    return () => clearInterval(timer);
-  }, [active]);
-
-  return (
-    <div className="pf-headline-ticker" aria-live="polite">
-      <div className="pf-headline-inner">
-        <AnimatePresence mode="popLayout" initial={false}>
-          <motion.span
-            key={index}
-            className="pf-hl-bold pf-headline-line"
-            variants={headlineVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-          >
-            {HEADLINE_LINES[index]}
-          </motion.span>
-        </AnimatePresence>
-      </div>
-    </div>
-  );
-}
 const OPAL_LIGHT_GRADIENT =
   "linear-gradient(120deg, #FFFFFF 0%, #F8FAFC 30%, #F3F4F6 65%, #FFFFFF 100%)";
 const OPAL_SOFT_GLOW = "rgba(255,255,255,0.28)";
@@ -190,7 +131,7 @@ function buildBurst(W, H) {
 function easeOut3(t) { return 1 - Math.pow(1 - t, 3); }
 
 /* ─── Main component ──────────────────────────────────────────────── */
-export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }) {
+export default function PlatformSection({ navbarHeight = 80, autoplayMs = 2000 }) {
   const sectionRef = useRef(null);
   const tileRef     = useRef(null);
   const canvasRef   = useRef(null);
@@ -424,52 +365,6 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
           line-height: var(--page-hl-bold-lh);
           text-transform: uppercase;
         }
-        /* Rotating subheader — matches ProblemWordMap .hl-muted */
-        .pf-hl-bold {
-          display: block;
-          font-size: var(--page-hl-muted-size);
-          font-weight: var(--page-hl-muted-weight);
-          letter-spacing: var(--page-hl-muted-tracking);
-          color: var(--page-hl-muted-color);
-          line-height: var(--page-hl-muted-lh);
-          white-space: nowrap;
-        }
-
-        /* Vertical ticker (LogoStream tagline, on Y — scrolls upward) */
-        .pf-headline-ticker {
-          width: 100%;
-          max-width: min(1100px, 100%);
-          margin: 0 auto;
-          overflow: hidden;
-          height: clamp(32px, 4.2vh, 40px);
-          padding: 0 8px;
-          box-sizing: border-box;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .pf-headline-inner {
-          position: relative;
-          width: 100%;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
-          mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
-        }
-        .pf-headline-line {
-          position: absolute;
-          left: 0;
-          right: 0;
-          text-align: center;
-          width: 100%;
-          padding: 0 12px;
-          box-sizing: border-box;
-          line-height: 1.15;
-          white-space: nowrap;
-        }
-
         .pf-body {
           flex: 1;
           min-height: 0;
@@ -565,6 +460,44 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
         }
 
         /* ── Content tile ── */
+        .pf-demo-cta {
+          flex-shrink: 0;
+          align-self: center;
+          margin-top: 0;
+          padding: 12px 26px;
+          border-radius: 999px;
+          border: 1px solid transparent;
+          background:
+            linear-gradient(${BG}, ${BG}) padding-box,
+            ${OPAL_LIGHT_GRADIENT} border-box;
+          font-family: inherit;
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          text-decoration: none;
+          cursor: pointer;
+          box-shadow: 0 0 22px rgba(255,255,255,0.45), 0 0 48px rgba(255,255,255,0.22);
+          animation: pfCtaGlow 2.6s ease-in-out infinite;
+        }
+        @keyframes pfCtaGlow {
+          0%, 100% { box-shadow: 0 0 18px rgba(255,255,255,0.35), 0 0 42px rgba(255,255,255,0.16); }
+          50% { box-shadow: 0 0 36px rgba(255,255,255,0.75), 0 0 80px rgba(255,255,255,0.38); }
+        }
+        .pf-demo-cta span {
+          background-image: ${OPAL_LIGHT_GRADIENT};
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+        }
+        .pf-demo-cta:hover {
+          animation: none;
+          box-shadow: 0 0 40px rgba(255,255,255,0.85), 0 0 90px rgba(255,255,255,0.42);
+        }
+        .pf-demo-cta:focus-visible {
+          outline: 2px solid rgba(255,255,255,0.7);
+          outline-offset: 3px;
+        }
         .pf-tile {
           position: relative; border-radius: 20px; overflow: hidden; cursor: default;
           display: flex; flex-direction: column;
@@ -678,15 +611,6 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
             padding: 0 14px;
           }
           .pf-heading { gap: 14px; }   /* was 8px — more gap between subheader and header */
-          .pf-hl-bold {
-            white-space: nowrap;
-          }
-          .pf-headline-ticker {
-            height: clamp(28px, 6.5vw, 36px);
-            max-width: 100%;
-            padding: 0 4px;
-          }
-          .pf-headline-line { padding: 0 4px; }
 
           /* ── Hide the 4-tab icon row on mobile ── */
           .pf-tabs { display: none !important; }
@@ -780,6 +704,7 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
         }
         @media (prefers-reduced-motion: reduce) {
           .pf-wave-ring { animation: none !important; }
+          .pf-demo-cta { animation: none; }
         }
       `}</style>
 
@@ -812,7 +737,14 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
               >
                 The Guided Operating System
               </motion.span>
-              <HeadlineTicker active={inView} />
+              <a
+                className="pf-demo-cta"
+                href="https://calendly.com/opalgos/opal-connect-call"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span>Book a Demo</span>
+              </a>
             </div>
           </div>
 
@@ -928,7 +860,6 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 4500 }
                   transition={{ duration: 0.35, ease: EASE }}
                   style={{
                     flexShrink: 0,
-                    display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "center",

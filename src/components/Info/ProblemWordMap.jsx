@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useEffect, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
+import OpalRevenueDiagnostic from "../Form/OpalRevenueDiagnostic";
 // eslint-disable-next-line no-unused-vars
 import { useInView, motion, AnimatePresence } from "framer-motion";
 import useHomeSlideActive from "../../hooks/useHomeSlideActive";
@@ -274,6 +276,7 @@ export default function ProblemWordMap() {
   const slideActive = useHomeSlideActive(sectionRef);
   const shouldAnimate = inView && slideActive;
   const [words, setWords] = useState([]);
+  const [assessmentOpen, setAssessmentOpen] = useState(false);
 
   /* ── Build layout on resize ─────────────────────────────────────────────── */
   useEffect(() => {
@@ -604,6 +607,45 @@ export default function ProblemWordMap() {
           line-height: 1.25;
           padding: 0 4px;
         }
+        .pwm-assessment-cta {
+          margin-top: clamp(12px, 1.8vh, 18px);
+          padding: 12px 26px;
+          border-radius: 999px;
+          border: 1px solid transparent;
+          background:
+            linear-gradient(#0a0a0a, #0a0a0a) padding-box,
+            linear-gradient(120deg, #FFFFFF 0%, #F8FAFC 30%, #F3F4F6 65%, #FFFFFF 100%) border-box;
+          font-family: inherit;
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          cursor: pointer;
+          box-shadow: 0 0 22px rgba(255,255,255,0.45), 0 0 48px rgba(255,255,255,0.22);
+          animation: pwmCtaGlow 2.6s ease-in-out infinite;
+        }
+        @keyframes pwmCtaGlow {
+          0%, 100% {
+            box-shadow: 0 0 18px rgba(255,255,255,0.35), 0 0 42px rgba(255,255,255,0.16);
+          }
+          50% {
+            box-shadow: 0 0 36px rgba(255,255,255,0.75), 0 0 80px rgba(255,255,255,0.38);
+          }
+        }
+        .pwm-assessment-cta span {
+          background-image: linear-gradient(120deg, #FFFFFF 0%, #F8FAFC 30%, #F3F4F6 65%, #FFFFFF 100%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+        }
+        .pwm-assessment-cta:hover {
+          animation: none;
+          box-shadow: 0 0 40px rgba(255,255,255,0.85), 0 0 90px rgba(255,255,255,0.42);
+        }
+        .pwm-assessment-cta:focus-visible {
+          outline: 2px solid rgba(255,255,255,0.7);
+          outline-offset: 3px;
+        }
         .pwm-map-wrap {
           position: relative; width: 100%;
           flex: 1 1 auto; min-height: 0;
@@ -646,6 +688,7 @@ export default function ProblemWordMap() {
         @media (prefers-reduced-motion: reduce) {
           .pwm-word { transition: none !important; }
           .pwm-ticker-line { position: relative; }
+          .pwm-assessment-cta { animation: none; }
         }
       `}</style>
 
@@ -681,6 +724,16 @@ export default function ProblemWordMap() {
               >
                 <ProblemSentenceTicker active={shouldAnimate} />
               </motion.div>
+              <motion.button
+                type="button"
+                className="pwm-assessment-cta"
+                onClick={() => setAssessmentOpen(true)}
+                initial={{ opacity: 0, y: 10 }}
+                animate={inView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.7, delay: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <span>Quick Revenue Assessment</span>
+              </motion.button>
             </div>
           </div>
 
@@ -711,6 +764,13 @@ export default function ProblemWordMap() {
 
         </div>
       </section>
+      {createPortal(
+        <OpalRevenueDiagnostic
+          open={assessmentOpen}
+          onClose={() => setAssessmentOpen(false)}
+        />,
+        document.body,
+      )}
     </>
   );
 }

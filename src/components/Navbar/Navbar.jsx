@@ -4,9 +4,9 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import NavigationOverlay from "./NavigationOverlay";
 import { NAVBAR_LINKS, goToTarget } from "./navigationConfig";
-import opalGosLogo from "../../assets/opal-gos-mark.webp";
+import opalGosLogo from "../../assets/Opal_favicon.svg";
 
-const SECTION_IDS = ["problem", "platform", "loop", "impact", "stack", "testimonials"];
+const SECTION_IDS = ["problem", "platform", "impact", "stack", "testimonials"];
 
 /**
  * Watches window scroll and returns the key of the section currently snapped

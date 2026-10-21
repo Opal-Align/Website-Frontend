@@ -136,7 +136,7 @@ export default function Footer() {
         </div>
 
         {/* CTA copy */}
-        <div className="ft-cta-copy space-y-2">
+        {/* <div className="ft-cta-copy space-y-2">
           
           <p className="text-xs md:text-sm">
             <Typewriter
@@ -147,7 +147,7 @@ export default function Footer() {
               style={{ ...gradientText, opacity: 0.6 }}
             />
           </p>
-        </div>
+        </div> */}
 
         {/* Join button */}
         <Link to="/contact-us" className="ft-join">
@@ -163,7 +163,7 @@ export default function Footer() {
             animate={{ opacity: typewriterStarted ? 1 : 0 }}
             transition={{ delay: typewriterStarted ? s.btn : 0, duration: 0.5 }}
           >
-            <span style={gradientText}>Join Today</span>
+            <span style={gradientText}>CONTACT US</span>
             <span className="flex gap-1.5">
               <span className="w-2 h-2 rounded-full" style={{ background: OPAL_GRADIENT }} />
               <span className="w-2 h-2 rounded-full" style={{ background: OPAL_GRADIENT }} />
@@ -191,12 +191,12 @@ export default function Footer() {
         <span className="ft-dot" aria-hidden />
 
         <a
-          href="mailto:info@opalgos.com"
+          href="mailto:connect@opalgos.com "
           className="flex items-center gap-2.5 text-sm md:text-base transition-opacity hover:opacity-75"
         >
           <MdEmail className="w-4 h-4 md:w-5 md:h-5 shrink-0" style={{ color: "#fff" }} />
           <Typewriter
-            text="info@opalgos.com"
+            text="connect@opalgos.com "
             started={typewriterStarted}
             delay={s.email.d}
             speed={s.email.sp}
@@ -253,7 +253,7 @@ export default function Footer() {
           <div className="flex items-center">
             <img
               src={opalLogo}
-              alt="OPAL gOS"
+              alt="OPAL"
               className="h-6 md:h-8 w-auto object-contain ft-logo-glow"
             />
           </div>
@@ -261,7 +261,7 @@ export default function Footer() {
           {/* Copyright */}
           <div className="flex flex-wrap items-center gap-4 md:gap-6">
             <span style={{ ...gradientText, opacity: 0.55 }}>
-              © 2026 OPAL gOS, Inc. All rights reserved
+              © 2026 OPAL Align, Inc. All rights reserved
             </span>
           </div>
 

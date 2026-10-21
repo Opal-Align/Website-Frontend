@@ -1,10 +1,10 @@
 import { createContext, lazy, Suspense, useEffect, useRef, useState } from "react";
 import Navbar from "./Navbar/Navbar";
 import ScrollHero from "./HomeHero/ScrollHero";
-import FiveStepLoop, {
-  FiveStepLoopOrbit,
-  FiveStepLoopCards,
-} from "./Info/FiveStepLoop.jsx";
+// import FiveStepLoop, {
+//   FiveStepLoopOrbit,
+//   FiveStepLoopCards,
+// } from "./Info/FiveStepLoop.jsx";
 import { NAV_HEIGHT } from "./Navbar/navigationConfig";
 
 const Footer = lazy(() => import("./Footer"));
@@ -16,7 +16,7 @@ const ImpactNarrative = lazy(() =>
 const ImpactMetrics = lazy(() =>
   import("./Info/Stats.jsx").then((m) => ({ default: m.ImpactMetrics })),
 );
-const TestimonialSection = lazy(() => import("./Info/Testimonial"));
+// const TestimonialSection = lazy(() => import("./Info/Testimonial"));
 const ProblemWordMap = lazy(() => import("./Info/ProblemWordMap.jsx"));
 const PlatformSection = lazy(() => import("./Info/PlatformSection.jsx"));
 
@@ -117,8 +117,7 @@ export default function HomePageLayout() {
   }, [isMobile]);
 
   // Mouse / trackpad flings often skip CSS snap-stop. One deliberate wheel
-  // gesture = one stop. The hero deliberately has two stops:
-  // logo → revealed words → first content slide.
+  // gesture = one stop.
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
@@ -129,7 +128,7 @@ export default function HomePageLayout() {
     const snapTargets = () =>
       [
         ...container.querySelectorAll(
-          ".hero-snap, .hero-reveal-snap, .home-slide, .footer-snap",
+          ".hero-snap, .home-slide, .footer-snap",
         ),
       ];
 
@@ -235,23 +234,12 @@ export default function HomePageLayout() {
         }
         .snap-container::-webkit-scrollbar { display: none; }
 
-        /* Two-stage hero: logo at the start, revealed words at the second stop. */
         .hero-snap {
           scroll-snap-align: start;
           scroll-snap-stop: always;
           position: relative;
           flex-shrink: 0;
-          height: calc(var(--snap-h) * 1.7);
-        }
-        .hero-reveal-snap {
-          position: absolute;
-          top: calc(var(--snap-h) * 0.7);
-          left: 0;
-          width: 1px;
-          height: 1px;
-          pointer-events: none;
-          scroll-snap-align: start;
-          scroll-snap-stop: always;
+          height: var(--snap-h);
         }
 
         .home-slide {
@@ -322,7 +310,6 @@ export default function HomePageLayout() {
         <div ref={scrollContainerRef} className="snap-container">
           <div className="hero-snap">
             <ScrollHero />
-            <div className="hero-reveal-snap" aria-hidden="true" />
           </div>
 
           <div style={{ position: "relative" }}>
@@ -348,12 +335,12 @@ export default function HomePageLayout() {
 
               {isMobile ? (
                 <>
-                  <div className="home-slide" data-card-scroll="none" style={{ ["--slide-z"]: 3 }}>
+                  {/* <div className="home-slide" data-card-scroll="none" style={{ ["--slide-z"]: 3 }}>
                     <FiveStepLoopOrbit />
                   </div>
                   <div className="home-slide" data-card-scroll="none" style={{ ["--slide-z"]: 4 }}>
                     <FiveStepLoopCards />
-                  </div>
+                  </div> */}
                   <div className="home-slide" data-card-scroll="none" style={{ ["--slide-z"]: 5 }}>
                     <Suspense fallback={<SlideFallback />}>
                       <ImpactNarrative />
@@ -369,17 +356,17 @@ export default function HomePageLayout() {
                       <LogoStream />
                     </Suspense>
                   </div>
-                  <div className="home-slide" data-card-scroll="none" style={{ ["--slide-z"]: 8 }}>
+                  {/* <div className="home-slide" data-card-scroll="none" style={{ ["--slide-z"]: 8 }}>
                     <Suspense fallback={<SlideFallback />}>
                       <TestimonialSection />
                     </Suspense>
-                  </div>
+                  </div> */}
                 </>
               ) : (
                 <>
-                  <div className="home-slide" style={{ ["--slide-z"]: 3 }}>
+                  {/* <div className="home-slide" style={{ ["--slide-z"]: 3 }}>
                     <FiveStepLoop />
-                  </div>
+                  </div> */}
                   <div className="home-slide" data-card-scroll="auto" style={{ ["--slide-z"]: 4 }}>
                     <Suspense fallback={<SlideFallback />}>
                       <Processes />
@@ -390,11 +377,11 @@ export default function HomePageLayout() {
                       <LogoStream />
                     </Suspense>
                   </div>
-                  <div className="home-slide" data-card-scroll="none" style={{ ["--slide-z"]: 6 }}>
+                  {/* <div className="home-slide" data-card-scroll="none" style={{ ["--slide-z"]: 6 }}>
                     <Suspense fallback={<SlideFallback />}>
                       <TestimonialSection />
                     </Suspense>
-                  </div>
+                  </div> */}
                 </>
               )}
             </div>
