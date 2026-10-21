@@ -206,17 +206,22 @@ export default function HomePageLayout() {
   }, []);
 
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "100vh",
-        overflow: "hidden",
-        position: "relative",
-        ["--page-nav-h"]: `${NAV_HEIGHT}px`,
-        ["--snap-h"]: `calc(100vh - ${NAV_HEIGHT}px)`,
-      }}
-    >
+    <div className="home-shell">
       <style>{`
+        /* 100vh is taller than the visible phone screen once the browser
+           bar and home indicator are showing, so the bottom of each snap
+           section sits behind that chrome. 100dvh tracks the visible screen. */
+        .home-shell {
+          width: 100%;
+          height: 100vh;
+          height: 100dvh;
+          overflow: hidden;
+          position: relative;
+          background: ${SLIDE_BG};
+          --page-nav-h: ${NAV_HEIGHT}px;
+          --snap-h: calc(100vh - ${NAV_HEIGHT}px);
+          --snap-h: calc(100dvh - ${NAV_HEIGHT}px - env(safe-area-inset-bottom, 0px));
+        }
         /* Snap viewport sits BELOW the fixed navbar so headers never tuck under it. */
         .snap-container {
           position: absolute;
