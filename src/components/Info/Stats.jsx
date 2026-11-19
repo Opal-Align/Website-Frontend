@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { motion, useInView, animate } from "framer-motion";
-import clientLogo from "../../assets/marquee-logo.svg";
+import { AnimatePresence, motion, useInView, animate } from "framer-motion";
+import marqueeLogo from "../../assets/marquee-logo.svg";
+import smileExpressLogo from "../../assets/SmileExpress.svg";
+import novaDentalLogo from "../../assets/NovaDental.svg";
 import useHomeSlideActive from "../../hooks/useHomeSlideActive";
 import useScrollContainer from "../../hooks/useScrollContainer";
 
@@ -731,39 +733,100 @@ function NewHiresCard({ inView, pulse, countsComplete }) {
   );
 }
 
-/* ─── Client attribution pill (cyan hover, mobile default-active) ─── */
-function ClientBadge({ baseOpacity = 0.85, defaultActive = false }) {
+/* One logo rises from below, holds, then leaves upward as the next rises. */
+const CLIENT_LOGOS = [
+  {
+    src: marqueeLogo,
+    alt: "Marquee Dental Partners",
+    border: "rgba(34,211,238,0.55)",
+    borderIdle: "rgba(34,211,238,0.28)",
+    background: "linear-gradient(145deg, rgba(34,211,238,0.16), rgba(251,146,60,0.08))",
+    backgroundIdle: "linear-gradient(145deg, rgba(34,211,238,0.08), rgba(251,146,60,0.04))",
+    glow: "rgba(34,211,238,0.85)",
+    glowSoft: "rgba(34,211,238,0.28)",
+  },
+  {
+    src: smileExpressLogo,
+    alt: "The Smile Express",
+    border: "rgba(232,185,35,0.6)",
+    borderIdle: "rgba(232,185,35,0.32)",
+    background: "linear-gradient(145deg, rgba(232,185,35,0.18), rgba(34,139,60,0.10))",
+    backgroundIdle: "linear-gradient(145deg, rgba(232,185,35,0.09), rgba(34,139,60,0.05))",
+    glow: "rgba(232,185,35,0.9)",
+    glowSoft: "rgba(232,185,35,0.3)",
+  },
+  {
+    src: novaDentalLogo,
+    alt: "Nova Dental",
+    border: "rgba(59,130,246,0.6)",
+    borderIdle: "rgba(59,130,246,0.32)",
+    background: "linear-gradient(145deg, rgba(37,99,235,0.18), rgba(185,50,50,0.10))",
+    backgroundIdle: "linear-gradient(145deg, rgba(37,99,235,0.09), rgba(185,50,50,0.05))",
+    glow: "rgba(59,130,246,0.9)",
+    glowSoft: "rgba(59,130,246,0.3)",
+  },
+];
+const CLIENT_LOGO_HOLD_MS = 2800;
+
+/* ─── Client attribution pill — logos cycle vertically, each with its own gradient ─── */
+function ClientBadge({ defaultActive = false, playing = false }) {
   const [hovered, setHovered] = useState(false);
   const [active, setActive] = useState(defaultActive);
+  const [index, setIndex] = useState(0);
+  const [reduceMotion] = useState(
+    () => typeof window !== "undefined"
+      && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
   const isOn = hovered || active;
+  const logo = CLIENT_LOGOS[index];
+
+  useEffect(() => {
+    if (reduceMotion || !playing) {
+      setIndex(0);
+      return undefined;
+    }
+    setIndex(0);
+    const id = setInterval(() => {
+      setIndex((current) => (current + 1) % CLIENT_LOGOS.length);
+    }, CLIENT_LOGO_HOLD_MS);
+    return () => clearInterval(id);
+  }, [reduceMotion, playing]);
 
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={() => setActive((prev) => !prev)}
-      className="flex items-center gap-4 px-7 py-4 rounded-full border transition-all duration-300 cursor-pointer"
+      className="flex items-center gap-4 px-7 py-4 rounded-full border transition-all duration-500 cursor-pointer"
       style={{
-        borderColor: isOn ? "rgba(34,211,238,0.55)" : "rgba(255,255,255,0.12)",
-        background: isOn
-          ? "linear-gradient(145deg, rgba(34,211,238,0.12), rgba(34,211,238,0.03))"
-          : "linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))",
+        borderColor: isOn ? logo.border : logo.borderIdle,
+        background: isOn ? logo.background : logo.backgroundIdle,
         backdropFilter: "blur(10px)",
-        boxShadow: isOn ? "0 0 30px rgba(34,211,238,0.28)" : "none",
+        boxShadow: isOn ? `0 0 30px ${logo.glowSoft}` : "none",
         transform: isOn ? "translateY(-1px)" : "translateY(0)",
       }}
     >
-      <img
-        src={clientLogo}
-        alt="Advanced Dental Arts"
-        className="h-9 md:h-11 w-auto object-contain transition-all duration-300"
-        style={{
-          filter: isOn
-            ? "drop-shadow(0 0 10px rgba(34,211,238,0.85))"
-            : "none",
-          opacity: isOn ? 1 : baseOpacity,
-        }}
-      />
+      <div className="st-logo-window" aria-live="off">
+        <AnimatePresence initial={false}>
+          <motion.img
+            key={logo.alt}
+            src={logo.src}
+            alt={logo.alt}
+            className="st-logo-img"
+            initial={reduceMotion ? false : { y: "120%", x: "-50%", opacity: 0 }}
+            animate={{ y: "0%", x: "-50%", opacity: 1 }}
+            exit={reduceMotion
+              ? { opacity: 0, x: "-50%" }
+              : { y: "-120%", x: "-50%", opacity: 0 }}
+            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+            style={{
+              filter: isOn
+                ? `drop-shadow(0 0 10px ${logo.glow})`
+                : "none",
+            }}
+          />
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
@@ -822,6 +885,23 @@ function StStyles() {
       .st-demo-cta:focus-visible {
         outline: 2px solid rgba(255,255,255,0.7);
         outline-offset: 3px;
+      }
+      .st-logo-window {
+        position: relative;
+        overflow: hidden;
+        width: 250px;
+        height: 44px;
+        flex-shrink: 0;
+      }
+      .st-logo-img {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        height: 100%;
+        width: auto;
+        max-width: 100%;
+        object-fit: contain;
+        pointer-events: none;
       }
       @media (prefers-reduced-motion: reduce) {
         .st-demo-cta { animation: none; }
@@ -882,8 +962,9 @@ function StStyles() {
           padding: 8px 20px !important;
           gap: 8px !important;
         }
-        .st-metrics-fit .st-metrics-badge-mid img {
-          height: 30px !important;
+        .st-metrics-fit .st-logo-window {
+          width: 180px;
+          height: 30px;
         }
         /* Each card group takes equal share of remaining height */
         .st-metrics-fit .st-metrics-top-cards,
@@ -1049,7 +1130,7 @@ export function ImpactMetrics() {
           transition={{ duration: 0.6, delay: 0.25 }}
           className="st-metrics-badge-mid flex items-center justify-center"
         >
-          <ClientBadge baseOpacity={0.65} defaultActive={true} />
+          <ClientBadge defaultActive={true} playing={shouldAnimate} />
         </motion.div>
 
         {/* Bottom 2 stat cards */}
@@ -1121,7 +1202,7 @@ export default function Processes() {
             className="flex-1 h-px"
             style={{ background: "linear-gradient(to right, transparent, rgba(255,255,255,0.15))" }}
           />
-          <ClientBadge />
+          <ClientBadge playing={inkActive} />
           <div
             className="flex-1 h-px"
             style={{ background: "linear-gradient(to left, transparent, rgba(255,255,255,0.15))" }}

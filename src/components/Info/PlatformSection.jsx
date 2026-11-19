@@ -79,38 +79,38 @@ function ModuleIcon({ src, active, size = 30 }) {
 const MODULES = [
   {
     id: "schedule", label: "Schedule", num: "01", glyph: "α · 001", icon: scheduleIcon,
-    title: "Identified, Verified, Filled",
+    title: "Keep the schedule full",
     features: [
-      "Initiates automated outreach for no-shows, overdue procedures, and reactivations to recapture scheduling leakage",
-      "Patients submit appointment preferences through an embedded scheduling prompt, providing a staff queue for booking while AdWords integration attributes the visit to its source marketing campaign",
-      "Verifies patient benefits ahead of each appointment, flagging discrepancies for staff review before the visit",
+      "Rebook no-shows & patients with no future appointments",
+      "Recall & reappoint patients not seen in months to years",
+      "Attribute ad spend to patients visits",
     ],
   },
   {
     id: "produce", label: "Produce", num: "02", glyph: "β · 002", icon: productionIcon,
-    title: "Reconnected, Reactivated, Recovered",
+    title: "Convert missed treatments into visits",
     features: [
-      "Identifies production gaps, such as unscheduled and declined treatment plans, in order to re-engage with patients automatically",
-      "Deploys targeted campaigns for select events and procedure-specific opportunities",
-      "Offers complete customization of the outreach, messaging, and flow for each individual initiative"
+      "Reach patients with overdue treatment",
+      "Target patients with procedure-based communications & reminders",
+      "Increase visits with custom campaigns & promotions",
     ],
   },
   {
     id: "collect", label: "Collect", num: "03", glyph: "γ · 003", icon: collectIcon,
-    title: "Identified, Pursued, Collected",
+    title: "No balances overlooked",
     features: [
-      "Segments patient-balance scenarios into distinct categories, from missed OTC payments to aged A/R balances",
-      "Applies an automated cadence to each scenario to accelerate A/R recovery",
-      "Automatically reconciles claims against incoming EOBs, flagging denials or discrepancies for staff review",
+      "Aged balances grouped, ranked, & worked until paid",
+      "Remind patients of open balances before their next visit",
+      "Pursue balances missed at checkout",
     ],
   },
   {
     id: "relay", label: "Relay", num: "04", glyph: "δ · 004", icon: relayIcon,
-    title: "Centralized, Prioritized, Streamlined",
+    title: "Patients & practice communications",
     features: [
-      "Centralizes all communications and responses into a single, real-time chat inbox interface",
-      "Handles exception management tasking to close the last inch of the patient journey",
-      "Surfaces a live view of each patient's progress through the automation lifecycle",
+      "Message patients in real time",
+      "Manage schedule requests, campaigns & promotions",
+      "Assign tasks across teams from escalations to follow-ups",
     ],
   },
 ];
@@ -551,7 +551,7 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 2000 }
           display: flex;
           flex-direction: column;
           align-items: flex-start;
-          justify-content: flex-start;
+          justify-content: center;
           gap: clamp(8px, 1.1vh, 14px);
           flex: 1 1 0;
           min-height: 0;
@@ -561,6 +561,7 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 2000 }
         .pf-card-feature {
           display: flex;
           align-items: flex-start;
+          justify-content: flex-start;
           gap: 9px;
           font-size: clamp(15px, min(2vh, 1.55vw), 21px);
           line-height: 1.5;
@@ -626,8 +627,8 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 2000 }
             height: 100%;
             justify-content: flex-start;
             overflow: hidden;
-            padding: 18px 18px 16px;   /* was 24px 20px 20px — reclaims dead vertical space */
-            gap: 10px;     
+            padding: 14px 18px 12px;
+            gap: 8px;
           }
           .pf-card-icon { display: flex; }
           .pf-card-autoplay {
@@ -638,8 +639,8 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 2000 }
 
           /* ── Large centered icon in card ── */
           .pf-card-icon img {
-            width: 90px !important;
-            height: 90px !important;
+            width: 64px !important;
+            height: 64px !important;
           }
 
           /* ── Service name label below big icon ── */
@@ -658,14 +659,22 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 2000 }
             line-height: 1.3;
           }
           .pf-card-feature {
-            font-size: clamp(17px, 3.7vw, 20px);
-            line-height: 1.46;
+            font-size: clamp(16px, 3.7vw, 18px);
+            line-height: 1.4;
             width: 100%;
             max-width: none;
+            justify-content: flex-start;
+            text-align: left;
+            flex-shrink: 0;
           }
           .pf-card-features {
             align-items: flex-start;
+            justify-content: flex-start;
+            text-align: left;
             max-width: 100%;
+            flex: 1 1 auto;
+            min-height: min-content;
+            overflow: visible;
           }
 
           /* ── Footer text hidden; replaced by dot indicators ── */
