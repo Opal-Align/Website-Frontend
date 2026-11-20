@@ -802,7 +802,9 @@ function ClientBadge({ defaultActive = false, playing = false }) {
         borderColor: isOn ? logo.border : logo.borderIdle,
         background: isOn ? logo.background : logo.backgroundIdle,
         backdropFilter: "blur(10px)",
-        boxShadow: isOn ? `0 0 30px ${logo.glowSoft}` : "none",
+        boxShadow: isOn
+          ? `0 0 40px ${logo.glowSoft}, 0 0 80px ${logo.glowSoft}`
+          : `0 0 26px ${logo.glowSoft}`,
         transform: isOn ? "translateY(-1px)" : "translateY(0)",
       }}
     >
@@ -821,8 +823,8 @@ function ClientBadge({ defaultActive = false, playing = false }) {
             transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
             style={{
               filter: isOn
-                ? `drop-shadow(0 0 10px ${logo.glow})`
-                : "none",
+                ? `drop-shadow(0 0 12px ${logo.glow}) drop-shadow(0 0 24px ${logo.glowSoft})`
+                : `drop-shadow(0 0 8px ${logo.glowSoft})`,
             }}
           />
         </AnimatePresence>
@@ -889,8 +891,8 @@ function StStyles() {
       .st-logo-window {
         position: relative;
         overflow: hidden;
-        width: 250px;
-        height: 44px;
+        width: min(360px, 60vw);
+        height: clamp(44px, 7vh, 68px);
         flex-shrink: 0;
       }
       .st-logo-img {
@@ -963,8 +965,8 @@ function StStyles() {
           gap: 8px !important;
         }
         .st-metrics-fit .st-logo-window {
-          width: 180px;
-          height: 30px;
+          width: 230px;
+          height: 40px;
         }
         /* Each card group takes equal share of remaining height */
         .st-metrics-fit .st-metrics-top-cards,

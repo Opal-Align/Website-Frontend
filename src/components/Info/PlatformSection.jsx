@@ -508,6 +508,8 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 2000 }
           min-height: min(28vh, 280px);
           max-height: none;
           align-self: stretch;
+          container-type: size;
+          container-name: pftile;
         }
         .pf-tile-glass-shine { position:absolute; inset:0; opacity:0.7; pointer-events:none; z-index:0; background:radial-gradient(circle at 20% 10%, rgba(255,255,255,0.10), transparent 36%), radial-gradient(circle at 85% 90%, rgba(255,255,255,0.08), transparent 42%); }
         .pf-tile-glass-edge { position:absolute; left:0; right:0; top:0; height:1px; z-index:1; pointer-events:none; background-image: ${OPAL_LIGHT_GRADIENT}; }
@@ -539,20 +541,21 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 2000 }
         }
         .pf-card-title {
           font-size: clamp(22px, min(3.2vh, 2.8vw), 36px);
+          font-size: clamp(24px, 9cqh, 58px);
           font-weight: 700;
-          line-height: 1.28;
+          line-height: 1.2;
           color: rgba(255,255,255,0.94);
-          max-width: 680px;
+          max-width: 100%;
           flex-shrink: 0;
         }
         .pf-card-features {
           width: 100%;
-          max-width: 700px;
+          max-width: 100%;
           display: flex;
           flex-direction: column;
           align-items: flex-start;
           justify-content: center;
-          gap: clamp(8px, 1.1vh, 14px);
+          gap: clamp(8px, 1.3cqh, 16px);
           flex: 1 1 0;
           min-height: 0;
           overflow: hidden;
@@ -562,14 +565,15 @@ export default function PlatformSection({ navbarHeight = 80, autoplayMs = 2000 }
           display: flex;
           align-items: flex-start;
           justify-content: flex-start;
-          gap: 9px;
+          gap: 10px;
           font-size: clamp(15px, min(2vh, 1.55vw), 21px);
-          line-height: 1.5;
+          font-size: clamp(16px, 5.4cqh, 34px);
+          line-height: 1.35;
           color: rgba(255,255,255,0.58);
           text-align: left;
           max-width: 100%;
           width: 100%;
-          flex-shrink: 1;
+          flex-shrink: 0;
         }
         .pf-card-footer {
           font-size: clamp(10.5px, 1.15vh, 12px);

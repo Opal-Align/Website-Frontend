@@ -580,7 +580,7 @@ export default function ScrollHero() {
               </div>
 
               <p className="hero-caption font-['Montserrat'] font-light text-white/55 text-[clamp(0.9rem,1.4vw,1.15rem)] tracking-[0.06em]">
-              Your Practices are leaking revenue. <br />OPAL Recovers Revenue & Maximizes Margins with <br/><strong className="font-bold text-white/90">No New Hires</strong>.
+              OPAL Drives & Recovers Revenue with <br/><strong className="font-bold text-white/90">No New Hires</strong>.
               </p>
             </div>
           </div>
